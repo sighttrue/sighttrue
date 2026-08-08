@@ -65,6 +65,18 @@ const INDEX = {
       archived: false,
       pushedAt: '2026-08-01T00:00:00Z',
     },
+    // Withdrawn by its own publisher, which is npm's word rather than a reading
+    // taken here, and the strongest thing any of these fields can say.
+    'npm:request': {
+      repo: 'request/request',
+      installs: 20_000,
+      scorecard: 4.0,
+      advisories: 3,
+      license: 'Apache-2.0',
+      archived: true,
+      pushedAt: '2020-01-01T00:00:00Z',
+      withdrawn: 'request has been deprecated, see https://github.com/request/request/issues/3142',
+    },
   },
 };
 
@@ -315,6 +327,19 @@ describe('failing the build', () => {
     comments = [];
     const lenient = await run({ READOUT_TOKEN: 'stub', READOUT_FAIL_ON: 'advisories' }, MANIFEST);
     expect(lenient.code).toBe(0);
+  });
+
+  it('fails on a package its own publisher withdrew, and says whose word it is', async () => {
+    // The strongest reading available and the only one that is an instruction
+    // rather than a measurement. It is npm's word, not this project's.
+    comments = [];
+    const result = await run(
+      { READOUT_TOKEN: 'stub', READOUT_FAIL_ON: 'withdrawn' },
+      '{"dependencies":{"request":"^2.88.2"}}',
+    );
+
+    expect(result.code).toBe(1);
+    expect(comments[0]?.body).toContain('withdrawn by its publisher');
   });
 
   it('passes when the manifest is missing rather than blaming the build', async () => {

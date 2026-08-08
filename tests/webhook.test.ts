@@ -281,6 +281,25 @@ describe('the comment', () => {
     expect(readings).toContain('archived');
   });
 
+  it('leads the notes with a publisher that withdrew the package', () => {
+    // The one line in the table that is an instruction rather than a
+    // measurement, and it outranks anything measured about the repository.
+    const withdrawn = entry({ withdrawn: 'no longer maintained', installScripts: 'postinstall' });
+    const body = commentBody(
+      options({
+        readings: readingsFor(
+          [{ registry: 'npm' as const, name: 'axios', path: 'package.json' }],
+          index({ 'npm:axios': withdrawn }),
+        ),
+        index: index({ 'npm:axios': withdrawn }),
+      }),
+    ) as string;
+
+    const row = body.split('\n').find((line) => line.includes('axios')) as string;
+    expect(row.indexOf('withdrawn by its publisher')).toBeLessThan(row.indexOf('runs postinstall'));
+    expect(body).toContain('It is the one line here that is an instruction rather than a measurement');
+  });
+
   it('says what a scorecard measures, beside the scorecard', () => {
     const body = commentBody(options()) as string;
 

@@ -13,11 +13,13 @@ steps:
   - uses: sighttrue/sighttrue@v1
     with:
       manifest: package.json
-      fail-on: archived,relicensed
+      fail-on: withdrawn,archived,relicensed
 ```
 
-Fails the build when a dependency's repository has been archived or has moved
-to a source-available licence, and reports advisories either way. No key, no
+Fails the build when a dependency's own publisher has withdrawn it — npm calls
+it deprecated, PyPI and crates.io call it yanked — or when its repository has
+been archived or moved to a source-available licence, and reports advisories
+either way. No key, no
 account, no service to sign up to — it reads published measurements and talks
 to OSV. A network problem is never a finding: if the readings cannot be fetched
 the step says so and passes, because a build that breaks when somebody else's

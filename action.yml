@@ -20,10 +20,10 @@ inputs:
     default: ''
   fail-on:
     description: >-
-      Comma-separated conditions that fail the build: archived, relicensed,
-      advisories. Empty reports without failing.
+      Comma-separated conditions that fail the build: withdrawn, archived,
+      relicensed, advisories. Empty reports without failing.
     required: false
-    default: 'archived,relicensed'
+    default: 'withdrawn,archived,relicensed'
   comment:
     description: >-
       Post the findings as a pull request comment, rewritten in place on each
@@ -44,6 +44,9 @@ inputs:
     default: 'https://sighttrue.com'
 
 outputs:
+  withdrawn:
+    description: 'Dependencies their own publisher marked deprecated or yanked.'
+    value: ${{ steps.check.outputs.withdrawn }}
   archived:
     description: 'Dependencies whose repository is archived.'
     value: ${{ steps.check.outputs.archived }}

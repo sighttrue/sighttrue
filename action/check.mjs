@@ -246,6 +246,7 @@ async function main() {
 
   const archived = [];
   const relicensed = [];
+  const withdrawn = [];
   const risky = [];
   const rows = [];
   let total = 0;
@@ -270,6 +271,13 @@ async function main() {
         relicensed.push(`${name} (${hit.license})`);
         flags.push(`licence now ${hit.license}`);
       }
+      // The publisher's own instruction not to install this — npm calls it
+      // deprecated, PyPI and crates.io call it yanked. The strongest thing any
+      // of these readings can say, and it is not this project's opinion.
+      if (hit.withdrawn) {
+        withdrawn.push(name);
+        flags.push(`withdrawn by its publisher: ${String(hit.withdrawn).slice(0, 120)}`);
+      }
     }
 
     if (flags.length > 0) {
@@ -292,7 +300,7 @@ async function main() {
 
   if (rows.length === 0) {
     lines.push(
-      `Nothing to report. Nothing here is archived, relicensed, or carrying an advisory.`,
+      `Nothing to report. Nothing here is archived, withdrawn, relicensed, or carrying an advisory.`,
       ``,
     );
   } else {
@@ -325,11 +333,13 @@ async function main() {
 
   output('archived', archived.join(','));
   output('relicensed', relicensed.join(','));
+  output('withdrawn', withdrawn.join(','));
   output('advisories', String(total));
 
   const failed = [
     failOn.has('archived') && archived.length > 0 ? `${archived.length} archived` : '',
     failOn.has('relicensed') && relicensed.length > 0 ? `${relicensed.length} relicensed` : '',
+    failOn.has('withdrawn') && withdrawn.length > 0 ? `${withdrawn.length} withdrawn by their publisher` : '',
     failOn.has('advisories') && risky.length > 0 ? `${risky.length} with advisories` : '',
   ].filter(Boolean);
 

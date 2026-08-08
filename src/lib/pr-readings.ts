@@ -75,6 +75,10 @@ export interface StackEntry {
   license: string | null;
   archived: boolean;
   pushedAt: string | null;
+  /** The publisher's own withdrawal notice — npm deprecated, PyPI yanked. */
+  withdrawn?: string | null;
+  /** Install-time hooks npm publishes for the newest version. */
+  installScripts?: string | null;
 }
 
 export interface StackIndex {
@@ -165,8 +169,12 @@ function pushedAge(iso: string | null, now: number): string {
  */
 function notes(entry: StackEntry): string {
   const said: string[] = [];
+  // First, because it is the publisher telling the reviewer not to install
+  // this, and it outranks anything measured about the repository behind it.
+  if (entry.withdrawn) said.push('**withdrawn by its publisher**');
   if (entry.archived) said.push('archived');
   if (entry.license !== null && SOURCE_AVAILABLE.test(entry.license)) said.push('source-available');
+  if (entry.installScripts) said.push(`runs ${entry.installScripts} on install`);
   return said.join(', ');
 }
 
@@ -231,6 +239,8 @@ ${rows}${more}
       : ` The median across ${index.benchmark.repositories} tracked repositories is ${median.toFixed(1)}.`
   }
 - **Advisories** are OSV totals for all time, so a mature, well-patched project carries more than a young one. A high count is not a warning on its own.
+- **Withdrawn** is the publisher's own word — npm calls it deprecated, PyPI and crates.io call it yanked. It is the one line here that is an instruction rather than a measurement, and it is theirs.
+- **Runs on install** names the scripts npm executes on the installing machine. Naming them is a fact about the package, not a claim that any of them does anything untoward, and this reads none of their contents.
 - **Last push** is to the repository that publishes the package, not to the package.
 - Only runtime dependencies are read. Development and optional dependencies are not compared.
 - The watchlist is curated and partial — around ${index.benchmark.repositories} repositories chosen by hand.${
