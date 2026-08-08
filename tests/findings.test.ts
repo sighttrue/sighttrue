@@ -24,7 +24,7 @@ const EMPTY: IndexBundle = {
   adoption: { measured: 0, unread: 0, weekly: 0, weeklyPackages: 0, top: [] },
   models: { available: 0, providers: 0, withdrawn: 0, cheapest: [], dearest: [], moved: [], perContext: [] },
   lifecycle: { products: 0, dated: 0, ended: 0, approaching: 0, soon: [], supported: [] },
-  incidents: { windowDays: 90, providers: 0, total: 0, observedDays: 0, byProvider: [], recent: [] },
+  incidents: { windowDays: 90, providers: 0, total: 0, timed: 0, medianMinutes: null, observedDays: 0, byProvider: [], recent: [] },
   hiring: { month: null, sample: 0, previousMonth: null, previousSample: 0, top: [], rising: [], falling: [] },
   staleness: { measured: 0, unread: 0, medianDays: null, overAYear: 0, quietest: [], byRegistry: [] },
   advisories: { registries: 0, total: 0, byRegistry: [] },

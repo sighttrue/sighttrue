@@ -1,53 +1,82 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  apiUrl,
   collectIncidents,
-  parseFeed,
+  parseHeroku,
+  parseStatuspage,
   PROVIDERS,
   type IncidentClient,
+  type Provider,
 } from '../src/collectors/incidents.ts';
 import { summariseIncidents, WINDOW_DAYS } from '../src/lib/incidents-summary.ts';
-import type { IncidentRow } from '../src/types/incidents.ts';
+import { incidentAt, incidentMinutes, type IncidentRow } from '../src/types/incidents.ts';
 
 /**
- * Incident history read from other people's status feeds.
+ * Incident history read from other people's status pages.
  *
- * The dangerous failure here is quiet: every feed is a rolling window, so a
- * read that returns nothing looks exactly like a provider with a spotless
- * quarter. Emptying the ledger on one of those would delete the only copy of a
- * record that no longer exists anywhere else.
+ * Two failures matter here and neither one throws. The first is a rolling
+ * window: a read that returns nothing looks exactly like a provider with a
+ * spotless quarter, and emptying the ledger on one of those deletes the only
+ * copy of a record that no longer exists anywhere else.
+ *
+ * The second is the one that actually happened. This read `history.rss` and
+ * stored each item's pubDate — the time of its *last update* — in a field named
+ * `startedAt`. Every resolved row carried a resolution time and the site
+ * published it as the incident date. The dates parsed, sorted and rendered
+ * fine. So the tests below check which timestamp lands in which field, not that
+ * a timestamp landed.
  */
 
 const TODAY = '2026-08-07';
 
-function feed(items: string): string {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"><channel><title>Whoever - Incident History</title>${items}</channel></rss>`;
+const WHOEVER: Provider = {
+  slug: 'whoever',
+  name: 'Whoever',
+  host: 'https://status.test',
+  kind: 'statuspage',
+};
+
+const ONE = [WHOEVER];
+
+/** Statuspage's own shape, trimmed to the fields this reads. */
+function incident(
+  over: {
+    id?: string;
+    name?: string;
+    status?: string;
+    started_at?: string | null;
+    created_at?: string;
+    resolved_at?: string | null;
+    updated_at?: string;
+  } = {},
+): Record<string, unknown> {
+  return {
+    id: over.id ?? 'abc123',
+    name: over.name ?? 'Incident with Actions',
+    status: over.status ?? 'resolved',
+    created_at: over.created_at ?? '2026-08-07T02:04:44.000Z',
+    started_at: over.started_at === undefined ? '2026-08-07T02:04:44.000Z' : over.started_at,
+    resolved_at: over.resolved_at === undefined ? '2026-08-07T02:30:44.000Z' : over.resolved_at,
+    updated_at: over.updated_at ?? '2026-08-07T02:30:44.000Z',
+  };
 }
 
-function item(over: { title?: string; date?: string; link?: string; resolved?: boolean } = {}): string {
-  const resolved = over.resolved ?? true;
-  return `<item>
-    <title>${over.title ?? 'Incident with Actions'}</title>
-    <description>&lt;p&gt;&lt;strong&gt;${resolved ? 'Resolved' : 'Investigating'}&lt;/strong&gt; - words&lt;/p&gt;</description>
-    <pubDate>${over.date ?? 'Fri, 07 Aug 2026 02:04:44 +0000'}</pubDate>
-    <link>${over.link ?? 'https://example.test/incidents/1'}</link>
-  </item>`;
+function payload(...incidents: Record<string, unknown>[]): unknown {
+  return { page: { id: 'p1', name: 'Whoever' }, incidents };
 }
 
-function client(payloads: Record<string, string | null>, fail: string[] = []): IncidentClient {
+function client(payloads: Record<string, unknown>, fail: string[] = []): IncidentClient {
   let spent = 0;
   return {
     requests: () => spent,
-    async feed(url) {
+    async json(url) {
       spent += 1;
       if (fail.includes(url)) throw new Error('socket hang up');
       return payloads[url] ?? null;
     },
   };
 }
-
-const ONE = [{ slug: 'whoever', name: 'Whoever', feed: 'https://status.test/history.rss' }];
 
 function options(over: Partial<Parameters<typeof collectIncidents>[1]> = {}) {
   return { today: TODAY, delayMs: 0, providers: ONE, ...over };
@@ -56,123 +85,239 @@ function options(over: Partial<Parameters<typeof collectIncidents>[1]> = {}) {
 function row(over: Partial<IncidentRow> = {}): IncidentRow {
   return {
     provider: 'whoever',
-    id: 'https://example.test/incidents/1',
+    id: 'https://status.test/incidents/abc123',
     title: 'Incident with Actions',
     startedAt: '2026-08-01T02:04:44.000Z',
+    resolvedAt: '2026-08-01T02:30:44.000Z',
+    updatedAt: '2026-08-01T02:30:44.000Z',
     resolved: true,
-    url: 'https://example.test/incidents/1',
+    url: 'https://status.test/incidents/abc123',
     ...over,
   };
 }
 
-describe('parseFeed', () => {
-  it('reads title, date, link and the provider’s own resolution', () => {
-    const rows = parseFeed(feed(item()), 'whoever');
+describe('apiUrl', () => {
+  it('asks Statuspage for JSON, not for the feed that lost the start time', () => {
+    expect(apiUrl(WHOEVER)).toBe('https://status.test/api/v2/incidents.json');
+  });
+
+  it('asks Heroku through its own API, which is not Statuspage', () => {
+    const heroku = PROVIDERS.find((provider) => provider.slug === 'heroku');
+    expect(apiUrl(heroku as Provider)).toBe('https://status.heroku.com/api/v4/incidents');
+  });
+
+  it('gives every provider a host with no trailing slash', () => {
+    // Two of these publish their own URL with one, which is how ids containing
+    // `//incidents/` got into the ledger.
+    for (const provider of PROVIDERS) expect(provider.host.endsWith('/')).toBe(false);
+  });
+});
+
+describe('parseStatuspage', () => {
+  it('keeps the start and the resolution apart', () => {
+    const rows = parseStatuspage(payload(incident()), WHOEVER);
 
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       provider: 'whoever',
       title: 'Incident with Actions',
       startedAt: '2026-08-07T02:04:44.000Z',
+      resolvedAt: '2026-08-07T02:30:44.000Z',
       resolved: true,
-      url: 'https://example.test/incidents/1',
     });
   });
 
-  it('records an open incident as unresolved rather than guessing', () => {
-    // Covers both "still going" and "never closed out". Those are different,
-    // and this cannot tell them apart, so it claims neither.
-    expect(parseFeed(feed(item({ resolved: false })), 'whoever')[0]?.resolved).toBe(false);
-  });
-
-  it('unescapes the entities the feed arrives with', () => {
-    const rows = parseFeed(
-      feed(item({ title: 'Elevated errors &amp; latency on &lt;api&gt;' })),
-      'whoever',
+  it('never stores the resolution time as the start', () => {
+    // The bug this file exists to prevent a second time.
+    const rows = parseStatuspage(
+      payload(
+        incident({ started_at: '2026-07-22T08:34:31.874Z', resolved_at: '2026-07-22T09:00:25.206Z' }),
+      ),
+      WHOEVER,
     );
 
-    expect(rows[0]?.title).toBe('Elevated errors & latency on <api>');
+    expect(rows[0]?.startedAt).toBe('2026-07-22T08:34:31.874Z');
+    expect(incidentMinutes(rows[0] as IncidentRow)).toBe(26);
   });
 
-  it('skips an item with no usable date instead of inventing one', () => {
-    const broken = `<item><title>No date</title><link>https://example.test/x</link></item>`;
-    const nonsense = `<item><title>Bad date</title><pubDate>whenever</pubDate><link>https://example.test/y</link></item>`;
+  it('falls back to created_at on the clones that publish no started_at', () => {
+    // OpenAI and Groq run a Statuspage-compatible service without the field.
+    // Their first incident update carries created_at exactly, so the record was
+    // opened when it began.
+    const rows = parseStatuspage(
+      payload(incident({ started_at: null, created_at: '2026-08-05T14:55:59.000Z' })),
+      WHOEVER,
+    );
 
-    expect(parseFeed(feed(broken + nonsense + item()), 'whoever')).toHaveLength(1);
+    expect(rows[0]?.startedAt).toBe('2026-08-05T14:55:59.000Z');
   });
 
-  it('returns nothing for a page that is not a feed', () => {
-    // Heroku and Railway both answer their /history.rss with HTML and a 200.
-    expect(parseFeed('<!DOCTYPE html><html><body>Status</body></html>', 'whoever')).toEqual([]);
+  it('builds the id from the host, so a trailing slash cannot double it', () => {
+    const rows = parseStatuspage(payload(incident({ id: 'xyz' })), WHOEVER);
+
+    expect(rows[0]?.id).toBe('https://status.test/incidents/xyz');
+    expect(rows[0]?.url).toBe('https://status.test/incidents/xyz');
+  });
+
+  it('records an open incident as unresolved rather than guessing', () => {
+    const rows = parseStatuspage(
+      payload(incident({ status: 'investigating', resolved_at: null })),
+      WHOEVER,
+    );
+
+    expect(rows[0]?.resolved).toBe(false);
+    expect(rows[0]?.resolvedAt).toBeNull();
+  });
+
+  it('reads a postmortem as resolved, because it is', () => {
+    expect(parseStatuspage(payload(incident({ status: 'postmortem' })), WHOEVER)[0]?.resolved).toBe(
+      true,
+    );
+  });
+
+  it('skips a record with no usable timestamp instead of inventing one', () => {
+    const undated = { id: 'nope', name: 'No dates', status: 'resolved' };
+    expect(parseStatuspage(payload(undated, incident()), WHOEVER)).toHaveLength(1);
+  });
+
+  it('ignores a timestamp that does not parse', () => {
+    const rows = parseStatuspage(payload(incident({ started_at: 'whenever' })), WHOEVER);
+    // created_at is still good, so the row survives with the start it can prove.
+    expect(rows[0]?.startedAt).toBe('2026-08-07T02:04:44.000Z');
+  });
+
+  it('returns nothing for a page that is not the API', () => {
+    expect(parseStatuspage('<!DOCTYPE html><html></html>', WHOEVER)).toEqual([]);
+    expect(parseStatuspage({ page: {} }, WHOEVER)).toEqual([]);
+  });
+});
+
+describe('parseHeroku', () => {
+  const heroku: Provider = {
+    slug: 'heroku',
+    name: 'Heroku',
+    host: 'https://status.heroku.com',
+    kind: 'heroku',
+  };
+
+  const record = {
+    id: 2960,
+    title: 'Heroku Retroactive Feature Degradation',
+    state: 'resolved',
+    created_at: '2026-08-06T16:17:48.126Z',
+    updated_at: '2026-08-06T16:20:35.981Z',
+    resolved: false,
+    resolved_at: null,
+    duration: 165146,
+    full_url: 'https://status.heroku.com/incidents/2960',
+  };
+
+  it('reads its numeric id and its own incident URL', () => {
+    const rows = parseHeroku([record], heroku);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      provider: 'heroku',
+      id: 'https://status.heroku.com/incidents/2960',
+      title: 'Heroku Retroactive Feature Degradation',
+      startedAt: '2026-08-06T16:17:48.126Z',
+    });
+  });
+
+  it('trusts state, not the resolved flag Heroku leaves false on resolved records', () => {
+    expect(parseHeroku([record], heroku)[0]?.resolved).toBe(true);
+    expect(parseHeroku([{ ...record, state: 'issue' }], heroku)[0]?.resolved).toBe(false);
+  });
+
+  it('leaves the end unpublished rather than deriving one from duration', () => {
+    // Heroku's `duration` disagrees with its own timestamps by minutes to
+    // hours. A length computed from it would be a made-up number.
+    expect(parseHeroku([record], heroku)[0]?.resolvedAt).toBeNull();
+    expect(incidentMinutes(parseHeroku([record], heroku)[0] as IncidentRow)).toBeNull();
+  });
+
+  it('takes the resolution when Heroku does publish one', () => {
+    const closed = { ...record, resolved_at: '2026-08-06T16:30:00.000Z' };
+    expect(parseHeroku([closed], heroku)[0]?.resolvedAt).toBe('2026-08-06T16:30:00.000Z');
   });
 });
 
 describe('collectIncidents', () => {
-  it('keeps an incident the feed has already dropped', async () => {
-    // The entire reason the file exists. Statuspage carries about 25 items and
+  const URL = 'https://status.test/api/v2/incidents.json';
+
+  it('keeps an incident the provider has already dropped', async () => {
+    // The entire reason the file exists. A status page carries fifty and
     // forgets the rest, so outliving that window is the only thing added here.
     const held = [row({ id: 'old', startedAt: '2026-06-01T00:00:00.000Z' })];
     const result = await collectIncidents(
       held,
-      options({ client: client({ 'https://status.test/history.rss': feed(item()) }) }),
+      options({ client: client({ [URL]: payload(incident()) }) }),
     );
 
     expect(result.rows.map((entry) => entry.id).sort()).toEqual([
-      'https://example.test/incidents/1',
+      'https://status.test/incidents/abc123',
       'old',
     ]);
   });
 
   it('updates an incident in place when its resolution lands later', async () => {
-    const held = [row({ resolved: false })];
+    const held = [row({ resolved: false, resolvedAt: null })];
     const result = await collectIncidents(
       held,
-      options({
-        client: client({
-          'https://status.test/history.rss': feed(item({ date: 'Sat, 01 Aug 2026 02:04:44 +0000' })),
-        }),
-      }),
+      options({ client: client({ [URL]: payload(incident()) }) }),
     );
 
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0]?.resolved).toBe(true);
+    expect(result.rows[0]?.resolvedAt).toBe('2026-08-07T02:30:44.000Z');
   });
 
-  it('keeps what it has when a feed cannot be read', async () => {
+  it('keeps what it has when a provider cannot be read', async () => {
     const held = [row()];
-    const result = await collectIncidents(
-      held,
-      options({ client: client({}, ['https://status.test/history.rss']) }),
-    );
+    const result = await collectIncidents(held, options({ client: client({}, [URL]) }));
 
     expect(result.rows).toEqual(held);
     expect(result.errors[0]).toContain('whoever');
   });
 
-  it('keeps what it has when a feed stops being a feed', async () => {
+  it('keeps what it has when the API stops being the API', async () => {
     const held = [row()];
     const result = await collectIncidents(
       held,
-      options({ client: client({ 'https://status.test/history.rss': '<html></html>' }) }),
+      options({ client: client({ [URL]: { page: {} } }) }),
     );
 
     expect(result.rows).toEqual(held);
-    expect(result.errors[0]).toContain('no items parsed');
+    expect(result.errors[0]).toContain('no incidents parsed');
   });
 
   it('drops rows past the retention window', async () => {
     const held = [
-      row({ id: 'ancient', startedAt: '2020-01-01T00:00:00.000Z' }),
+      row({ id: 'ancient', startedAt: '2020-01-01T00:00:00.000Z', updatedAt: '2020-01-01T00:00:00.000Z' }),
       row({ id: 'recent', startedAt: '2026-08-01T00:00:00.000Z' }),
     ];
 
     const result = await collectIncidents(
       held,
-      options({ retainDays: 365, client: client({ 'https://status.test/history.rss': feed(item()) }) }),
+      options({ retainDays: 365, client: client({ [URL]: payload(incident()) }) }),
     );
 
     expect(result.rows.map((entry) => entry.id)).not.toContain('ancient');
     expect(result.rows.map((entry) => entry.id)).toContain('recent');
+  });
+
+  it('retains a row with no start by its last update', async () => {
+    // The rows kept from the RSS era. They have one timestamp and it is not a
+    // start; dropping them would delete history nobody else has.
+    const held = [
+      row({ id: 'legacy', startedAt: null, resolvedAt: null, updatedAt: '2026-08-01T00:00:00.000Z' }),
+    ];
+    const result = await collectIncidents(
+      held,
+      options({ retainDays: 365, client: client({ [URL]: payload(incident()) }) }),
+    );
+
+    expect(result.rows.map((entry) => entry.id)).toContain('legacy');
   });
 
   it('spends one request per provider', async () => {
@@ -182,15 +327,29 @@ describe('collectIncidents', () => {
   });
 });
 
+describe('incidentAt', () => {
+  it('prefers the published start', () => {
+    expect(incidentAt(row())).toBe('2026-08-01T02:04:44.000Z');
+  });
+
+  it('falls back to the last update when there is no start', () => {
+    expect(incidentAt(row({ startedAt: null }))).toBe('2026-08-01T02:30:44.000Z');
+  });
+
+  it('refuses to date a row with nothing usable', () => {
+    expect(incidentAt(row({ startedAt: null, updatedAt: 'whenever' }))).toBeNull();
+  });
+});
+
 describe('summariseIncidents', () => {
   it('counts inside the window and names every tracked provider', () => {
     const summary = summariseIncidents(
       [
-        { ...row({ provider: 'github', startedAt: '2026-08-06T00:00:00.000Z', id: 'a' }) },
-        { ...row({ provider: 'github', startedAt: '2026-08-05T00:00:00.000Z', id: 'b' }) },
-        { ...row({ provider: 'npm', startedAt: '2026-08-04T00:00:00.000Z', id: 'c' }) },
+        row({ provider: 'github', startedAt: '2026-08-06T00:00:00.000Z', id: 'a' }),
+        row({ provider: 'github', startedAt: '2026-08-05T00:00:00.000Z', id: 'b' }),
+        row({ provider: 'npm', startedAt: '2026-08-04T00:00:00.000Z', id: 'c' }),
         // Outside the window.
-        { ...row({ provider: 'npm', startedAt: '2025-01-01T00:00:00.000Z', id: 'd' }) },
+        row({ provider: 'npm', startedAt: '2025-01-01T00:00:00.000Z', id: 'd' }),
       ],
       TODAY,
     );
@@ -229,43 +388,77 @@ describe('summariseIncidents', () => {
     expect(summary.observedDays).toBe(30);
   });
 
+  it('measures length only where both ends were published', () => {
+    const summary = summariseIncidents(
+      [
+        row({ provider: 'github', id: 'a', startedAt: '2026-08-06T00:00:00.000Z', resolvedAt: '2026-08-06T01:00:00.000Z' }),
+        row({ provider: 'github', id: 'b', startedAt: '2026-08-06T00:00:00.000Z', resolvedAt: '2026-08-06T00:30:00.000Z' }),
+        // Open: no end published, so no length.
+        row({ provider: 'github', id: 'c', startedAt: '2026-08-06T00:00:00.000Z', resolvedAt: null, resolved: false }),
+        // Kept from the RSS era: no start, so no length.
+        row({ provider: 'github', id: 'd', startedAt: null, updatedAt: '2026-08-06T00:00:00.000Z' }),
+      ],
+      TODAY,
+    );
+
+    expect(summary.total).toBe(4);
+    expect(summary.timed).toBe(2);
+    expect(summary.medianMinutes).toBe(60);
+    expect(summary.byProvider[0]).toMatchObject({ slug: 'github', timed: 2, medianMinutes: 60 });
+  });
+
+  it('counts a row with no status apart from one marked unresolved', () => {
+    // The RSS reader looked for a `Resolved` marker in the item description and
+    // missed it on every OpenAI incident. Reading those rows as unresolved
+    // would publish sixty-six outages OpenAI never closed, out of a parser bug.
+    const summary = summariseIncidents(
+      [
+        row({ provider: 'github', id: 'a', startedAt: '2026-08-06T00:00:00.000Z', resolved: true }),
+        row({ provider: 'github', id: 'b', startedAt: '2026-08-06T00:00:00.000Z', resolved: false }),
+        row({ provider: 'github', id: 'c', startedAt: null, updatedAt: '2026-08-06T00:00:00.000Z', resolved: null }),
+      ],
+      TODAY,
+    );
+
+    expect(summary.byProvider[0]).toMatchObject({
+      slug: 'github',
+      count: 3,
+      resolved: 1,
+      withStatus: 2,
+    });
+  });
+
+  it('says when the date it shows is a last update rather than a start', () => {
+    const summary = summariseIncidents(
+      [
+        row({ provider: 'github', id: 'a', startedAt: '2026-08-06T00:00:00.000Z' }),
+        row({ provider: 'npm', id: 'b', startedAt: null, updatedAt: '2026-08-05T00:00:00.000Z' }),
+      ],
+      TODAY,
+    );
+
+    expect(summary.recent.map((entry) => entry.atKind)).toEqual(['started', 'updated']);
+    expect(summary.recent[1]?.at).toBe('2026-08-05T00:00:00.000Z');
+  });
+
+  it('leaves an undatable row out of the window rather than dating it today', () => {
+    const summary = summariseIncidents(
+      [row({ provider: 'github', startedAt: null, updatedAt: 'whenever' })],
+      TODAY,
+    );
+
+    expect(summary.total).toBe(0);
+    expect(summary.observedDays).toBe(0);
+  });
+
   it('reads an empty ledger as empty rather than throwing', () => {
     const summary = summariseIncidents([], TODAY);
 
     expect(summary.total).toBe(0);
+    expect(summary.timed).toBe(0);
+    expect(summary.medianMinutes).toBeNull();
     expect(summary.observedDays).toBe(0);
     expect(summary.recent).toEqual([]);
     expect(summary.byProvider.every((entry) => entry.count === 0)).toBe(true);
-  });
-});
-
-describe('Atom feeds', () => {
-  // Heroku was dropped for answering `/history.rss` with HTML. It publishes a
-  // perfectly good Atom feed at `/feed`; nobody looked past the URL that failed.
-  const atom = `<?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-  <title>Heroku Status</title>
-  <entry>
-    <id>tag:status-api.heroku.com,2005:Incident/2960</id>
-    <published>2026-08-06T16:17:48Z</published>
-    <link rel="alternate" type="text/html" href="https://status.heroku.com/incidents/2960"/>
-    <title>Elevated error rates</title>
-  </entry>
-</feed>`;
-
-  it('reads an entry the way it reads an item', () => {
-    const rows = parseFeed(atom, 'heroku');
-
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({
-      provider: 'heroku',
-      id: 'tag:status-api.heroku.com,2005:Incident/2960',
-      title: 'Elevated error rates',
-      startedAt: '2026-08-06T16:17:48.000Z',
-    });
-  });
-
-  it('takes the link from the attribute Atom puts it in', () => {
-    expect(parseFeed(atom, 'heroku')[0]?.url).toBe('https://status.heroku.com/incidents/2960');
   });
 });

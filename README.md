@@ -57,7 +57,7 @@ code review and a scorecard quoted without "measures declared practices, not
 whether the project is safe" is a claim this project does not make.
 
 One agent watches 388 open-source repositories and takes eleven readings, most
-of which never touch GitHub: 441 provider incidents kept after their own status
+of which never touch GitHub: 461 provider incidents kept after their own status
 pages dropped them, 518 release lines on the end-of-life clock, 395 model prices
 across 58 providers, 247 packages by real ship date, 387 commit histories for
 the bus factor. It runs every four hours on GitHub Actions, commits what it

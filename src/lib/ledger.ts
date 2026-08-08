@@ -42,7 +42,7 @@ import { IMAGE_KEYS, type ImageRow } from '../types/images.ts';
 import { QUESTION_KEYS, type QuestionRow } from '../types/questions.ts';
 import { STALENESS_KEYS, type StalenessRow } from '../types/staleness.ts';
 import { TYPOSQUAT_KEYS, type TyposquatRow } from '../types/typosquat.ts';
-import { INCIDENT_KEYS, type IncidentRow } from '../types/incidents.ts';
+import { incidentAt, INCIDENT_KEYS, type IncidentRow } from '../types/incidents.ts';
 import { LIFECYCLE_KEYS, type LifecycleRow } from '../types/lifecycle.ts';
 import { HEALTH_KEYS, type HealthRow } from '../types/health.ts';
 import { CALIBRATION_KEYS, type CalibrationRow } from './calibration.ts';
@@ -289,7 +289,11 @@ export function writeIncidents(rows: readonly IncidentRow[]): void {
     // By provider, then oldest first. A new incident appends near its
     // provider's block instead of reshuffling the file, which keeps the diff
     // readable as what it is: one line added.
-    sortBy: (row) => [row.provider, row.startedAt, row.id].join(' '),
+    //
+    // Sorted on the date the row is placed by, not on `startedAt` alone — rows
+    // kept from the RSS era have no start, and sorting a null would collect
+    // every one of them at the top of its provider's block.
+    sortBy: (row) => [row.provider, incidentAt(row) ?? '', row.id].join(' '),
     rejectDuplicates: true,
   });
 }

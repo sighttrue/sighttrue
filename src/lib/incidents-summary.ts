@@ -1,5 +1,5 @@
 import { PROVIDERS } from '../collectors/incidents.ts';
-import type { IncidentRow } from '../types/incidents.ts';
+import { incidentAt, incidentMinutes, type IncidentRow } from '../types/incidents.ts';
 
 /**
  * Providers side by side, over one window.
@@ -9,6 +9,11 @@ import type { IncidentRow } from '../types/incidents.ts';
  * and the two diverge in a direction that punishes honesty: a company that
  * posts every degradation will out-count one that posts nothing. Anything
  * rendered from this has to say that where the number is, not in a footnote.
+ *
+ * Length is reported the same way. It is the gap between the two timestamps the
+ * provider published, on the rows where they published both — never a mean over
+ * rows whose start was unknown, and never a claim about how long anything was
+ * actually broken, which nobody outside the provider can measure.
  */
 
 export interface ProviderIncidents {
@@ -18,28 +23,64 @@ export interface ProviderIncidents {
   count: number;
   /** Of those, how many the provider marked resolved. */
   resolved: number;
+  /**
+   * Of those, how many carry a status at all.
+   *
+   * Below `count` where rows were kept from before this read the providers'
+   * JSON. Those have no status on record, and the resolved figure has to be
+   * read against this rather than against the count.
+   */
+  withStatus: number;
+  /** Of those, how many published both a start and an end. */
+  timed: number;
+  /** Median announced length in minutes across the `timed` rows, or null. */
+  medianMinutes: number | null;
   /** ISO 8601 of the most recent, or null when the window is empty. */
   latestAt: string | null;
   latestTitle: string | null;
 }
 
+export interface RecentIncident {
+  provider: string;
+  name: string;
+  title: string;
+  /** Start where the provider published one, last update where it did not. */
+  at: string;
+  /** Which of those `at` is. The page has to say when it is not a start. */
+  atKind: 'started' | 'updated';
+  /** Announced length in minutes, or null when either end is unpublished. */
+  minutes: number | null;
+  url: string;
+}
+
 export interface IncidentSummary {
   /** Days the counts cover. */
   windowDays: number;
-  /** Providers with a feed on record, whatever it said. */
+  /** Providers with a record on file, whatever it said. */
   providers: number;
   /** Incidents across every provider inside the window. */
   total: number;
+  /** Of those, how many carry both a published start and end. */
+  timed: number;
+  /** Median announced length in minutes across every timed row, or null. */
+  medianMinutes: number | null;
   /** Days of history the oldest row here goes back to. */
   observedDays: number;
   /** Busiest first. Every tracked provider appears, including the quiet ones. */
   byProvider: ProviderIncidents[];
   /** Newest first, across all providers. Bounded — see `RECENT_LIMIT`. */
-  recent: { provider: string; name: string; title: string; at: string; url: string }[];
+  recent: RecentIncident[];
 }
 
 export const WINDOW_DAYS = 90;
 export const RECENT_LIMIT = 12;
+
+/** Upper median, so an even count returns a value one of the rows really had. */
+function median(values: readonly number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)] ?? null;
+}
 
 export function summariseIncidents(
   rows: readonly IncidentRow[],
@@ -50,43 +91,64 @@ export function summariseIncidents(
   const cutoff = now - windowDays * 86_400_000;
   const named = new Map(PROVIDERS.map((provider) => [provider.slug, provider.name]));
 
-  const inWindow = rows.filter((row) => Date.parse(row.startedAt) >= cutoff);
+  // Dated once, here. A row with no usable timestamp cannot be placed in a
+  // window and is not counted into one — it is not dated as today instead.
+  const dated = rows
+    .map((row) => ({ row, at: incidentAt(row) }))
+    .filter((entry): entry is { row: IncidentRow; at: string } => entry.at !== null);
+
+  const inWindow = dated.filter((entry) => Date.parse(entry.at) >= cutoff);
 
   const byProvider: ProviderIncidents[] = PROVIDERS.map((provider) => {
     const mine = inWindow
-      .filter((row) => row.provider === provider.slug)
-      .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
+      .filter((entry) => entry.row.provider === provider.slug)
+      .sort((a, b) => (a.at < b.at ? 1 : -1));
+
+    const lengths = mine
+      .map((entry) => incidentMinutes(entry.row))
+      .filter((minutes): minutes is number => minutes !== null);
 
     return {
       slug: provider.slug,
       name: provider.name,
       count: mine.length,
-      resolved: mine.filter((row) => row.resolved).length,
-      latestAt: mine[0]?.startedAt ?? null,
-      latestTitle: mine[0]?.title ?? null,
+      resolved: mine.filter((entry) => entry.row.resolved === true).length,
+      withStatus: mine.filter((entry) => entry.row.resolved !== null).length,
+      timed: lengths.length,
+      medianMinutes: median(lengths),
+      latestAt: mine[0]?.at ?? null,
+      latestTitle: mine[0]?.row.title ?? null,
     };
   }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
-  const oldest = rows.reduce(
-    (earliest, row) => Math.min(earliest, Date.parse(row.startedAt)),
+  const oldest = dated.reduce(
+    (earliest, entry) => Math.min(earliest, Date.parse(entry.at)),
     Number.POSITIVE_INFINITY,
   );
 
   const recent = [...inWindow]
-    .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1))
+    .sort((a, b) => (a.at < b.at ? 1 : -1))
     .slice(0, RECENT_LIMIT)
-    .map((row) => ({
+    .map(({ row, at }) => ({
       provider: row.provider,
       name: named.get(row.provider) ?? row.provider,
       title: row.title,
-      at: row.startedAt,
+      at,
+      atKind: row.startedAt === null ? ('updated' as const) : ('started' as const),
+      minutes: incidentMinutes(row),
       url: row.url,
     }));
+
+  const allLengths = inWindow
+    .map((entry) => incidentMinutes(entry.row))
+    .filter((minutes): minutes is number => minutes !== null);
 
   return {
     windowDays,
     providers: PROVIDERS.length,
     total: inWindow.length,
+    timed: allLengths.length,
+    medianMinutes: median(allLengths),
     observedDays: Number.isFinite(oldest) ? Math.max(0, Math.round((now - oldest) / 86_400_000)) : 0,
     byProvider,
     recent,

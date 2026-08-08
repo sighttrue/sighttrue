@@ -129,7 +129,7 @@ export function findingsFrom(index: IndexBundle): Finding[] {
   if (busiest !== undefined && busiest.count > 0) {
     found.push({
       headline: `${busiest.name} announced ${busiest.count} incidents in ${incidents.windowDays} days`,
-      detail: `Their own status feed, kept after it stopped carrying them.${quietest === undefined ? '' : ` ${quietest.name} announced none in the same window.`} A count measures how often a provider publishes, so one that discloses every degradation out-counts one that stays quiet.`,
+      detail: `Their own status page, kept after it stopped carrying them.${quietest === undefined ? '' : ` ${quietest.name} announced none in the same window.`} A count measures how often a provider publishes, so one that discloses every degradation out-counts one that stays quiet.`,
       basis: `${incidents.total.toLocaleString('en')} incidents across ${incidents.providers} providers, ${incidents.observedDays} days on record here. Never read a low number as a good one.`,
       href: '/incidents',
       novelty: 'Every status page forgets after a few months. This one does not.',

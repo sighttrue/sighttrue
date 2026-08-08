@@ -68,10 +68,34 @@ interface IncidentBundle {
   incidents: {
     provider: string;
     title: string;
-    startedAt: string;
-    resolved: boolean;
+    startedAt: string | null;
+    resolvedAt: string | null;
+    updatedAt: string;
+    /** Null where no status was ever on record — not the same as unresolved. */
+    resolved: boolean | null;
     url: string;
   }[];
+}
+
+type IncidentEntry = IncidentBundle['incidents'][number];
+
+/**
+ * Where the incident sits in time: the published start, or the last update when
+ * the provider published no start. Rows kept from before this project read the
+ * JSON API have only the second.
+ */
+function incidentAt(row: IncidentEntry): string | null {
+  const at = row.startedAt ?? row.updatedAt ?? null;
+  return typeof at === 'string' && !Number.isNaN(Date.parse(at)) ? at : null;
+}
+
+/** Only where the provider published both ends. Never measured from a guess. */
+function incidentMinutes(row: IncidentEntry): number | null {
+  if (row.startedAt === null || row.resolvedAt === null) return null;
+  const from = Date.parse(row.startedAt);
+  const to = Date.parse(row.resolvedAt);
+  if (Number.isNaN(from) || Number.isNaN(to) || to < from) return null;
+  return Math.round((to - from) / 60_000);
 }
 
 interface EolBundle {
@@ -614,7 +638,11 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
     const since = Date.now() - days * 86_400_000;
     const wanted = asString(args['provider'], 40)?.toLowerCase() ?? null;
 
-    const inWindow = bundle.incidents.filter((row) => Date.parse(row.startedAt) >= since);
+    const dated = bundle.incidents
+      .map((row) => ({ row, at: incidentAt(row) }))
+      .filter((entry): entry is { row: IncidentEntry; at: string } => entry.at !== null);
+
+    const inWindow = dated.filter((entry) => Date.parse(entry.at) >= since);
     const tracked = [...new Set(bundle.incidents.map((row) => row.provider))].sort();
 
     if (wanted !== null && !tracked.includes(wanted)) {
@@ -630,9 +658,17 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
       );
     }
 
-    const scoped = wanted === null ? inWindow : inWindow.filter((row) => row.provider === wanted);
+    const scoped =
+      wanted === null ? inWindow : inWindow.filter((entry) => entry.row.provider === wanted);
     const counts: Record<string, number> = {};
-    for (const row of scoped) counts[row.provider] = (counts[row.provider] ?? 0) + 1;
+    for (const entry of scoped) {
+      counts[entry.row.provider] = (counts[entry.row.provider] ?? 0) + 1;
+    }
+
+    const lengths = scoped
+      .map((entry) => incidentMinutes(entry.row))
+      .filter((minutes): minutes is number => minutes !== null)
+      .sort((a, b) => a - b);
 
     return toolResult(id, {
       windowDays: days,
@@ -642,20 +678,29 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
       byProvider: Object.fromEntries(
         Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
       ),
+      // Announced length, over the subset that published both ends. The
+      // denominator ships with the number so it cannot be quoted as if it
+      // covered every incident.
+      timed: lengths.length,
+      medianMinutes: lengths.length === 0 ? null : (lengths[Math.floor(lengths.length / 2)] ?? null),
       incidents: scoped
-        .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1))
+        .sort((a, b) => (a.at < b.at ? 1 : -1))
         .slice(0, MAX_RESULTS)
-        .map((row) => ({
+        .map(({ row }) => ({
           provider: row.provider,
           title: row.title,
           startedAt: row.startedAt,
+          resolvedAt: row.resolvedAt,
+          minutes: incidentMinutes(row),
           resolved: row.resolved,
           url: row.url,
         })),
       limits: [
         'These are the providers’ own announcements, republished unchanged. Nothing here is measured independently.',
         'A count is how often a provider announced something, not how often it broke. One that publishes every degradation will out-count one that publishes nothing, so a low count is not a good sign on its own.',
-        'Unresolved covers both "still going" and "never closed out", which this cannot tell apart.',
+        'Unresolved covers both "still going" and "never closed out", which this cannot tell apart. A null resolved is neither: it means no status was ever on record for that row.',
+        'A null startedAt is a row kept from before this read the providers’ JSON, where only the time of their last update survives. It is dated by that and has no length.',
+        'Length is the gap between the start and resolution the provider published, not a measure of how long anything was broken, and it covers only the incidents where they published both.',
         'History only goes back as far as this project has been keeping it, which is shorter than the providers have existed.',
       ],
     });

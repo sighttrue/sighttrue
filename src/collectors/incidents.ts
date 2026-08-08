@@ -1,11 +1,11 @@
 /**
  * Who actually goes down, and how often.
  *
- * Every provider here publishes an incident feed and every one of those feeds
- * forgets. Statuspage carries a few months and then drops the rest, so "how
- * often has this gone down" has no answer anywhere a season later — which is
- * how a provider's reputation ends up being whatever people remember about the
- * last bad week.
+ * Every provider here publishes an incident record and every one of those
+ * records disappears. Statuspage carries fifty and drops the rest, so "how often
+ * has this gone down" has no answer anywhere a season later — which is how a
+ * provider's reputation ends up being whatever people remember about the last
+ * bad week.
  *
  * Nothing is judged and nothing is scored. These are their own announcements,
  * kept after they stopped keeping them, counted and put side by side. A count
@@ -17,62 +17,119 @@
  * finding per incident would bury every other signal in the product under
  * somebody else's operational noise. The value here is the record, not an
  * alert.
+ *
+ * ── Why this reads JSON and not the RSS feed
+ *
+ * It read `history.rss` until 2026-08-08 and stored each item's `pubDate` as
+ * `startedAt`. A pubDate is the time of the item's most recent update, so for a
+ * resolved incident it is the time it *ended*. Checked against Statuspage's own
+ * JSON for every row that could still be checked, 369 of 379 stored timestamps
+ * matched `resolved_at` exactly and none matched `started_at`. The site was
+ * publishing resolution times as incident dates, and nothing ever failed — a
+ * field holding the wrong thing does not throw.
+ *
+ * `/api/v2/incidents.json` returns `started_at` and `resolved_at` as separate
+ * fields, which fixes that and makes a duration computable for the first time.
+ * It carries a second correction with it: the RSS history feed mixes scheduled
+ * maintenance in with incidents, and the JSON incidents endpoint does not.
+ * Fifty maintenance windows — every Twilio row, three quarters of Cloudflare's
+ * — were being counted and rendered as announced incidents, some of them dated
+ * in the future. See `scripts/migrate-incidents.ts`.
  */
 
-import type { IncidentRow } from '../types/incidents.ts';
+import { incidentAt, type IncidentRow } from '../types/incidents.ts';
 import { sleep } from '../lib/registries.ts';
 
 const USER_AGENT = 'sighttrue-agent (+https://github.com/sighttrue/sighttrue)';
 
 /**
- * Curated, and every URL verified rather than guessed.
- *
- * Several of these redirect from the obvious hostname — Anthropic's feed lives
- * on status.claude.com, Fly's on status.flyio.net — and following a redirect
- * chain on every run to rediscover that each time is a request spent to learn
- * something already known.
+ * `statuspage` is Atlassian's product and its clones, which answer
+ * `/api/v2/incidents.json`. `heroku` is its own API and the only provider here
+ * that needs a second reader.
  */
-export const PROVIDERS: readonly { slug: string; name: string; feed: string }[] = [
-  { slug: 'openai', name: 'OpenAI', feed: 'https://status.openai.com/history.rss' },
-  { slug: 'anthropic', name: 'Anthropic', feed: 'https://status.claude.com/history.rss' },
-  { slug: 'github', name: 'GitHub', feed: 'https://www.githubstatus.com/history.rss' },
-  { slug: 'cloudflare', name: 'Cloudflare', feed: 'https://www.cloudflarestatus.com/history.rss' },
-  { slug: 'npm', name: 'npm', feed: 'https://status.npmjs.org/history.rss' },
-  { slug: 'vercel', name: 'Vercel', feed: 'https://www.vercel-status.com/history.rss' },
-  { slug: 'supabase', name: 'Supabase', feed: 'https://status.supabase.com/history.rss' },
-  { slug: 'digitalocean', name: 'DigitalOcean', feed: 'https://status.digitalocean.com/history.rss' },
-  { slug: 'fly-io', name: 'Fly.io', feed: 'https://status.flyio.net/history.rss' },
-  { slug: 'render', name: 'Render', feed: 'https://status.render.com/history.rss' },
-  { slug: 'netlify', name: 'Netlify', feed: 'https://www.netlifystatus.com/history.rss' },
-  { slug: 'upstash', name: 'Upstash', feed: 'https://status.upstash.com/history.rss' },
-  { slug: 'mongodb', name: 'MongoDB', feed: 'https://status.mongodb.com/history.rss' },
-  { slug: 'twilio', name: 'Twilio', feed: 'https://status.twilio.com/history.rss' },
-  { slug: 'discord', name: 'Discord', feed: 'https://discordstatus.com/history.rss' },
-  { slug: 'sentry', name: 'Sentry', feed: 'https://status.sentry.io/history.rss' },
-  { slug: 'groq', name: 'Groq', feed: 'https://groqstatus.com/history.rss' },
-  { slug: 'heroku', name: 'Heroku', feed: 'https://status.heroku.com/feed' },
-  { slug: 'datadog', name: 'Datadog', feed: 'https://status.datadoghq.com/history.rss' },
-  { slug: 'atlassian', name: 'Atlassian', feed: 'https://status.atlassian.com/history.rss' },
+export type ProviderKind = 'statuspage' | 'heroku';
+
+export interface Provider {
+  slug: string;
+  name: string;
+  /** Status site origin, no trailing slash. Every other URL derives from it. */
+  host: string;
+  kind: ProviderKind;
+}
+
+/**
+ * Curated, and every host verified rather than guessed.
+ *
+ * Several of these are not the obvious hostname — Anthropic's status site is
+ * status.claude.com, Fly's is status.flyio.net — and rediscovering that through
+ * a redirect chain on every run is a request spent to learn something already
+ * known.
+ */
+export const PROVIDERS: readonly Provider[] = [
+  { slug: 'openai', name: 'OpenAI', host: 'https://status.openai.com', kind: 'statuspage' },
+  { slug: 'anthropic', name: 'Anthropic', host: 'https://status.claude.com', kind: 'statuspage' },
+  { slug: 'github', name: 'GitHub', host: 'https://www.githubstatus.com', kind: 'statuspage' },
+  {
+    slug: 'cloudflare',
+    name: 'Cloudflare',
+    host: 'https://www.cloudflarestatus.com',
+    kind: 'statuspage',
+  },
+  { slug: 'npm', name: 'npm', host: 'https://status.npmjs.org', kind: 'statuspage' },
+  { slug: 'vercel', name: 'Vercel', host: 'https://www.vercel-status.com', kind: 'statuspage' },
+  { slug: 'supabase', name: 'Supabase', host: 'https://status.supabase.com', kind: 'statuspage' },
+  {
+    slug: 'digitalocean',
+    name: 'DigitalOcean',
+    host: 'https://status.digitalocean.com',
+    kind: 'statuspage',
+  },
+  { slug: 'fly-io', name: 'Fly.io', host: 'https://status.flyio.net', kind: 'statuspage' },
+  { slug: 'render', name: 'Render', host: 'https://status.render.com', kind: 'statuspage' },
+  { slug: 'netlify', name: 'Netlify', host: 'https://www.netlifystatus.com', kind: 'statuspage' },
+  { slug: 'upstash', name: 'Upstash', host: 'https://status.upstash.com', kind: 'statuspage' },
+  { slug: 'mongodb', name: 'MongoDB', host: 'https://status.mongodb.com', kind: 'statuspage' },
+  { slug: 'twilio', name: 'Twilio', host: 'https://status.twilio.com', kind: 'statuspage' },
+  { slug: 'discord', name: 'Discord', host: 'https://discordstatus.com', kind: 'statuspage' },
+  { slug: 'sentry', name: 'Sentry', host: 'https://status.sentry.io', kind: 'statuspage' },
+  { slug: 'groq', name: 'Groq', host: 'https://groqstatus.com', kind: 'statuspage' },
+  { slug: 'heroku', name: 'Heroku', host: 'https://status.heroku.com', kind: 'heroku' },
+  { slug: 'datadog', name: 'Datadog', host: 'https://status.datadoghq.com', kind: 'statuspage' },
+  { slug: 'atlassian', name: 'Atlassian', host: 'https://status.atlassian.com', kind: 'statuspage' },
 ];
 
 /**
- * Railway is absent, and Heroku nearly was.
+ * Railway is absent.
  *
- * Both answer `/history.rss` with 200 and a page of HTML, and both were dropped
- * on that basis — which was the wrong call for one of them. Heroku publishes a
- * perfectly good Atom feed at `/feed`; nobody looked past the URL that failed.
- * Railway's status page is Instatus rather than Statuspage and publishes only
- * its current state, with no incident history in any format, so that one stays
- * a genuine gap in coverage rather than a statement about the service.
+ * Its status page is Instatus rather than Statuspage and publishes only the
+ * current state, with no incident history in any format — so that one is a
+ * genuine gap in coverage rather than a statement about the service.
  */
 
-/** How long an incident stays on record here after the feed drops it. */
+/** How long an incident stays on record here after the provider drops it. */
 export const RETAIN_DAYS = 730;
 
 export const DELAY_MS = 150;
 
+export function apiUrl(provider: Provider): string {
+  return provider.kind === 'heroku'
+    ? `${provider.host}/api/v4/incidents`
+    : `${provider.host}/api/v2/incidents.json`;
+}
+
+/**
+ * Where a reader can check the claim.
+ *
+ * Built from the host rather than taken from the payload: two of these pages
+ * publish their own URL with a trailing slash, which produced ids containing
+ * `//incidents/` for as long as this read the feed.
+ */
+export function incidentUrl(provider: Provider, id: string): string {
+  return `${provider.host}/incidents/${id}`;
+}
+
 export interface IncidentClient {
-  feed(url: string): Promise<string | null>;
+  json(url: string): Promise<unknown | null>;
   requests(): number;
 }
 
@@ -80,107 +137,131 @@ export function createIncidentClient(): IncidentClient {
   let spent = 0;
   return {
     requests: () => spent,
-    async feed(url) {
+    async json(url) {
       spent += 1;
-      const response = await fetch(url, { headers: { 'user-agent': USER_AGENT } });
+      const response = await fetch(url, {
+        headers: { 'user-agent': USER_AGENT, accept: 'application/json' },
+      });
       if (!response.ok) return null;
-      return response.text();
+      try {
+        return await response.json();
+      } catch {
+        // A status page serving HTML from a JSON path is a status page having a
+        // bad day. Reads as unavailable, which keeps what is already on record.
+        return null;
+      }
     },
   };
 }
 
-/** The five entities XML requires. Statuspage escapes its HTML with these. */
-function unescapeXml(text: string): string {
-  return text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&');
+function text(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
 }
 
-function tag(item: string, name: string): string | null {
-  const match = new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`).exec(item);
-  if (match === null) return null;
-  const raw = (match[1] as string).replace(/^<!\[CDATA\[([\s\S]*?)\]\]>$/, '$1');
-  return unescapeXml(raw).replace(/\s+/g, ' ').trim();
+/** A timestamp only counts if it parses. A string that does not is not a date. */
+function stamp(value: unknown): string | null {
+  const raw = text(value);
+  if (raw === null) return null;
+  const at = new Date(raw);
+  return Number.isNaN(at.getTime()) ? null : at.toISOString();
 }
 
 /**
- * A regex reader rather than a parser, and the trade is stated.
+ * Statuspage and the pages that copy its API.
  *
- * Node ships no XML parser and this project ships no dependencies, so the
- * choice is between a hand-written parser and pattern-matching a format that is
- * machine-generated by one product. Statuspage emits every one of these feeds,
- * which makes the shape regular in a way general XML is not.
- *
- * What it gives up: a feed that stops being Statuspage yields no items, which
- * reads as "no incidents" rather than as an error. That is why a provider whose
- * feed parses to nothing keeps its previous rows instead of being emptied.
+ * `started_at` is absent from two of them — OpenAI and Groq run a
+ * Statuspage-compatible service that publishes `created_at` only. On those the
+ * incident's first update carries the same timestamp as `created_at`, so the
+ * record was opened when it began and the fallback is the start rather than a
+ * stand-in for it.
  */
-export function parseFeed(xml: string, provider: string): IncidentRow[] {
+export function parseStatuspage(payload: unknown, provider: Provider): IncidentRow[] {
+  const incidents = (payload as { incidents?: unknown })?.incidents;
+  if (!Array.isArray(incidents)) return [];
+
   const rows: IncidentRow[] = [];
 
-  // RSS `<item>` and Atom `<entry>` in one pass. Statuspage emits the first and
-  // Heroku the second, and the difference is three element names — worth
-  // reading rather than dropping a provider over.
-  const entries = [
-    ...xml.matchAll(/<item>([\s\S]*?)<\/item>/g),
-    ...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g),
-  ];
+  for (const entry of incidents) {
+    const record = entry as Record<string, unknown>;
 
-  for (const match of entries) {
-    const item = match[1] as string;
+    const id = text(record['id']);
+    const title = text(record['name']);
+    if (id === null || title === null) continue;
 
-    const title = tag(item, 'title');
-    // Atom puts the URL in an attribute rather than in the element's text.
-    const link = tag(item, 'link') ?? /<link[^>]*href="([^"]+)"/.exec(item)?.[1] ?? null;
-    const published = tag(item, 'pubDate') ?? tag(item, 'published');
-    if (title === null || published === null) continue;
+    const startedAt = stamp(record['started_at']) ?? stamp(record['created_at']);
+    const resolvedAt = stamp(record['resolved_at']);
+    const updatedAt = stamp(record['updated_at']) ?? resolvedAt ?? startedAt;
+    if (updatedAt === null) continue;
 
-    const at = new Date(published);
-    if (Number.isNaN(at.getTime())) continue;
-
-    // RSS calls it a guid and Atom calls it an id. Either is more stable than
-    // the link, which providers rewrite when they reorganise their status site
-    // — and a changed key would file the same incident a second time.
-    const id = tag(item, 'guid') ?? tag(item, 'id') ?? link;
-    if (id === null) continue;
+    // `postmortem` is resolved with a write-up published afterwards. Reading it
+    // as unresolved would report a closed incident as still running.
+    const status = text(record['status'])?.toLowerCase() ?? null;
+    const url = incidentUrl(provider, id);
 
     rows.push({
-      provider,
-      id,
+      provider: provider.slug,
+      id: url,
       title,
-      // WRONG FIELD. Verified 2026-08-08 against Statuspage's own JSON API for
-      // incident xvbzmkjbzh0x:
-      //
-      //   started_at   2026-07-22T08:34:31.874Z
-      //   resolved_at  2026-07-22T09:00:25.206Z
-      //   stored here  2026-07-22T09:00:25.000Z   <- matches resolved_at
-      //
-      // An RSS item's pubDate is the time of its most recent update, so for a
-      // closed incident this is when it ended, twenty-six minutes after it
-      // began. Every resolved row in the ledger carries a resolution time in a
-      // field called startedAt, and the site publishes it as an incident date.
-      //
-      // Nothing failed. The dates parse, sort sensibly and render fine — which
-      // is why it survived: a field holding the wrong thing never throws.
-      //
-      // The fix is not a rename. `https://<host>/api/v2/incidents.json` returns
-      // started_at and resolved_at as separate fields for every incident, so
-      // this collector should read that instead of the feed. That also delivers
-      // the resolvedAt needed to compute real uptime, which was the reason for
-      // looking at this at all.
-      startedAt: at.toISOString(),
-      // The provider's own word, taken from the update they labelled resolved.
-      // Absent, this stays false — which covers both "still going" and "never
-      // closed out", and this cannot tell those apart so it claims neither.
-      resolved: /<strong>\s*Resolved\s*<\/strong>/i.test(unescapeXml(item)),
-      url: link ?? '',
+      startedAt,
+      resolvedAt,
+      updatedAt,
+      resolved: status === 'resolved' || status === 'postmortem' || resolvedAt !== null,
+      url,
     });
   }
 
   return rows;
+}
+
+/**
+ * Heroku, which is not Statuspage.
+ *
+ * Two of its fields cannot be used. `resolved` is false on every record in the
+ * feed including the ones whose `state` is `resolved`, and `duration` disagrees
+ * with the timestamps by minutes to hours — so state is read for whether it
+ * ended, and `resolved_at` is taken only when Heroku publishes one. It often
+ * does not, which is a closed incident with no published end, and that is
+ * recorded as exactly that rather than filled in from the last update.
+ */
+export function parseHeroku(payload: unknown, provider: Provider): IncidentRow[] {
+  if (!Array.isArray(payload)) return [];
+
+  const rows: IncidentRow[] = [];
+
+  for (const entry of payload) {
+    const record = entry as Record<string, unknown>;
+
+    const rawId = record['id'];
+    const id = typeof rawId === 'number' ? String(rawId) : text(rawId);
+    const title = text(record['title']);
+    if (id === null || title === null) continue;
+
+    const startedAt = stamp(record['created_at']);
+    const resolvedAt = stamp(record['resolved_at']);
+    const updatedAt = stamp(record['updated_at']) ?? resolvedAt ?? startedAt;
+    if (updatedAt === null) continue;
+
+    const url = text(record['full_url']) ?? incidentUrl(provider, id);
+
+    rows.push({
+      provider: provider.slug,
+      id: url,
+      title,
+      startedAt,
+      resolvedAt,
+      updatedAt,
+      resolved: text(record['state'])?.toLowerCase() === 'resolved',
+      url,
+    });
+  }
+
+  return rows;
+}
+
+export function parseIncidents(payload: unknown, provider: Provider): IncidentRow[] {
+  return provider.kind === 'heroku'
+    ? parseHeroku(payload, provider)
+    : parseStatuspage(payload, provider);
 }
 
 export interface IncidentCollectionResult {
@@ -193,7 +274,7 @@ export interface IncidentCollectionOptions {
   /** `YYYY-MM-DD` UTC. Anything older than the retention window is dropped. */
   today: string;
   client?: IncidentClient;
-  providers?: readonly { slug: string; name: string; feed: string }[];
+  providers?: readonly Provider[];
   delayMs?: number;
   retainDays?: number;
 }
@@ -209,16 +290,17 @@ export async function collectIncidents(
 
   const cutoff = Date.parse(`${options.today}T00:00:00Z`) - retain * 86_400_000;
 
-  // Keyed by provider and id, so re-reading a feed updates a row rather than
-  // duplicating it, and a resolution recorded later replaces the open version.
+  // Keyed by provider and id, so re-reading a provider updates a row rather
+  // than duplicating it, and a resolution recorded later replaces the open
+  // version.
   const known = new Map(previous.map((row) => [`${row.provider} ${row.id}`, row]));
 
   for (const [index, provider] of providers.entries()) {
     if (index > 0) await sleep(options.delayMs ?? DELAY_MS);
 
-    let xml: string | null;
+    let payload: unknown;
     try {
-      xml = await client.feed(provider.feed);
+      payload = await client.json(apiUrl(provider));
     } catch (error) {
       errors.push(
         `incidents ${provider.slug}: ${error instanceof Error ? error.message : String(error)}`,
@@ -226,24 +308,27 @@ export async function collectIncidents(
       continue;
     }
 
-    if (xml === null) {
-      errors.push(`incidents ${provider.slug}: feed unavailable`);
+    if (payload === null) {
+      errors.push(`incidents ${provider.slug}: api unavailable`);
       continue;
     }
 
-    const parsed = parseFeed(xml, provider.slug);
+    const parsed = parseIncidents(payload, provider);
     if (parsed.length === 0) {
-      // Either a genuinely spotless provider or a feed that stopped being the
-      // shape this reads. Both keep what is already on record; only one of them
-      // is worth an error, and this cannot tell which.
-      errors.push(`incidents ${provider.slug}: no items parsed`);
+      // Either a genuinely spotless provider or a payload that stopped being
+      // the shape this reads. Both keep what is already on record; only one of
+      // them is worth an error, and this cannot tell which.
+      errors.push(`incidents ${provider.slug}: no incidents parsed`);
       continue;
     }
 
     for (const row of parsed) known.set(`${row.provider} ${row.id}`, row);
   }
 
-  const rows = [...known.values()].filter((row) => Date.parse(row.startedAt) >= cutoff);
+  const rows = [...known.values()].filter((row) => {
+    const at = incidentAt(row);
+    return at !== null && Date.parse(at) >= cutoff;
+  });
 
   return { rows, errors, requests: client.requests() };
 }

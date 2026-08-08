@@ -774,6 +774,19 @@ function timeOf(iso: string): string {
   return esc(iso.slice(11, 16));
 }
 
+/**
+ * A published duration, at the precision it was published to.
+ *
+ * Minutes below two hours, hours below two days, days above that. Rounding a
+ * 26-minute incident to "0h" and a three-day one to "72h" both discard
+ * something a reader came here for.
+ */
+function humanMinutes(minutes: number): string {
+  if (minutes < 120) return `${minutes}m`;
+  if (minutes < 2880) return `${Math.round(minutes / 60)}h`;
+  return `${Math.round(minutes / 1440)}d`;
+}
+
 function metric(label: string, value: string): string {
   return `<div class="metric"><span class="label">${esc(label)}</span><span class="metric-value num">${esc(value)}</span></div>`;
 }
@@ -1707,14 +1720,15 @@ export function renderIncidents(index: IndexBundle, meta: MetaRecord): string {
   const table =
     busiest.length === 0
       ? `<p class="notice">No incident has been announced by any of the ${incidents.providers}
-      providers watched here in the last ${incidents.windowDays} days. That is what the feeds
-      said, and it is a reading rather than a claim that nothing broke.</p>`
+      providers watched here in the last ${incidents.windowDays} days. That is what they
+      published, and it is a reading rather than a claim that nothing broke.</p>`
       : `<div class="wrap"><table class="readout">
   <caption class="label">Announced incidents, last ${incidents.windowDays} days</caption>
   <thead><tr>
     <th scope="col">Provider</th>
     <th scope="col" class="n">Incidents</th>
     <th scope="col" class="n">Marked resolved</th>
+    <th scope="col" class="n">Median length</th>
     <th scope="col">Most recent</th>
   </tr></thead>
   <tbody>${busiest
@@ -1722,7 +1736,14 @@ export function renderIncidents(index: IndexBundle, meta: MetaRecord): string {
       (row) => `<tr>
       <td>${esc(row.name)}</td>
       <td class="n"><span class="big num">${row.count}</span></td>
-      <td class="n num">${row.resolved}</td>
+      <td class="n num">${row.resolved}${
+        row.withStatus === row.count ? '' : ` <span class="label">of ${row.withStatus}</span>`
+      }</td>
+      <td class="n num">${
+        row.medianMinutes === null
+          ? '<span class="dim">—</span>'
+          : `${humanMinutes(row.medianMinutes)} <span class="label">of ${row.timed}</span>`
+      }</td>
       <td>${row.latestTitle === null ? '<span class="dim">—</span>' : esc(row.latestTitle)}
         ${row.latestAt === null ? '' : `<span class="label">${esc(row.latestAt.slice(0, 10))}</span>`}</td>
     </tr>`,
@@ -1742,16 +1763,22 @@ export function renderIncidents(index: IndexBundle, meta: MetaRecord): string {
       : `<div class="wrap"><table class="readout">
   <caption class="label">Newest first, across every provider</caption>
   <thead><tr>
-    <th scope="col">Date</th>
+    <th scope="col">Began</th>
     <th scope="col">Provider</th>
     <th scope="col">What they said it was</th>
+    <th scope="col" class="n">Length</th>
   </tr></thead>
   <tbody>${incidents.recent
     .map(
       (row) => `<tr>
-      <td class="dim num">${esc(row.at.slice(0, 10))}</td>
+      <td class="dim num">${esc(row.at.slice(0, 10))}${
+        row.atKind === 'started' ? '' : ' <span class="label">last update</span>'
+      }</td>
       <td>${esc(row.name)}</td>
       <td>${row.url === '' ? esc(row.title) : `<a href="${esc(row.url)}">${esc(row.title)}</a>`}</td>
+      <td class="n num">${
+        row.minutes === null ? '<span class="dim">—</span>' : humanMinutes(row.minutes)
+      }</td>
     </tr>`,
     )
     .join('')}</tbody>
@@ -1760,7 +1787,7 @@ export function renderIncidents(index: IndexBundle, meta: MetaRecord): string {
   return layout({
     title: 'Status history — who goes down, and how often',
     description:
-      'A dated record of announced incidents across twenty providers developers depend on, kept after their own status feeds stop carrying it.',
+      'A dated record of announced incidents across twenty providers developers depend on, kept after their own status pages stop carrying it.',
     current: '/incidents',
     path: '/incidents',
     index,
@@ -1768,13 +1795,17 @@ export function renderIncidents(index: IndexBundle, meta: MetaRecord): string {
     body: `<section class="hero">
   <h1 class="hero-thesis">Every status page forgets.</h1>
   <p class="hero-sub">
-    Status feeds carry a few months and then drop the rest. Ask how often a provider went down
-    last year and nobody has the record, so the answer people use is whatever they remember about
-    the last bad week. These are their own announcements, kept.
+    A status page carries its last fifty incidents and drops the rest. Ask how often a provider
+    went down last year and nobody has the record, so the answer people use is whatever they
+    remember about the last bad week. These are their own announcements, kept — with the start
+    time, the resolution time, and nothing added.
   </p>
   <div class="hero-figures">
     <div class="figure"><span class="figure-value num">${incidents.providers}</span><span class="label">Providers watched</span></div>
     <div class="figure"><span class="figure-value num">${incidents.total}</span><span class="label">Incidents in ${incidents.windowDays} days</span></div>
+    <div class="figure"><span class="figure-value num">${
+      incidents.medianMinutes === null ? '—' : humanMinutes(incidents.medianMinutes)
+    }</span><span class="label">Median announced length</span></div>
     <div class="figure"><span class="figure-value num">${incidents.observedDays}</span><span class="label">Days on record here</span></div>
   </div>
 </section>
@@ -1783,10 +1814,15 @@ ${band(
   'By provider',
   `${table}
   ${silent}`,
-  'A count is how often a provider announced something, not how often it broke. A company that publishes every degradation will out-count one that publishes nothing, so this ranks disclosure as much as reliability. Never read a low number as a good one.',
+  'A count is how often a provider announced something, not how often it broke. A company that publishes every degradation will out-count one that publishes nothing, so this ranks disclosure as much as reliability. Never read a low number as a good one. Where the resolved figure carries a second number, the difference is rows kept from before this read the providers’ own JSON, which have no status on record either way.',
 )}
 
-${band('Recently', recent, 'Titles are the provider’s own wording, linking to their own write-up.')}
+${band(
+  'Recently',
+  recent,
+  'Titles are the provider’s own wording, linking to their own write-up. Length is the gap between the start and the resolution they published, on the ' +
+    `${incidents.timed} of ${incidents.total} incidents in this window where they published both — it is not a measure of how long anything was broken.`,
+)}
 
 ${hiringHtml(index)}`,
   });
