@@ -19,7 +19,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "sighttrue": "./sighttrue.mjs"
+    "sighttrue": "sighttrue.mjs"
   },
   "files": [
     "sighttrue.mjs",
