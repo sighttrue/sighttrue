@@ -18,7 +18,7 @@
 {"id":"apache/hbase","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"apache/hive","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"apache/hudi","category":"database","added":"2026-08-04","active":true,"packages":[]}
-{"id":"apache/iceberg","category":"database","added":"2026-08-04","active":true,"packages":["pypi:apache-iceberg"]}
+{"id":"apache/iceberg","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"apache/kafka","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"apache/pinot","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"apache/pulsar","category":"database","added":"2026-08-04","active":true,"packages":[]}
@@ -33,7 +33,7 @@
 {"id":"AUTOMATIC1111/stable-diffusion-webui","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
 {"id":"axolotl-ai-cloud/axolotl","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:axolotl"]}
 {"id":"AztecProtocol/aztec-packages","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
-{"id":"babel/babel","category":"devtool","added":"2026-08-04","active":true,"packages":["npm:babel"]}
+{"id":"babel/babel","category":"devtool","added":"2026-08-04","active":true,"packages":["npm:@babel/core"]}
 {"id":"balancer/balancer-v2-monorepo","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"base-org/node","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"beego/beego","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
@@ -89,7 +89,7 @@
 {"id":"duckdb/duckdb","category":"database","added":"2026-08-04","active":true,"packages":["brew:duckdb"]}
 {"id":"duckdb/duckdb-wasm","category":"database","added":"2026-08-04","active":true,"packages":["npm:@duckdb/duckdb-wasm"]}
 {"id":"elastic/elasticsearch","category":"database","added":"2026-08-04","active":true,"packages":[]}
-{"id":"elastic/kibana","category":"devtool","added":"2026-08-04","active":true,"packages":["npm:kibana"]}
+{"id":"elastic/kibana","category":"devtool","added":"2026-08-04","active":true,"packages":[]}
 {"id":"ElementsProject/lightning","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["brew:core-lightning"]}
 {"id":"EleutherAI/gpt-neox","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
 {"id":"EleutherAI/lm-evaluation-harness","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
@@ -121,7 +121,7 @@
 {"id":"facebook/rocksdb","category":"database","added":"2026-08-04","active":true,"packages":["brew:rocksdb"]}
 {"id":"facebookresearch/detectron2","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
 {"id":"facebookresearch/fairseq","category":"ai-ml","added":"2026-08-04","active":false,"packages":[]}
-{"id":"facebookresearch/faiss","category":"ai-ml","added":"2026-08-04","active":true,"packages":["brew:faiss","pypi:faiss"]}
+{"id":"facebookresearch/faiss","category":"ai-ml","added":"2026-08-04","active":true,"packages":["brew:faiss","pypi:faiss-cpu"]}
 {"id":"facebookresearch/segment-anything","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
 {"id":"fastapi/fastapi","category":"web-framework","added":"2026-08-04","active":true,"packages":["pypi:fastapi"]}
 {"id":"fastify/fastify","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:fastify"]}
@@ -146,7 +146,7 @@
 {"id":"graphprotocol/graph-node","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"guidance-ai/guidance","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:guidance"]}
 {"id":"hanami/hanami","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
-{"id":"hapijs/hapi","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:hapi"]}
+{"id":"hapijs/hapi","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:@hapi/hapi"]}
 {"id":"haproxy/haproxy","category":"devtool","added":"2026-08-04","active":true,"packages":[]}
 {"id":"hashicorp/consul","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"hashicorp/nomad","category":"devtool","added":"2026-08-04","active":true,"packages":[]}
@@ -166,7 +166,7 @@
 {"id":"huggingface/diffusers","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:diffusers"]}
 {"id":"huggingface/peft","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:peft"]}
 {"id":"huggingface/text-generation-inference","category":"ai-ml","added":"2026-08-04","active":false,"packages":[]}
-{"id":"huggingface/tokenizers","category":"ai-ml","added":"2026-08-04","active":true,"packages":["npm:tokenizers"]}
+{"id":"huggingface/tokenizers","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:tokenizers"]}
 {"id":"huggingface/transformers","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:transformers"]}
 {"id":"huggingface/trl","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:trl"]}
 {"id":"hyperledger/besu","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
@@ -190,7 +190,7 @@
 {"id":"keras-team/keras","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:keras"]}
 {"id":"knex/knex","category":"database","added":"2026-08-04","active":true,"packages":["npm:knex"]}
 {"id":"koajs/koa","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:koa"]}
-{"id":"kubernetes-sigs/kustomize","category":"devtool","added":"2026-08-04","active":true,"packages":["brew:kustomize","npm:kustomize"]}
+{"id":"kubernetes-sigs/kustomize","category":"devtool","added":"2026-08-04","active":true,"packages":["brew:kustomize"]}
 {"id":"kubernetes/kubernetes","category":"devtool","added":"2026-08-04","active":true,"packages":["brew:kubernetes-cli"]}
 {"id":"kysely-org/kysely","category":"database","added":"2026-08-04","active":true,"packages":["npm:kysely"]}
 {"id":"labstack/echo","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
@@ -203,7 +203,7 @@
 {"id":"libp2p/go-libp2p","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"Lightning-AI/litgpt","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:litgpt"]}
 {"id":"Lightning-AI/pytorch-lightning","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:pytorch-lightning"]}
-{"id":"lightningnetwork/lnd","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["npm:lnd"]}
+{"id":"lightningnetwork/lnd","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"lit/lit","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:lit"]}
 {"id":"makerdao/dss","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"MariaDB/server","category":"database","added":"2026-08-04","active":true,"packages":[]}
@@ -217,7 +217,7 @@
 {"id":"micronaut-projects/micronaut-core","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
 {"id":"microsoft/autogen","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
 {"id":"microsoft/DeepSpeed","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
-{"id":"microsoft/onnxruntime","category":"ai-ml","added":"2026-08-04","active":true,"packages":["brew:onnxruntime","npm:onnxruntime"]}
+{"id":"microsoft/onnxruntime","category":"ai-ml","added":"2026-08-04","active":true,"packages":["brew:onnxruntime","pypi:onnxruntime"]}
 {"id":"microsoft/playwright","category":"devtool","added":"2026-08-04","active":true,"packages":["npm:playwright"]}
 {"id":"microsoft/pyright","category":"devtool","added":"2026-08-04","active":true,"packages":["brew:pyright","npm:pyright"]}
 {"id":"microsoft/TypeScript","category":"devtool","added":"2026-08-04","active":true,"packages":["npm:typescript"]}
@@ -262,7 +262,7 @@
 {"id":"openai/whisper","category":"ai-ml","added":"2026-08-04","active":true,"packages":["brew:openai-whisper","pypi:openai-whisper"]}
 {"id":"opensearch-project/OpenSearch","category":"database","added":"2026-08-04","active":true,"packages":["brew:opensearch"]}
 {"id":"opentofu/opentofu","category":"devtool","added":"2026-08-04","active":true,"packages":["brew:opentofu"]}
-{"id":"OpenZeppelin/openzeppelin-contracts","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["npm:openzeppelin-contracts"]}
+{"id":"OpenZeppelin/openzeppelin-contracts","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["npm:@openzeppelin/contracts"]}
 {"id":"OpenZeppelin/openzeppelin-contracts-upgradeable","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"optuna/optuna","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:optuna"]}
 {"id":"oven-sh/bun","category":"web-framework","added":"2026-08-04","active":true,"packages":["brew:bun","npm:bun"]}
@@ -297,13 +297,13 @@
 {"id":"pytorch/audio","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
 {"id":"pytorch/pytorch","category":"ai-ml","added":"2026-08-04","active":true,"packages":["brew:pytorch"]}
 {"id":"pytorch/vision","category":"ai-ml","added":"2026-08-04","active":true,"packages":["brew:torchvision"]}
-{"id":"qdrant/qdrant","category":"database","added":"2026-08-04","active":true,"packages":["crates:qdrant"]}
+{"id":"qdrant/qdrant","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"quarkusio/quarkus","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
 {"id":"questdb/questdb","category":"database","added":"2026-08-04","active":true,"packages":["brew:questdb"]}
 {"id":"QwenLM/Qwen","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
 {"id":"rabbitmq/rabbitmq-server","category":"database","added":"2026-08-04","active":true,"packages":["brew:rabbitmq"]}
 {"id":"radix-ui/primitives","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
-{"id":"rails/rails","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:rails"]}
+{"id":"rails/rails","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
 {"id":"rainbow-me/rainbowkit","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["npm:@rainbow-me/rainbowkit"]}
 {"id":"ray-project/ray","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:ray"]}
 {"id":"redis/redis","category":"database","added":"2026-08-04","active":true,"packages":[]}
@@ -350,7 +350,7 @@
 {"id":"symfony/symfony","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
 {"id":"tailwindlabs/tailwindcss","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:tailwindcss"]}
 {"id":"TanStack/query","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
-{"id":"TanStack/router","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:@tanstack/router"]}
+{"id":"TanStack/router","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:@tanstack/react-router"]}
 {"id":"TanStack/table","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
 {"id":"tendermint/tendermint","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["brew:tendermint"]}
 {"id":"tensorflow/tensorflow","category":"ai-ml","added":"2026-08-04","active":true,"packages":["brew:libtensorflow","pypi:tensorflow"]}
@@ -386,7 +386,7 @@
 {"id":"vllm-project/vllm","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:vllm"]}
 {"id":"vuejs/core","category":"web-framework","added":"2026-08-04","active":true,"packages":[]}
 {"id":"vuejs/pinia","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:pinia"]}
-{"id":"WalletConnect/walletconnect-monorepo","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["npm:walletconnect-monorepo"]}
+{"id":"WalletConnect/walletconnect-monorepo","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["npm:@walletconnect/sign-client"]}
 {"id":"wandb/wandb","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:wandb"]}
 {"id":"weaviate/weaviate","category":"database","added":"2026-08-04","active":true,"packages":["brew:weaviate"]}
 {"id":"web3/web3.js","category":"crypto-web3","added":"2026-08-04","active":false,"packages":[]}
