@@ -51,6 +51,20 @@ things this project measures.
 The Action fails a build; the App only reports. Both read the same published
 bundle, so they cannot disagree.
 
+## An SBOM you are allowed to hand over
+
+[/stack](https://sighttrue.com/stack) exports the readout as a CycloneDX 1.6
+document, with each dependency's advisory count, scorecard, licence, publish
+date and bus factor attached as properties. Built in the browser from the
+pasted manifest, like everything else on that page — nothing is uploaded, and
+there is no endpoint to send a manifest to.
+
+It states no versions. A manifest declares `^1.6.0`; it does not say what was
+installed, and it says nothing about the transitive tree underneath. The
+document says both of those things in its own metadata rather than leaving a
+reader to notice, because an SBOM that guessed would be worse than none: a
+compliance artefact asserting something nobody resolved.
+
 ## Suggest something to watch
 
 The watchlist is curated and partial, and it was chosen by hand with no method

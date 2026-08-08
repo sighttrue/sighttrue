@@ -38,7 +38,14 @@ if (stackForm) {
     try {
       const pkg = JSON.parse(text);
       for (const group of ['dependencies', 'devDependencies', 'peerDependencies']) {
-        for (const name of Object.keys(pkg[group] || {})) found.set('npm:' + name, name);
+        const block = pkg[group] || {};
+        // The declared range is kept as well as the name. It is not a version —
+        // that is the whole point of the note in the SBOM — but it is what the
+        // manifest actually says, and reporting a range as a range is honest
+        // where reporting it as a version would not be.
+        for (const name of Object.keys(block)) {
+          found.set('npm:' + name, { shown: name, range: String(block[name] || '') });
+        }
       }
       if (found.size) return found;
     } catch { /* not package.json — fall through to the line formats */ }
@@ -48,12 +55,14 @@ if (stackForm) {
       if (!line || line.startsWith('[') || line.startsWith('-')) continue;
 
       // requirements.txt: name, name==1.2, name>=1.2
-      const py = /^([A-Za-z0-9._-]+)\\s*(?:[=<>!~]|$)/.exec(line);
+      const py = /^([A-Za-z0-9._-]+)\\s*([=<>!~].*)?$/.exec(line);
       // Cargo.toml / go.mod: name = "1.2"  |  name v1.2
-      const other = /^([A-Za-z0-9._\\/-]+)\\s*=\\s*[{"]/.exec(line);
+      const other = /^([A-Za-z0-9._\\/-]+)\\s*=\\s*[{"]([^"}]*)/.exec(line);
 
-      if (other) found.set('crates:' + other[1], other[1]);
-      else if (py) found.set('pypi:' + py[1].toLowerCase(), py[1]);
+      if (other) found.set('crates:' + other[1], { shown: other[1], range: (other[2] || '').trim() });
+      else if (py) {
+        found.set('pypi:' + py[1].toLowerCase(), { shown: py[1], range: (py[2] || '').trim() });
+      }
     }
 
     return found;
@@ -116,7 +125,7 @@ if (stackForm) {
     catch { out.innerHTML = '<p class="notice">The index could not be loaded.</p>'; return; }
 
     const wanted = names(text);
-    share([...wanted.values()]);
+    share([...wanted.values()].map((declared) => declared.shown));
 
     // Advisories for everything, not only for what this project happens to
     // track. OSV answers 150 packages in one request and allows the call from a
@@ -127,13 +136,15 @@ if (stackForm) {
     try { osv = await advisories(wanted); } catch { /* leave it unknown, never zero */ }
 
     const rows = [];
-    for (const [key, shown] of wanted) {
+    for (const [key, declared] of wanted) {
+      const shown = declared.shown;
       const tracked = data.packages[key];
       // How many watched projects depend on this. Case-folded to match the
       // index: PyPI treats PyYAML and pyyaml as one package.
       const also = data.dependents?.[shown.toLowerCase().replace(/_/g, '-')] ?? null;
       rows.push({
         name: shown,
+        range: declared.range,
         // The index key, which is also the address of that package's page. The
         // pasted spelling is not: PyYAML and pyyaml are the same package and
         // only one of the two has a page.
@@ -242,10 +253,46 @@ if (stackForm) {
         '</tr>';
       }).join('') +
       '</tbody></table></div>' +
+      // The one thing on this site somebody is obliged to have: EO 14028 asks
+      // federal suppliers for an SBOM, and the EU Cyber Resilience Act asks
+      // everybody from 2027. Built from what is already on screen, in the
+      // browser, so producing it does not mean uploading a manifest.
+      '<p class="repo-facts"><button class="label" type="button" id="stack-sbom">' +
+      'Download a CycloneDX SBOM</button>' +
+      '<span class="label">Direct dependencies, no versions — a manifest declares ranges. ' +
+      'The readings ride along as properties.</span></p>' +
       '<p class="basis label">Advisories from OSV for every dependency. Scorecard, licence and ' +
       'last push for the ' + tracked.length + ' on this watchlist. Also used by counts how many ' +
       'tracked projects depend on it — high means infrastructure, blank means nothing tracked here ' +
       'uses it. Advisory counts are all time. <a href="/method">How</a></p>';
+
+    const button = document.getElementById('stack-sbom');
+    if (button) button.addEventListener('click', () => download(rows));
+  }
+
+  /**
+   * The file, assembled and handed over without a round trip.
+   *
+   * A blob rather than a link to an endpoint: the whole page promises the
+   * manifest does not leave the browser, and an SBOM route would break that
+   * promise at exactly the moment somebody is most careful about it.
+   */
+  function download(rows) {
+    const serial = self.crypto && self.crypto.randomUUID
+      ? 'urn:uuid:' + self.crypto.randomUUID()
+      : null;
+    const doc = sighttrueSbom(rows, { origin: location.origin, serialNumber: serial });
+    const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'sighttrue-sbom.cdx.json';
+    anchor.click();
+
+    // Revoked on the next turn of the event loop. Held forever, every download
+    // leaks the whole document until the tab closes.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   // Built rather than written inline: the build's dead-link guard scans emitted

@@ -2,6 +2,7 @@ import { COMPARISON, isCapped, readingsOf, SIGNAL_LABEL } from './vocabulary.ts'
 import { REACHABLE_SHARE } from '../lib/calibration.ts';
 import { MIN_INSTALLS } from '../lib/divergence.ts';
 import { COMPARE_SCRIPT } from './compare.ts';
+import { SBOM_SCRIPT } from './sbom-script.ts';
 import { STACK_SCRIPT } from './stack.ts';
 import { ACCOUNT_SCRIPT, CHROME_ACCOUNT_SCRIPT } from './account-script.ts';
 import { DOORS, doorFor, READINGS } from './readings.ts';
@@ -599,6 +600,8 @@ export const SITE_SCRIPT = [
   COPY_SCRIPT,
   ASK_SCRIPT,
   COMPARE_SCRIPT,
+  // Before the stack block, which calls the function it defines.
+  SBOM_SCRIPT,
   STACK_SCRIPT,
   // Before the watchlist block, which waits on the promise this one starts.
   CHROME_ACCOUNT_SCRIPT,
@@ -1626,7 +1629,7 @@ ${band(
   <div id="stack-out" hidden></div>
   <noscript><p class="notice">This runs entirely in the browser, so it needs scripting. The index it
   reads is at <a href="/data/stack-index.json">/data/stack-index.json</a>.</p></noscript>`,
-  'Advisories are checked for every dependency. Scorecard and licence only for the ones tracked here.',
+  'Advisories are checked for every dependency. Scorecard and licence only for the ones tracked here. The readout can be downloaded as a CycloneDX SBOM, built in the browser like everything else on this page.',
 )}
 
 ${watchlistBands()}
