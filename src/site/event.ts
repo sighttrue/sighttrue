@@ -30,6 +30,8 @@ const KIND_LABEL: Record<EventRecord['kind'], string> = {
   'model-price': 'Model price change',
   'model-withdrawn': 'Model withdrawn',
   'eol-approaching': 'End of life',
+  'package-withdrawn': 'Package withdrawn by its publisher',
+  'package-woke': 'Published after a long silence',
   correction: 'Correction',
 };
 

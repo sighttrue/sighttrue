@@ -71,6 +71,23 @@ export type EventKind =
    * Python 3.9 went unsupported when an auditor tells them.
    */
   | 'eol-approaching'
+  /**
+   * The publisher has told people not to install a package.
+   *
+   * npm calls it deprecated, PyPI and crates.io call it yanked, and all three
+   * publish it in the document this project already reads for the publish date.
+   * A field diff with no false-positive mode, like `licence`.
+   */
+  | 'package-withdrawn'
+  /**
+   * A package that had been quiet for over a year published.
+   *
+   * The event-stream shape, and equally the shape of a maintainer returning to
+   * a finished library. The record says how long the gap was and stops there —
+   * nothing here makes it suspicious, and a page that implied otherwise would
+   * be accusing somebody of something on the evidence of a release date.
+   */
+  | 'package-woke'
   /** Supersedes an earlier event that turned out to be wrong. Never a delete. */
   | 'correction';
 

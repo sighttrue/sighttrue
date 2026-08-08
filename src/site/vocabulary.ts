@@ -22,6 +22,8 @@ export const SIGNAL_LABEL: Record<EventKind, string> = {
   'model-price': 'Model price',
   'model-withdrawn': 'Model withdrawn',
   'eol-approaching': 'End of life',
+  'package-withdrawn': 'Package withdrawn',
+  'package-woke': 'Published after a long silence',
   correction: 'Correction',
 };
 

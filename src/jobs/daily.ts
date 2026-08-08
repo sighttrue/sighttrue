@@ -498,12 +498,18 @@ export async function runDaily(options: DailyOptions = {}): Promise<MetaRecord> 
       const held = readStaleness();
       const staleness = await collectStaleness(tracked, held, {
         now: nowIso,
+        today,
+        seen: new Set(readEvents(month).map((event) => event.id)),
         ...(options.collectors?.staleness ? { client: options.collectors.staleness } : {}),
         ...(options.delayMs === undefined ? {} : { delayMs: options.delayMs }),
       });
       const keptStaleness = keepOrCarry('staleness', staleness.rows, held);
       writeStaleness(keptStaleness.rows);
       if (keptStaleness.error !== null) errors.push(keptStaleness.error);
+      // Appended here, not through `events`. See the models block above for why
+      // doing both crashes the run.
+      if (staleness.events.length > 0) appendEvents(month, staleness.events);
+      appendedByCollectors += staleness.events.length;
       errors.push(...staleness.errors);
     } catch (error) {
       errors.push(`staleness: ${error instanceof Error ? error.message : String(error)}`);

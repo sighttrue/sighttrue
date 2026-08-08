@@ -46,6 +46,14 @@ export interface PackagePageData {
   /** When the registry says the newest version was published. */
   lastPublish: string | null;
   version: string | null;
+  /** The publisher's own withdrawal notice — npm deprecated, PyPI yanked. */
+  withdrawn: string | null;
+  /** Install-time hooks npm publishes. Null where a registry has no such field. */
+  installScripts: string | null;
+  /** Bytes the published artefact unpacks to. */
+  bytes: number | null;
+  /** Where the maintainers ask to be funded. */
+  funding: string | null;
   /** Contributors accounting for half the commits, and the top share. */
   busFactor: number | null;
   topShare: number | null;
@@ -88,6 +96,13 @@ export function elapsed(days: number): string {
   if (days < 60) return `${days} days ago`;
   if (days < 730) return `${Math.round(days / 30)} months ago`;
   return `${(days / 365).toFixed(1)} years ago`;
+}
+
+/** Bytes at the precision the number deserves, never rounded to nothing. */
+function humanBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1_048_576) return `${Math.round(bytes / 1024)} kB`;
+  return `${(bytes / 1_048_576).toFixed(1)} MB`;
 }
 
 function metric(label: string, value: string, note = ''): string {
@@ -245,12 +260,40 @@ export function renderPackagePage(
         : metric('Advisories', String(data.advisories), 'OSV, all time, all versions')
     }
     ${metric('Licence', data.license ?? 'unidentified', 'as GitHub reports it')}
+    ${
+      data.bytes === null
+        ? ''
+        : metric('Install weight', humanBytes(data.bytes), `${registryName}, unpacked`)
+    }
+    ${
+      data.installScripts === null
+        ? ''
+        : metric('Runs on install', data.installScripts, 'on the installing machine')
+    }
     ${metric(
       'Depended on by',
       String(data.dependents),
       `of the ${index.watchlist.active} repositories watched here`,
     )}
   </div>`;
+
+  // The publisher's own instruction not to install this, in their words. First
+  // on the page, above every other reading, because nothing else here matters
+  // if the answer is "they have told you to stop".
+  const withdrawn =
+    data.withdrawn === null
+      ? ''
+      : `<div class="notice notice-alert"><strong>${esc(registryName)} marks this ${
+          data.registry === 'npm' ? 'deprecated' : 'yanked'
+        }</strong>
+      ${esc(data.withdrawn)} — the publisher's own notice, republished unchanged.</div>`;
+
+  const funding =
+    data.funding === null
+      ? ''
+      : `<p class="band-note">The maintainers ask to be funded at
+        <a href="${esc(data.funding)}">${esc(data.funding)}</a>, which ${esc(registryName)} carries
+        in the package's own metadata.</p>`;
 
   const archived = data.archived
     ? `<div class="notice notice-alert"><strong>The repository is archived</strong>
@@ -280,10 +323,12 @@ export function renderPackagePage(
     <a class="label" href="https://github.com/${esc(data.repo)}">View on GitHub</a>
   </div>
 </section>
+${withdrawn}
 ${archived}
 ${readings}
 ${trend(data.samples, data.window)}
 ${divergence}
+${funding}
 
 ${band(
   'What these numbers are, and are not',
@@ -305,6 +350,12 @@ ${band(
     <p><strong>The bus factor</strong> is how many contributors account for half of all commits,
     read from the commit history. One person doing the work is a fact about a project, not a
     fault in it.</p>
+    <p><strong>Runs on install</strong> names the scripts npm executes on the machine doing the
+    installing. Naming them is a fact about the package. It is not a claim that any of them does
+    anything untoward — most download a platform binary, which is why the package works at all —
+    and this project does not read what they contain.</p>
+    <p><strong>Install weight</strong> is the size of the published artefact as the registry
+    reports it, not the size of everything it pulls in with it.</p>
     <p><strong>Depended on by</strong> counts only the ${index.watchlist.active} repositories on
     this watchlist, which is curated and partial. It is a floor, not a total.</p>
   </div>`,

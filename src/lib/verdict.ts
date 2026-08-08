@@ -120,6 +120,10 @@ export interface VerdictEntry {
   pushedAt: string | null;
   lastPublish: string | null;
   version: string | null;
+  withdrawn: string | null;
+  installScripts: string | null;
+  bytes: number | null;
+  funding: string | null;
   busFactor: number | null;
   topShare: number | null;
 }
@@ -262,6 +266,35 @@ export function buildVerdict(input: VerdictInput): Verdict {
       daysAgo: daysSince(entry.lastPublish, today),
       source: registryUrl(id.registry, id.name),
       note: 'The registry’s own date for the newest version. A package with no recent publish is not necessarily abandoned — a finished library is finished.',
+    },
+    // The publisher's own instruction not to install this. First thing an agent
+    // should read and the one reading here that is an instruction rather than a
+    // measurement — theirs, not this project's.
+    withdrawn: {
+      value: entry.withdrawn,
+      source: registryUrl(id.registry, id.name),
+      note:
+        entry.withdrawn === null
+          ? `${id.registry === 'npm' ? 'npm' : 'The registry'} does not mark this package withdrawn.`
+          : 'The publisher’s own notice, republished unchanged. npm calls it deprecated, PyPI and crates.io call it yanked.',
+    },
+    installScripts: {
+      value: entry.installScripts,
+      source: registryUrl(id.registry, id.name),
+      note:
+        id.registry === 'npm'
+          ? 'Scripts npm runs on the installing machine. Naming them is a fact about the package, not a claim that any of them is malicious — most are not.'
+          : 'This registry publishes no install-hook field, so null here is unpublished rather than absent.',
+    },
+    installWeight: {
+      value: entry.bytes,
+      source: registryUrl(id.registry, id.name),
+      note: 'Bytes the published artefact unpacks to, as the registry reports it. Not the size of its dependency tree.',
+    },
+    funding: {
+      value: entry.funding,
+      source: registryUrl(id.registry, id.name),
+      note: 'Where the maintainers ask to be funded, as the registry lists it. Absent means they did not list one.',
     },
     busFactor: {
       value: entry.busFactor,

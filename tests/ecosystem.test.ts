@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { collectImages, type ImageClient } from '../src/collectors/images.ts';
 import { collectQuestions, type QuestionClient } from '../src/collectors/questions.ts';
-import { collectStaleness, daysSince, type StalenessClient } from '../src/collectors/staleness.ts';
+import {
+  collectStaleness,
+  daysSince,
+  type PackageReading,
+  type StalenessClient,
+} from '../src/collectors/staleness.ts';
 import {
   candidates,
   collectTyposquats,
@@ -46,34 +51,55 @@ function pkg(over: Partial<AdoptionRow> = {}): AdoptionRow {
 // ------------------------------------------------------------------ staleness
 
 describe('when a package last shipped', () => {
-  function client(dates: Record<string, { at: string; version: string }>, fail: string[] = []): StalenessClient {
+  function reading(over: Partial<PackageReading> & { at: string; version: string }): PackageReading {
+    return {
+      withdrawn: null,
+      installScripts: null,
+      bytes: null,
+      funding: null,
+      ...over,
+    };
+  }
+
+  function client(
+    dates: Record<string, { at: string; version: string } & Partial<PackageReading>>,
+    fail: string[] = [],
+  ): StalenessClient {
     let spent = 0;
     return {
       requests: () => spent,
       async lastPublish(_registry, name) {
         spent += 1;
         if (fail.includes(name)) throw new Error('429 refused');
-        return dates[name] ?? null;
+        const found = dates[name];
+        return found === undefined ? null : reading(found);
       },
     };
   }
 
-  const held: StalenessRow[] = [
-    {
+  function row(over: Partial<StalenessRow> = {}): StalenessRow {
+    return {
       registry: 'npm',
       name: 'thing',
       repo: 'acme/thing',
       lastPublish: '2020-01-01',
       version: '1.0.0',
+      withdrawn: null,
+      installScripts: null,
+      bytes: null,
+      funding: null,
       observedAt: '2026-08-01T00:00:00.000Z',
-    },
-  ];
+      ...over,
+    };
+  }
+
+  const held: StalenessRow[] = [row()];
 
   it('records the date the newest version was published', async () => {
     const result = await collectStaleness(
       [pkg()],
       [],
-      { now: NOW, delayMs: 0, client: client({ thing: { at: '2024-03-05T10:00:00Z', version: '4.1.0' } }) },
+      { now: NOW, today: TODAY, delayMs: 0, client: client({ thing: { at: '2024-03-05T10:00:00Z', version: '4.1.0' } }) },
     );
 
     expect(result.rows[0]).toMatchObject({ lastPublish: '2024-03-05', version: '4.1.0' });
@@ -84,6 +110,7 @@ describe('when a package last shipped', () => {
     // dozens of reads on an ordinary day.
     const result = await collectStaleness([pkg()], held, {
       now: NOW,
+      today: TODAY,
       delayMs: 0,
       client: client({}, ['thing']),
     });
@@ -97,7 +124,7 @@ describe('when a package last shipped', () => {
     await collectStaleness(
       [pkg(), pkg({ id: 'other/thing' })],
       [],
-      { now: NOW, delayMs: 0, client: c },
+      { now: NOW, today: TODAY, delayMs: 0, client: c },
     );
 
     expect(c.requests()).toBe(1);
@@ -108,6 +135,7 @@ describe('when a package last shipped', () => {
     const c = client({});
     const result = await collectStaleness([pkg({ registry: 'brew' })], [], {
       now: NOW,
+      today: TODAY,
       delayMs: 0,
       client: c,
     });
@@ -118,6 +146,103 @@ describe('when a package last shipped', () => {
 
   it('counts days from the publish date', () => {
     expect(daysSince('2026-07-08T00:00:00Z', TODAY)).toBe(30);
+  });
+
+  it('keeps the four other facts that were in the same response', async () => {
+    // None of these costs a request. All four were being thrown away.
+    const result = await collectStaleness([pkg()], [], {
+      now: NOW,
+      today: TODAY,
+      delayMs: 0,
+      client: client({
+        thing: {
+          at: '2026-08-01T00:00:00Z',
+          version: '4.1.0',
+          withdrawn: 'use @scope/thing instead',
+          installScripts: 'postinstall',
+          bytes: 146_953,
+          funding: 'https://opencollective.com/thing',
+        },
+      }),
+    });
+
+    expect(result.rows[0]).toMatchObject({
+      withdrawn: 'use @scope/thing instead',
+      installScripts: 'postinstall',
+      bytes: 146_953,
+      funding: 'https://opencollective.com/thing',
+    });
+  });
+
+  it('files a finding when the publisher withdraws a package', async () => {
+    // Published recently, so the only thing new here is the withdrawal.
+    const result = await collectStaleness([pkg()], [row({ lastPublish: '2026-07-20' })], {
+      now: NOW,
+      today: TODAY,
+      delayMs: 0,
+      client: client({
+        thing: { at: '2026-08-01T00:00:00Z', version: '4.1.0', withdrawn: 'no longer maintained' },
+      }),
+    });
+
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0]).toMatchObject({ kind: 'package-withdrawn', confidence: 'confirmed' });
+    expect(result.events[0]?.evidenceUrl).toContain('npmjs.com/package/thing');
+  });
+
+  it('files it once, not on every run afterwards', async () => {
+    const withdrawn = row({ withdrawn: 'no longer maintained', lastPublish: '2026-07-20' });
+    const result = await collectStaleness([pkg()], [withdrawn], {
+      now: NOW,
+      today: TODAY,
+      delayMs: 0,
+      client: client({
+        thing: { at: '2026-08-01T00:00:00Z', version: '4.1.0', withdrawn: 'no longer maintained' },
+      }),
+    });
+
+    expect(result.events).toEqual([]);
+  });
+
+  it('files a finding when a package publishes after a long silence', async () => {
+    // The event-stream shape, and equally a maintainer returning to a finished
+    // library. The record says how long the gap was and stops there.
+    const result = await collectStaleness([pkg()], [row({ lastPublish: '2024-01-01' })], {
+      now: NOW,
+      today: TODAY,
+      delayMs: 0,
+      client: client({ thing: { at: '2026-08-01T00:00:00Z', version: '4.1.0' } }),
+    });
+
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0]?.kind).toBe('package-woke');
+    expect(result.events[0]?.metrics['quietDays']).toBe(943);
+  });
+
+  it('says nothing about an ordinary release', async () => {
+    const result = await collectStaleness([pkg()], [row({ lastPublish: '2026-07-01' })], {
+      now: NOW,
+      today: TODAY,
+      delayMs: 0,
+      client: client({ thing: { at: '2026-08-01T00:00:00Z', version: '4.1.0' } }),
+    });
+
+    expect(result.events).toEqual([]);
+  });
+
+  it('says nothing about a package it has never read before', async () => {
+    // A first reading is a starting point, not a change — the mistake that
+    // published 341 licence findings.
+    const result = await collectStaleness([pkg()], [], {
+      now: NOW,
+      today: TODAY,
+      delayMs: 0,
+      client: client({
+        thing: { at: '2026-08-01T00:00:00Z', version: '4.1.0', withdrawn: 'deprecated years ago' },
+      }),
+    });
+
+    expect(result.events).toEqual([]);
   });
 
   it('summarises the quiet ones first and states the sample', () => {

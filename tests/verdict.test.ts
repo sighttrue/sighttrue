@@ -37,6 +37,10 @@ function entry(over: Partial<VerdictEntry> = {}): VerdictEntry {
     pushedAt: '2026-08-05T00:00:00Z',
     lastPublish: '2026-07-20',
     version: '1.7.4',
+    withdrawn: null,
+    installScripts: null,
+    bytes: 209_281,
+    funding: null,
     busFactor: 3,
     topShare: 0.42,
     ...over,
@@ -256,11 +260,40 @@ describe('the endpoint', () => {
       'advisories',
       'busFactor',
       'endOfLife',
+      'funding',
+      'installScripts',
+      'installWeight',
       'licence',
       'published',
       'repository',
       'scorecard',
+      'withdrawn',
     ]);
+  });
+
+  it('leads with the publisher’s own instruction not to install it', async () => {
+    const response = await get('?pkg=npm:axios', {
+      'npm:axios': entry({ withdrawn: 'no longer maintained, use fetch' }),
+    });
+    const body = (await response.json()) as {
+      readings: { withdrawn: { value: string; note: string; source: string } };
+    };
+
+    expect(body.readings.withdrawn.value).toBe('no longer maintained, use fetch');
+    expect(body.readings.withdrawn.note).toContain('republished unchanged');
+    expect(body.readings.withdrawn.source).toContain('npmjs.com');
+  });
+
+  it('names install-time scripts without calling them dangerous', async () => {
+    const response = await get('?pkg=npm:axios', {
+      'npm:axios': entry({ installScripts: 'postinstall' }),
+    });
+    const body = (await response.json()) as {
+      readings: { installScripts: { value: string; note: string } };
+    };
+
+    expect(body.readings.installScripts.value).toBe('postinstall');
+    expect(body.readings.installScripts.note).toContain('not a claim that any of them is malicious');
   });
 
   it('narrows end of life when a version is given', async () => {

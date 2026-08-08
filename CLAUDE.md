@@ -57,7 +57,8 @@ data/
 ├── live/health.jsonl         Scorecard and advisories. Carries forward on a refused read.
 ├── live/incidents.jsonl      Provider outages, kept after their feeds drop them.
 ├── live/models.jsonl         Model catalogue and prices. Price moves emit events.
-├── live/staleness.jsonl      When each package last actually published.
+├── live/staleness.jsonl      Per package: last real publish, withdrawal notice,
+│                             install scripts, artefact size, funding link.
 ├── live/contributors.jsonl   Commit concentration. Written weekly.
 ├── live/trending.jsonl       Rising projects. Appended weekly, never overwritten.
 ├── live/hiring.jsonl         What employers asked for.

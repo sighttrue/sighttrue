@@ -187,6 +187,31 @@ export function templatedSentence(event: EventRecord): string | null {
     return `${event.repo} added ${added} forks over ${hours} hours; the median of the ${peers} ${category} repositories measured was ${median}.`;
   }
 
+  if (event.kind === 'package-withdrawn') {
+    const registry = metricString(metrics, 'registry');
+    const name = metricString(metrics, 'package');
+    if (registry === null || name === null) return null;
+
+    // The state, not a transition. The field is read for the first time on some
+    // run, and "npm marks this deprecated" is true whenever that run happens
+    // where "was deprecated today" would not be. The publisher's own notice is
+    // deliberately not quoted: it is their copyrighted text, and it links.
+    const word = registry === 'npm' ? 'deprecated' : 'yanked';
+    return `${registry} marks ${name} as ${word}.`;
+  }
+
+  if (event.kind === 'package-woke') {
+    const name = metricString(metrics, 'package');
+    const version = metricString(metrics, 'version');
+    const quiet = metricNumber(metrics, 'quietDays');
+    if (name === null || version === null || quiet === null) return null;
+
+    // Two dates and the gap between them. Nothing about why, and nothing that
+    // implies anything is wrong: a maintainer returning to a finished library
+    // looks exactly like this.
+    return `${name} published ${version} after ${quiet} days without a release.`;
+  }
+
   if (event.kind === 'dependency-shift') {
     const manifest = metricString(metrics, 'manifest');
     const added = metricNumber(metrics, 'added');

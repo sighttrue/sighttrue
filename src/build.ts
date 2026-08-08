@@ -679,6 +679,14 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
         // aggregate, where a question about one package could not reach them.
         lastPublish: stalenessByPackage.get(`${registry}:${name.toLowerCase()}`)?.lastPublish ?? null,
         version: stalenessByPackage.get(`${registry}:${name.toLowerCase()}`)?.version ?? null,
+        // The publisher's own instruction not to install this, and what the
+        // package runs on the machine that installs it. Both were in a response
+        // already being fetched and neither was reaching anybody.
+        withdrawn: stalenessByPackage.get(`${registry}:${name.toLowerCase()}`)?.withdrawn ?? null,
+        installScripts:
+          stalenessByPackage.get(`${registry}:${name.toLowerCase()}`)?.installScripts ?? null,
+        bytes: stalenessByPackage.get(`${registry}:${name.toLowerCase()}`)?.bytes ?? null,
+        funding: stalenessByPackage.get(`${registry}:${name.toLowerCase()}`)?.funding ?? null,
         busFactor: contributorsByRepo.get(entry.id)?.busFactor ?? null,
         topShare: contributorsByRepo.get(entry.id)?.topShare ?? null,
       };
@@ -974,6 +982,10 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
           samples: adoption?.samples ?? [],
           lastPublish: stale?.lastPublish ?? null,
           version: stale?.version ?? null,
+          withdrawn: stale?.withdrawn ?? null,
+          installScripts: stale?.installScripts ?? null,
+          bytes: stale?.bytes ?? null,
+          funding: stale?.funding ?? null,
           busFactor: commits?.busFactor ?? null,
           topShare: commits?.topShare ?? null,
           dependents: dependents.get(name.toLowerCase().replace(/_/g, '-')) ?? 0,

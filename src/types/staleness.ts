@@ -1,12 +1,16 @@
 import type { AssertExhaustive } from './keys.ts';
 
 /**
- * When a package was last actually published, according to its registry.
+ * What the registry says about a package, from the one document it publishes.
  *
- * Distinct from anything GitHub says, and the two disagree more often than
+ * The publish date came first and is still the reason this exists: it is
+ * distinct from anything GitHub says, and the two disagree more often than
  * people expect. A repository can have commits this week and a package nobody
- * has shipped in two years — the commits are what a maintainer does for
- * themselves, the publish is what reaches the people depending on it.
+ * has shipped in two years — commits are what a maintainer does for themselves,
+ * a publish is what reaches the people depending on them.
+ *
+ * The four fields below it were in the same response all along and were being
+ * thrown away. None costs a request.
  */
 export interface StalenessRow {
   registry: string;
@@ -17,6 +21,34 @@ export interface StalenessRow {
   lastPublish: string | null;
   /** The version that date belongs to. */
   version: string | null;
+  /**
+   * The registry's own withdrawal notice, or null.
+   *
+   * npm calls it deprecated and carries a reason; PyPI and crates.io call it
+   * yanked and sometimes say why. All three mean the publisher is telling you
+   * not to install this. The text is theirs, truncated, never paraphrased.
+   *
+   * Null is "not withdrawn" only once the row has been read since this field
+   * existed. Before that it is "never looked at", and the two serialise the
+   * same way — see the collector for what is not claimed because of it.
+   */
+  withdrawn: string | null;
+  /**
+   * Install-time scripts the registry publishes for the newest version.
+   *
+   * npm runs `preinstall`, `install` and `postinstall` on the installing
+   * machine, which is the main path by which a compromised npm package becomes
+   * code execution. Naming them is a fact about the package; it is not a claim
+   * that any of them is malicious, and most are not.
+   *
+   * Null on PyPI and crates.io, which publish no equivalent field. Null there
+   * means unpublished, not absent.
+   */
+  installScripts: string | null;
+  /** Bytes the published artefact unpacks to, or downloads as. */
+  bytes: number | null;
+  /** Where the maintainers ask to be funded, as the registry lists it. */
+  funding: string | null;
   observedAt: string;
 }
 
@@ -26,6 +58,10 @@ export const STALENESS_KEYS = [
   'repo',
   'lastPublish',
   'version',
+  'withdrawn',
+  'installScripts',
+  'bytes',
+  'funding',
   'observedAt',
 ] as const satisfies readonly (keyof StalenessRow)[];
 
