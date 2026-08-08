@@ -24,6 +24,8 @@ if (stackForm) {
   const field = document.getElementById('stack-input');
   const out = document.getElementById('stack-out');
   let index = null;
+  /** The engines field from the last package.json read, for the calendar. */
+  let lastEngines = {};
 
   const load = () =>
     index ? Promise.resolve(index) :
@@ -37,6 +39,9 @@ if (stackForm) {
 
     try {
       const pkg = JSON.parse(text);
+      // A declared runtime, which is the one support window a manifest states
+      // outright rather than implying. Kept for the calendar.
+      lastEngines = pkg.engines || {};
       for (const group of ['dependencies', 'devDependencies', 'peerDependencies']) {
         const block = pkg[group] || {};
         // The declared range is kept as well as the name. It is not a version —
@@ -275,6 +280,14 @@ if (stackForm) {
       // federal suppliers for an SBOM, and the EU Cyber Resilience Act asks
       // everybody from 2027. Built from what is already on screen, in the
       // browser, so producing it does not mean uploading a manifest.
+      // Two things a manifest can answer that nothing else joins up: when the
+      // products in it stop getting fixes, and which providers it reveals you
+      // depend on. Both built here, so neither needs the manifest uploaded.
+      '<p class="repo-facts"><button class="label" type="button" id="stack-eol">' +
+      'Download an end-of-life calendar</button>' +
+      '<button class="label" type="button" id="stack-providers">' +
+      'Which of my providers went down?</button></p>' +
+      '<div id="stack-providers-out"></div>' +
       '<p class="repo-facts"><button class="label" type="button" id="stack-sbom">' +
       'Download a CycloneDX SBOM</button>' +
       '<span class="label">Direct dependencies, no versions — a manifest declares ranges. ' +
@@ -286,6 +299,88 @@ if (stackForm) {
 
     const button = document.getElementById('stack-sbom');
     if (button) button.addEventListener('click', () => download(rows));
+
+    const eolButton = document.getElementById('stack-eol');
+    if (eolButton) eolButton.addEventListener('click', () => calendar(rows));
+
+    const providerButton = document.getElementById('stack-providers');
+    if (providerButton) providerButton.addEventListener('click', () => providers(rows));
+  }
+
+  /** Hand a blob over as a download without a round trip. */
+  function handOver(text, type, filename) {
+    const blob = new Blob([text], { type });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  /**
+   * The support deadlines that apply to this stack, as a calendar.
+   *
+   * Dates are announced years ahead and looked up by nobody on the day. A
+   * calendar is the only shape of that fact which survives a real week.
+   */
+  async function calendar(rows) {
+    let eol;
+    try { eol = await (await fetch('/data/eol.json')).json(); }
+    catch { return; }
+
+    const entries = sighttrueEolFor(rows.map((r) => r.name), lastEngines, eol.products || []);
+    if (!entries.length) {
+      const out = document.getElementById('stack-providers-out');
+      if (out) out.innerHTML = '<p class="notice">Nothing in this manifest is itself a product ' +
+        'with a published end-of-life date. That is not a clean bill of health — it means the ' +
+        'runtimes underneath it were not declared here.</p>';
+      return;
+    }
+
+    handOver(sighttrueIcs(entries, { origin: location.origin }), 'text/calendar', 'sighttrue-eol.ics');
+  }
+
+  /**
+   * Which tracked providers this manifest reveals, and what they announced.
+   *
+   * A count measures how much a provider publishes as much as how often it
+   * broke, and that caveat sits with the number rather than under it.
+   */
+  async function providers(rows) {
+    const out = document.getElementById('stack-providers-out');
+    if (!out) return;
+    out.innerHTML = '<p class="notice">Reading…</p>';
+
+    let data;
+    try { data = await (await fetch('/data/incidents.json')).json(); }
+    catch { out.innerHTML = '<p class="notice">The incident record could not be loaded.</p>'; return; }
+
+    const found = sighttrueProviders(rows.map((r) => r.name), data.incidents || []);
+    if (!found.length) {
+      out.innerHTML = '<p class="notice">No first-party client for any of the twenty providers ' +
+        'tracked here is in this manifest. Only official clients count — a third-party wrapper ' +
+        'is not evidence you run the service.</p>';
+      return;
+    }
+
+    out.innerHTML = '<div class="wrap"><table class="readout"><thead><tr>' +
+      '<th scope="col">Provider</th><th scope="col" class="n">Announced, 90 days</th>' +
+      '<th scope="col" class="n">Median length</th><th scope="col">Most recent</th>' +
+      '<th scope="col">In your stack because of</th>' +
+      '</tr></thead><tbody>' +
+      found.map((row) =>
+        '<tr><td>' + row.provider + '</td>' +
+        '<td class="n"><span class="big num">' + row.incidents + '</span></td>' +
+        '<td class="n num">' + (row.medianMinutes === null ? '<span class="dim">—</span>'
+          : row.medianMinutes < 120 ? row.medianMinutes + 'm' : Math.round(row.medianMinutes / 60) + 'h') + '</td>' +
+        '<td>' + (row.latest ? link(row.latest.url, row.latest.title) : '<span class="dim">—</span>') + '</td>' +
+        '<td class="dim">' + row.because.join(', ') + '</td></tr>').join('') +
+      '</tbody></table></div>' +
+      '<p class="basis label">These are the providers\\u2019 own announcements, kept after their ' +
+      'status pages dropped them. A count measures how often a provider published, not how often ' +
+      'it broke \\u2014 one that discloses every degradation out-counts one that stays quiet, so ' +
+      'never read a low number as a good one. <a href="/incidents">The whole record</a></p>';
   }
 
   /**

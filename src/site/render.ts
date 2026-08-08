@@ -4,6 +4,7 @@ import { MIN_INSTALLS } from '../lib/divergence.ts';
 import { allowedMinutes } from '../lib/incidents-summary.ts';
 import { COMPARE_SCRIPT } from './compare.ts';
 import { SBOM_SCRIPT } from './sbom-script.ts';
+import { STACK_EXTRAS_SCRIPT } from './stack-extras.ts';
 import { STACK_SCRIPT } from './stack.ts';
 import { ACCOUNT_SCRIPT, CHROME_ACCOUNT_SCRIPT } from './account-script.ts';
 import { DOORS, doorFor, READINGS } from './readings.ts';
@@ -601,8 +602,9 @@ export const SITE_SCRIPT = [
   COPY_SCRIPT,
   ASK_SCRIPT,
   COMPARE_SCRIPT,
-  // Before the stack block, which calls the function it defines.
+  // Both before the stack block, which calls the functions they define.
   SBOM_SCRIPT,
+  STACK_EXTRAS_SCRIPT,
   STACK_SCRIPT,
   // Before the watchlist block, which waits on the promise this one starts.
   CHROME_ACCOUNT_SCRIPT,
