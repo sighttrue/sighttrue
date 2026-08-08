@@ -50,17 +50,35 @@ if (stackForm) {
       if (found.size) return found;
     } catch { /* not package.json — fall through to the line formats */ }
 
+    // Which TOML table we are inside, for a pasted Cargo.toml. Every line in
+    // one is \`key = value\`, so without this \`name = "my-app"\` under [package]
+    // reads as a dependency called \`name\` — and there is a real crate by that
+    // name, so the readout would show somebody else's numbers under it.
+    //
+    // A paste with no headers at all still works: only a table we can see is
+    // not a dependency table suppresses. Somebody pasting a bare list of
+    // \`name = "1.0"\` lines is the case this page exists for.
+    let table = null;
+    const deps = (name) => name === null || /dependencies\\]$/.test(name);
+
     for (const raw of text.split(/\\r?\\n/)) {
       const line = raw.split('#')[0].trim();
-      if (!line || line.startsWith('[') || line.startsWith('-')) continue;
+      if (!line || line.startsWith('-')) continue;
+      if (line.startsWith('[')) { table = line.toLowerCase(); continue; }
+      // Before either reader, not inside one. \`lto = true\` under
+      // [profile.release] is not a crate, and it is not a Python package
+      // called lto either — the requirements reader accepts \`=\` as a version
+      // operator, so an unguarded TOML line lands there instead.
+      if (!deps(table)) continue;
 
-      // requirements.txt: name, name==1.2, name>=1.2
-      const py = /^([A-Za-z0-9._-]+)\\s*([=<>!~].*)?$/.exec(line);
-      // Cargo.toml / go.mod: name = "1.2"  |  name v1.2
+      // requirements.txt: name, name==1.2, name>=1.2, name[extra]>=1.2
+      const py = /^([A-Za-z0-9._-]+)\\s*(?:\\[[^\\]]*\\])?\\s*([=<>!~].*)?$/.exec(line);
+      // Cargo.toml / go.mod: name = "1.2"  |  name = { version = "1.2" }
       const other = /^([A-Za-z0-9._\\/-]+)\\s*=\\s*[{"]([^"}]*)/.exec(line);
 
-      if (other) found.set('crates:' + other[1], { shown: other[1], range: (other[2] || '').trim() });
-      else if (py) {
+      if (other) {
+        found.set('crates:' + other[1], { shown: other[1], range: (other[2] || '').trim() });
+      } else if (py) {
         found.set('pypi:' + py[1].toLowerCase(), { shown: py[1], range: (py[2] || '').trim() });
       }
     }

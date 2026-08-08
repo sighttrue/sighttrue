@@ -64,11 +64,25 @@ function names(text, registry) {
     }
   }
 
+  // Which TOML table the reader is inside. Load-bearing for Cargo: every line
+  // in a Cargo.toml is `key = value`, so a reader that ignores the headers
+  // reports `name = "my-app"` under [package] as a dependency called `name` —
+  // and there is a real crate called `name` on crates.io, so the lookup would
+  // have attached somebody else's readings to it.
+  let table = null;
+
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.split('#')[0].trim();
-    if (!line || line.startsWith('[') || line.startsWith('-')) continue;
+    if (!line || line.startsWith('-')) continue;
+    if (line.startsWith('[')) {
+      table = line.toLowerCase();
+      continue;
+    }
 
     if (registry === 'crates') {
+      // [dependencies], [dev-dependencies], [build-dependencies] and the
+      // target- and workspace-qualified forms all end the same way.
+      if (table === null || !/dependencies\]$/.test(table)) continue;
       const match = /^([A-Za-z0-9._-]+)\s*=/.exec(line);
       if (match) found.add(match[1]);
     } else {
