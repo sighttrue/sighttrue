@@ -1,4 +1,5 @@
 import { band, esc, layout } from './render.ts';
+import { registryUrl } from '../lib/verdict.ts';
 import type { IndexBundle } from '../types/bundles.ts';
 import type { MetaRecord } from '../types/meta.ts';
 import type { AdoptionSample, AdoptionWindow } from '../types/adoption.ts';
@@ -62,12 +63,11 @@ const REGISTRY_NAME: Record<PackageRegistry, string> = {
   crates: 'crates.io',
 };
 
-/** Where the registry itself says this. Every claim here has to be checkable. */
-export function registryUrl(registry: PackageRegistry, name: string): string {
-  if (registry === 'npm') return `https://www.npmjs.com/package/${name}`;
-  if (registry === 'pypi') return `https://pypi.org/project/${name}/`;
-  return `https://crates.io/crates/${name}`;
-}
+/**
+ * Where the registry itself says this — one definition, shared with the verdict
+ * endpoint, so a package's page and the answer an agent gets cite the same URL.
+ */
+export { registryUrl } from '../lib/verdict.ts';
 
 const WINDOW_LABEL: Record<AdoptionWindow, string> = {
   week: 'weekly',

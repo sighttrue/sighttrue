@@ -74,6 +74,20 @@ limits of what it can support, because an agent will paste these figures into a
 code review and a scorecard quoted without "measures declared practices, not
 whether the project is safe" is a claim this project does not make.
 
+Without MCP, one GET returns the same thing:
+
+```
+curl 'https://sighttrue.com/api/verdict?pkg=npm:axios'
+curl 'https://sighttrue.com/api/verdict?pkg=pypi:django&version=4.2'
+```
+
+Advisories, licence, when the registry last shipped it, the bus factor, and
+whether the release is still supported — each with the address of the body that
+published it, so a figure quoted into a review can be checked in one click.
+Despite the name there is no verdict in it: no score, no rank, no
+recommendation. Those would be this project's judgement of somebody else's work
+wearing the costume of a measurement.
+
 One agent watches 388 open-source repositories and takes eleven readings, most
 of which never touch GitHub: 461 provider incidents kept after their own status
 pages dropped them, 518 release lines on the end-of-life clock, 395 model prices

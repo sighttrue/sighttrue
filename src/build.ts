@@ -648,6 +648,13 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
   // what lets the instrument be pointed at somebody else's stack instead of at
   // a list they did not choose.
   const liveById = new Map(readLiveState().map((row) => [row.id, row]));
+  const adoptionByPackage = new Map(
+    readAdoption().map((row) => [`${row.registry}:${row.name.toLowerCase()}`, row]),
+  );
+  const stalenessByPackage = new Map(
+    readStaleness().map((row) => [`${row.registry}:${row.name.toLowerCase()}`, row]),
+  );
+  const contributorsByRepo = new Map(readContributors().map((row) => [row.id, row]));
   const stackIndex: Record<string, unknown> = {};
   for (const entry of watchlist) {
     if (!entry.active) continue;
@@ -662,10 +669,18 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
         repo: entry.id,
         installs: adoptionByRepo.get(entry.id) ?? null,
         scorecard: health?.scorecard ?? null,
+        scoredAt: health?.scoredAt ?? null,
         advisories: health?.advisories ?? null,
         license: liveById.get(entry.id)?.license ?? null,
         archived: liveById.get(entry.id)?.archived ?? false,
         pushedAt: liveById.get(entry.id)?.pushedAt ?? null,
+        // When the registry says a version last reached anybody, and who
+        // actually writes the code. Both were collected and published only in
+        // aggregate, where a question about one package could not reach them.
+        lastPublish: stalenessByPackage.get(`${registry}:${name.toLowerCase()}`)?.lastPublish ?? null,
+        version: stalenessByPackage.get(`${registry}:${name.toLowerCase()}`)?.version ?? null,
+        busFactor: contributorsByRepo.get(entry.id)?.busFactor ?? null,
+        topShare: contributorsByRepo.get(entry.id)?.topShare ?? null,
       };
     }
   }
@@ -916,13 +931,6 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
   // reading here was already collected and was reachable only by knowing which
   // repository publishes the package — the one thing somebody searching "is X
   // still maintained" does not know.
-  const adoptionByPackage = new Map(
-    readAdoption().map((row) => [`${row.registry}:${row.name.toLowerCase()}`, row]),
-  );
-  const stalenessByPackage = new Map(
-    readStaleness().map((row) => [`${row.registry}:${row.name.toLowerCase()}`, row]),
-  );
-  const contributorsByRepo = new Map(readContributors().map((row) => [row.id, row]));
   const packagePaths: string[] = [];
 
   for (const [packageId, entry] of Object.entries(stackIndex)) {
