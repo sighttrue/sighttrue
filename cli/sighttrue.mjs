@@ -23,6 +23,7 @@ import { basename, resolve } from 'node:path';
 import { fromLines, readingFor } from './lib/docker.mjs';
 import { foldName, names, registryFor } from './lib/manifest.mjs';
 import { noticesFor } from './lib/notices.mjs';
+import { positionOf } from './lib/positions.mjs';
 
 const ENDPOINT = (process.env.SIGHTTRUE_ENDPOINT || 'https://sighttrue.com').replace(/\/$/, '');
 
@@ -190,7 +191,14 @@ async function main() {
       out(`${basename(path)} is not a manifest this reads.`);
       throw new Stop(2);
     }
-    wanted = names(readFileSync(path, 'utf8'), registry).map((name) => ({ registry, name }));
+    const source = readFileSync(path, 'utf8');
+    // The line, so somebody can jump straight to it rather than search a file
+    // they did not write. Absent for a single package asked about by name.
+    wanted = names(source, registry).map((name) => ({
+      registry,
+      name,
+      at: positionOf(source, registry, name),
+    }));
     read = basename(path);
   }
 
@@ -209,7 +217,7 @@ async function main() {
   }
 
   const rows = [];
-  for (const { registry, name } of wanted) {
+  for (const { registry, name, at } of wanted) {
     const entry = index.packages?.[`${registry}:${foldName(registry, name)}`];
 
     if (!entry) {
@@ -219,6 +227,7 @@ async function main() {
           registry,
           name,
           entry: { repo: null },
+          at,
           notices: [
             {
               kind: 'near-miss-name',
@@ -231,7 +240,7 @@ async function main() {
       continue;
     }
 
-    rows.push({ registry, name, entry, notices: noticesFor(registry, name, entry, today) });
+    rows.push({ registry, name, entry, at, notices: noticesFor(registry, name, entry, today) });
   }
 
   const flagged = rows.filter((row) => row.notices.length > 0);
@@ -279,7 +288,9 @@ async function main() {
       out(dim('from a curated watchlist, in readings taken up to four hours ago.'));
     } else {
       for (const row of flagged) {
-        out(row.entry.repo === null ? bold(row.name) : `${bold(row.name)} ${dim(`— ${row.entry.repo}`)}`);
+        const where = row.at ? dim(` ${read}:${row.at.line + 1}`) : '';
+        const from = row.entry.repo === null ? '' : dim(` — ${row.entry.repo}`);
+        out(`${bold(row.name)}${from}${where}`);
         for (const notice of row.notices) {
           out(`  • ${notice.statement}`);
           out(`    ${dim(notice.source)}`);

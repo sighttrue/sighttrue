@@ -1,0 +1,31 @@
+{
+  "name": "sighttrue-vscode",
+  "displayName": "Sighttrue",
+  "description": "Dated readings on a dependency, while you are typing it: withdrawn by its publisher, runs a script on install, archived, advisories, source-available licence.",
+  "version": "1.0.0",
+  "publisher": "sighttrue",
+  "license": "MIT",
+  "homepage": "https://sighttrue.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sighttrue/sighttrue.git",
+    "directory": "extension"
+  },
+  "categories": ["Linters", "Programming Languages"],
+  "keywords": ["dependencies", "supply chain", "deprecated", "advisories", "end of life"],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "workspaceContains:**/package.json",
+    "workspaceContains:**/requirements.txt",
+    "workspaceContains:**/Cargo.toml",
+    "workspaceContains:**/pyproject.toml"
+  ],
+  "contributes": {},
+  "dependencies": {
+    "sighttrue": "^1.2.0"
+  },
+  "files": ["extension.js", "README.md"]
+}

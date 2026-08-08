@@ -1,6 +1,6 @@
 {
   "name": "sighttrue",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Dated readings on what you are about to install: dependencies and base images. No account, no key, and nothing you read leaves the machine.",
   "keywords": [
     "dependencies",
@@ -20,6 +20,13 @@
   "type": "module",
   "bin": {
     "sighttrue": "sighttrue.mjs"
+  },
+  "//exports": "The readers are exported as well as run. The editor extension imports them from here rather than carrying a copy — three implementations of the manifest reader once disagreed, and a fourth arrived the day that was fixed.",
+  "exports": {
+    "./manifest": "./lib/manifest.mjs",
+    "./notices": "./lib/notices.mjs",
+    "./docker": "./lib/docker.mjs",
+    "./positions": "./lib/positions.mjs"
   },
   "files": [
     "sighttrue.mjs",
