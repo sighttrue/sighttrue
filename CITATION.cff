@@ -1,0 +1,40 @@
+# Makes GitHub render a "Cite this repository" button, and gives anybody
+# quoting these figures a fixed thing to point at.
+#
+# The distinction this file has to carry: almost nothing here was measured by
+# this project. Advisory counts are OSV's, scorecards are Google Open Source
+# Insights', end-of-life dates are endoflife.date's, incidents are the
+# providers' own announcements, publish dates are the registries'. What is
+# original is the collection, the dating, and the keeping — a record of when
+# each of those said what, held after they stopped holding it themselves.
+#
+# So a paper citing a scorecard should cite Open Source Insights. A paper
+# citing "what this said on 12 March" cites this.
+
+cff-version: 1.2.0
+title: "Sighttrue: a dated public record of open-source dependency and provider readings"
+message: "If you use this data, please cite it and the underlying sources named below."
+type: dataset
+authors:
+  - name: "Sighttrue"
+    website: "https://sighttrue.com"
+repository-code: "https://github.com/sighttrue/sighttrue"
+url: "https://sighttrue.com"
+license: MIT
+abstract: >-
+  A four-hourly record of eleven readings across roughly four hundred
+  hand-picked open-source repositories and the services they depend on:
+  releases, fork activity, dependency manifests, OpenSSF scorecards, OSV
+  advisory counts, registry publish dates, install-time scripts, publisher
+  withdrawals, commit concentration, language-model prices, end-of-life dates,
+  and the incident histories of twenty providers kept after their own status
+  pages drop them. Every reading is committed to a public git repository as it
+  is taken, so any figure can be checked against the commit that recorded it.
+keywords:
+  - open source
+  - software supply chain
+  - dependencies
+  - package registries
+  - end-of-life
+  - incident history
+  - reproducible data

@@ -104,6 +104,7 @@ import { windowAnchor } from './lib/window.ts';
 import { renderRepoPage, type RepoSeriesPoint } from './site/repo.ts';
 import { packagePath, renderPackagePage } from './site/package.ts';
 import { renderLlms } from './site/llms.ts';
+import { renderDataPackage, renderDataset, resourcesFrom } from './site/dataset.ts';
 import {
   LENSES,
   type Disclosure,
@@ -1098,6 +1099,7 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
     ...[...profiles.keys()].map((repo) => `/repo/${repo}`),
     // The largest indexable surface here after the repository pages, and the
     // one that answers a question people type rather than one they browse to.
+    '/dataset',
     ...packagePaths,
     ...addressable.map((event) => eventPath(event)),
     ...LENSES.flatMap((lens) =>
@@ -1111,6 +1113,19 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
 
   // The one page here written for a reader that will never see the CSS.
   pages.set('llms.txt', renderLlms(index));
+
+  // The published files, described well enough to be cited. Sizes are measured
+  // from the bytes actually emitted rather than declared, so the descriptor
+  // cannot claim a file weight the deployment does not have.
+  const bundleSizes = new Map(
+    [...emitted.entries()].map(([name, contents]) => [name, Buffer.byteLength(contents, 'utf8')]),
+  );
+  const resources = resourcesFrom(index, bundleSizes);
+  pages.set('dataset.html', renderDataset(index, previous, resources));
+  emitted.set(
+    'datapackage.json',
+    renderDataPackage(resources, previous.lastSuccessfulRunAt ?? now.toISOString()),
+  );
 
   pages.set('feed.xml', renderFeed(addressable, previous.lastSuccessfulRunAt ?? now.toISOString()));
   pages.set('sitemap.xml', renderSitemap(sitemapPaths));

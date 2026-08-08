@@ -94,6 +94,9 @@ describe('bundle emission', () => {
       // Every repository flattened across every axis, for /compare. Fetched
       // only by that page, never by the index.
       'compare.json',
+      // Frictionless Data descriptor, so a catalogue can index the files
+      // rather than a person having to read a page to learn what they are.
+      'datapackage.json',
       'demand.json',
       'ecosystem.json',
       // When each tracked runtime stops getting security fixes. The one class
@@ -293,6 +296,8 @@ describe('output hygiene', () => {
     expect(pages.sort()).toEqual([
       // The one page here that is a tool rather than a reading.
       'compare.html',
+      // The published files, described well enough to be cited.
+      'dataset.html',
       'demand.html',
       // The dependency graph read backwards, from manifests rather than a counter.
       'depends.html',
