@@ -1,4 +1,4 @@
-import { band, esc, layout } from './render.ts';
+import { band, esc, layout, SITE_ORIGIN } from './render.ts';
 import { registryUrl } from '../lib/verdict.ts';
 import type { IndexBundle } from '../types/bundles.ts';
 import type { MetaRecord } from '../types/meta.ts';
@@ -203,6 +203,38 @@ export function packagePath(registry: PackageRegistry, name: string): string {
   return `/${registry}/${name}`;
 }
 
+/**
+ * The two ways to take this reading with you.
+ *
+ * A badge goes in the README of everything that depends on the package, which
+ * is the only distribution here that compounds — and it costs a static file
+ * that already exists. The endpoint below it is for the reader who is not a
+ * person: an agent that has this page open is one line away from being able to
+ * ask the same question about every other package, and until now nothing on
+ * the page said so.
+ */
+function takeItWithYou(registry: PackageRegistry, name: string, repo: string): string {
+  const badge = `${SITE_ORIGIN}/badge/${registry}/${name}.svg`;
+  const markdown = `[![Sighttrue](${badge})](${SITE_ORIGIN}${packagePath(registry, name)})`;
+  const target = `embed-${registry}-${name.replace(/[@/]/g, '-')}`;
+
+  return `<div class="method-prose">
+    <p>The figure updates on its own. It is read every four hours and served as a static file, so
+    nothing calls back to you and there is nothing to install.</p>
+    <p><img src="/badge/${esc(registry)}/${esc(name)}.svg" alt="Sighttrue badge for ${esc(name)}" height="20"></p>
+    <pre class="method-code" id="${esc(target)}">${esc(markdown)}</pre>
+    <p class="repo-facts">
+      <button class="label" type="button" data-copy="${esc(target)}">Copy the markdown</button>
+      <a class="label" href="/repo/${esc(repo)}.xml">Follow ${esc(repo)} by feed</a>
+    </p>
+    <p><strong>Reading this as an agent?</strong> Every figure above is one call:</p>
+    <pre class="method-code">curl '${SITE_ORIGIN}/api/verdict?pkg=${esc(registry)}:${esc(name)}'</pre>
+    <p>Or connect the MCP server at <code>${SITE_ORIGIN}/api/mcp</code> — no key, no account — and
+    ask the same question about anything else you are about to install. Every reading it returns
+    carries the address of the body that published it.</p>
+  </div>`;
+}
+
 export function renderPackagePage(
   data: PackagePageData,
   index: IndexBundle,
@@ -362,6 +394,12 @@ ${band(
   `Readings are taken every ${index.disclosure.cadenceHours} hours at best${
     data.findings === 0 ? '' : `. ${data.findings} findings are on record for ${data.repo}`
   }.`,
+)}
+
+${band(
+  'Take this reading with you',
+  takeItWithYou(data.registry, data.name, data.repo),
+  'The badge and the endpoint read the same published file this page does, so they cannot disagree with it.',
 )}`;
 
   const description = `${summarise(data)} Dated readings for the ${registryName} package — downloads, advisories, licence, bus factor — with no verdict attached.`;

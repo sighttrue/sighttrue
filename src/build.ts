@@ -103,6 +103,7 @@ import {
 import { windowAnchor } from './lib/window.ts';
 import { renderRepoPage, type RepoSeriesPoint } from './site/repo.ts';
 import { packagePath, renderPackagePage } from './site/package.ts';
+import { renderLlms } from './site/llms.ts';
 import {
   LENSES,
   type Disclosure,
@@ -1056,6 +1057,29 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
     );
   }
 
+  // One badge per package, which is the badge that travels. A repository badge
+  // belongs in that repository's README; a package badge belongs in the README
+  // of everything that depends on it, and there are far more of those.
+  for (const [packageId, entry] of Object.entries(stackIndex)) {
+    const separator = packageId.indexOf(':');
+    const registry = packageId.slice(0, separator);
+    const name = packageId.slice(separator + 1);
+    if (!isSafePackageName(name)) continue;
+
+    const reading = entry as { repo: string };
+    pages.set(
+      `badge/${registry}/${assertSafePackageName(name)}.svg`,
+      renderBadge({
+        repo: reading.repo,
+        packageName: name,
+        health: healthByRepo.get(reading.repo),
+        // This package's own count, not the largest across the repository's
+        // packages: the badge names one package and must report that one.
+        installs: adoptionByPackage.get(`${registry}:${name.toLowerCase()}`)?.count ?? null,
+      }),
+    );
+  }
+
   // Derived from the navigation rather than listed again here. This was a
   // hand-kept list and it drifted the moment a page was added: /readings went
   // live and was in no sitemap at all, which is the one way a new page can be
@@ -1084,6 +1108,9 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
   // One script for the whole site rather than 12.6KB inlined into all 653
   // pages, most of which use none of it.
   pages.set('site.js', SITE_SCRIPT);
+
+  // The one page here written for a reader that will never see the CSS.
+  pages.set('llms.txt', renderLlms(index));
 
   pages.set('feed.xml', renderFeed(addressable, previous.lastSuccessfulRunAt ?? now.toISOString()));
   pages.set('sitemap.xml', renderSitemap(sitemapPaths));

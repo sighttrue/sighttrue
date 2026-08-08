@@ -40,6 +40,15 @@ export interface BadgeInput {
   health: HealthRow | undefined;
   /** Weekly downloads across npm and PyPI, or null when nothing is mapped. */
   installs: number | null;
+  /**
+   * The package this badge is about, when it is about one.
+   *
+   * A repository badge belongs in that repository's README. A package badge
+   * belongs in the README of everything that depends on it, which is a great
+   * deal more READMEs — and the reader of one is holding a package name, so
+   * that is the name the badge has to say.
+   */
+  packageName?: string;
 }
 
 /**
@@ -81,7 +90,7 @@ export function renderBadge(input: BadgeInput): string {
   // No gradient, no bevel, no rounded pill. The site's own two colours and its
   // own flat geometry, so a badge in the wild still looks like the instrument.
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(label)}: ${esc(value)}">
-  <title>${esc(input.repo)} — ${esc(label)} ${esc(value)}, measured by Sighttrue</title>
+  <title>${esc(input.packageName ?? input.repo)} — ${esc(label)} ${esc(value)}, measured by Sighttrue</title>
   <rect width="${width}" height="${height}" fill="#0c0f08"/>
   <rect x="${labelWidth}" width="${valueWidth}" height="${height}" fill="#171c10"/>
   <rect x="${labelWidth}" width="2" height="${height}" fill="#d2e2f4"/>
