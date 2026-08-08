@@ -10,7 +10,7 @@
  * the script writes down what happened.
  */
 
-import { runAnnounce } from '../src/jobs/announce.ts';
+import { MONTHLY_CAP, runAnnounce } from '../src/jobs/announce.ts';
 import { readMeta, writeMeta } from '../src/lib/ledger.ts';
 
 function numericFlag(name: string): number | undefined {
@@ -66,7 +66,20 @@ console.log(
     `eligible unposted : ${result.eligible}`,
     `posted            : ${result.posted}`,
     `skipped           : ${result.skipped}`,
+    `posted this month : ${result.postedThisMonth} of ${MONTHLY_CAP}`,
   ].join('\n'),
 );
+
+// Nothing to say is the ordinary outcome and it is a success. Said plainly so a
+// log full of zeroes does not read as a broken job.
+if (result.eligible === 0) {
+  console.log('Nothing cleared the bar since the last run. Nothing posted.');
+}
+
+if (result.capped) {
+  console.warn(
+    `warn: the monthly ceiling of ${MONTHLY_CAP} posts stopped this run. Findings still publish on the site.`,
+  );
+}
 
 for (const error of result.failed) console.warn(`warn: ${error}`);

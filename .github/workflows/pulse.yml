@@ -73,6 +73,24 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: node scripts/summarise.ts
 
+      - name: Announce confirmed findings
+        # Here as well as in daily, because this is the job that detects them.
+        # Announcing once a day meant a fork spike confirmed at 04:17 was posted
+        # at 02:17 the next morning, twenty-two hours after the site had it.
+        #
+        # Never blocks publishing, for the same reason summarisation does not,
+        # and never invents something to say: with nothing over the bar it posts
+        # nothing and exits 0. The per-run limit and the monthly ceiling live in
+        # the job — seven runs a day at four posts each would be over X's free
+        # tier by the third week of every month.
+        continue-on-error: true
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+        run: node scripts/announce.ts
+
       - name: Build bundles
         id: build
         env:

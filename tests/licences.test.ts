@@ -5,10 +5,16 @@ import { templatedSentence } from '../src/lib/validate.ts';
 import type { LiveStateRow } from '../src/types/state.ts';
 
 /**
- * The only detector here that needs no threshold and cannot produce a false
- * positive. Four of five of the others currently sit above anything that
- * happens in the real world; this one either sees a changed field or it does
- * not, which is why it is worth having even though it will fire rarely.
+ * The detector that needs no threshold: a field either changed between two
+ * readings or it did not, which is why it is worth having even though it fires
+ * rarely.
+ *
+ * It was described here as one that "cannot produce a false positive" and it
+ * produced 341, all the same shape — a repository appearing to relicense from
+ * unidentified to whatever it had always been. The comparison was never the
+ * problem. What was comparable was: a row written before the field existed
+ * stores null, and null was read as a licence GitHub could not identify rather
+ * than as one nobody had looked up. Both ends must now be a named licence.
  */
 
 const OPTIONS = { now: '2026-08-06T04:17:00.000Z', today: '2026-08-06', seen: new Set<string>() };
@@ -72,11 +78,16 @@ describe('relicensing', () => {
     expect(collectLicences([row({ license: 'Apache-2.0' })], legacy, OPTIONS)).toHaveLength(0);
   });
 
-  it('still reports a move away from an unidentified licence once recorded', () => {
-    // null is a real reading and a move off it is a real transition.
-    const events = collectLicences([row({ license: 'MIT' })], before({ license: null }), OPTIONS);
-    expect(events).toHaveLength(1);
-    expect(events[0]?.metrics['from']).toBe('unidentified');
+  it('says nothing about a move away from an unidentified licence', () => {
+    // It said something for a while, and it was wrong 341 times: "changed its
+    // licence from unidentified to MIT" is this project learning a licence, not
+    // a project changing one. A row written before the field existed stores
+    // null, which is indistinguishable from a genuine absence — 89 rows in the
+    // live ledger are in exactly that state, each one a false finding waiting
+    // for its ETag to move.
+    expect(collectLicences([row({ license: 'MIT' })], before({ license: null }), OPTIONS)).toEqual(
+      [],
+    );
   });
 
   it('says nothing on a first reading', () => {
@@ -85,11 +96,11 @@ describe('relicensing', () => {
     expect(collectLicences([row()], new Map(), OPTIONS)).toHaveLength(0);
   });
 
-  it('words an unidentifiable licence as unidentified, never as a licence', () => {
-    // GitHub returns NOASSERTION for a licence file it cannot parse. Storing
-    // that string would make a project look like it relicensed to it.
-    const events = collectLicences([row({ license: null })], before(), OPTIONS);
-    expect(events[0]?.metrics['to']).toBe('unidentified');
+  it('says nothing when a licence becomes unreadable', () => {
+    // GitHub returns NOASSERTION for a licence file it cannot parse, which the
+    // base collector stores as null. A project whose licence file moved is not
+    // a project that relicensed, and the two are indistinguishable from here.
+    expect(collectLicences([row({ license: null })], before(), OPTIONS)).toEqual([]);
   });
 
   it('reports nothing twice for the same day', () => {

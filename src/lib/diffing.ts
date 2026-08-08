@@ -35,12 +35,20 @@ export function changed<T>(before: T | undefined, after: T): Changed<T> {
 }
 
 /**
- * A false-to-true transition on a flag, guarded the same way.
+ * A false-to-true transition on a flag, guarded the same way and then once more.
  *
  * `!before.archived` reads as true for a row that predates the field, so the
  * plain negation announces every archived repository the day the field is
- * added.
+ * added. Guarding on `undefined` alone is not enough: a row written before the
+ * field existed is serialised with the key present and null — `undefined`
+ * becomes null on the way to disk — so the next run reads a false "not
+ * archived" that is really "never read". 22 rows in the live ledger are in
+ * exactly that state.
+ *
+ * So the previous value has to be `false` itself. Nothing true is lost: a
+ * genuine false-to-true is still a transition, and a row that has never been
+ * read has not transitioned from anything.
  */
-export function became(before: boolean | undefined, after: boolean): boolean {
-  return before !== undefined && !before && after;
+export function became(before: boolean | undefined | null, after: boolean): boolean {
+  return before === false && after;
 }

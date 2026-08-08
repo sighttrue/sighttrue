@@ -160,9 +160,41 @@ describe('templatedSentence', () => {
     );
   });
 
+  it('counts what moved in a manifest without calling it a migration', () => {
+    // A manifest says what changed in one file in one repository. It does not
+    // say a project moved off anything, and the sentence must not imply it.
+    const shift = spike({
+      kind: 'dependency-shift',
+      metrics: { manifest: 'go.mod', added: 1, removed: 0, majorBumps: 2 },
+    });
+
+    expect(templatedSentence(shift)).toBe(
+      'owner/repo changed its go.mod: 1 added and 2 moved a major version.',
+    );
+    expect(templatedSentence(shift)).not.toMatch(/\b(migrat|abandon|switch|dropped)/i);
+  });
+
+  it('names only the parts that actually moved', () => {
+    const shift = spike({
+      kind: 'dependency-shift',
+      metrics: { manifest: 'package.json', added: 0, removed: 1, majorBumps: 0 },
+    });
+
+    expect(templatedSentence(shift)).toBe('owner/repo changed its package.json: 1 removed.');
+  });
+
   it('returns null rather than asserting past the record', () => {
     expect(templatedSentence(spike({ metrics: { forksAdded: 60 } }))).toBeNull();
     expect(templatedSentence(spike({ kind: 'lineage', metrics: {} }))).toBeNull();
+    // Nothing moved, so there is no sentence to write about it moving.
+    expect(
+      templatedSentence(
+        spike({
+          kind: 'dependency-shift',
+          metrics: { manifest: 'go.mod', added: 0, removed: 0, majorBumps: 0 },
+        }),
+      ),
+    ).toBeNull();
   });
 
   it('produces sentences that pass their own validator', () => {

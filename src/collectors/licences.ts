@@ -52,10 +52,20 @@ export function collectLicences(
     // `changed` is where the absent-versus-empty rule lives. See lib/diffing.ts
     // for why it is a shared helper rather than a condition written out here.
     const move = changed(before.license, row.license);
-    if (move !== null) {
-      // Null on either side is "GitHub could not identify one", which is a real
-      // transition worth reporting and is worded as what it is rather than as a
-      // licence named "none".
+    // Both ends have to be a licence.
+    //
+    // A null was read as "GitHub could not identify one" and reported as a real
+    // transition. It is not: 341 findings said a project had "changed its
+    // licence from unidentified to MIT", and every one of them was this project
+    // learning a licence rather than a project changing one. A row written
+    // before the field existed stores null, which is indistinguishable from a
+    // genuine absence, and 89 rows in the live ledger still are — each one a
+    // false finding waiting for its ETag to move.
+    //
+    // What this gives up is a project that genuinely had no licence and added
+    // one. That is a real signal and a different sentence from relicensing; it
+    // is not worth 341 wrong ones to keep saying it this way.
+    if (move !== null && move.from !== null && move.to !== null) {
       const id = eventId('licence', row.id, options.today);
       if (!options.seen.has(id)) {
         events.push({
@@ -72,10 +82,7 @@ export function collectLicences(
           summary: null,
           summarySource: null,
           evidenceUrl: `https://github.com/${row.id}`,
-          metrics: {
-            from: move.from ?? 'unidentified',
-            to: move.to ?? 'unidentified',
-          },
+          metrics: { from: move.from, to: move.to },
           supersedes: null,
         });
       }

@@ -187,6 +187,31 @@ export function templatedSentence(event: EventRecord): string | null {
     return `${event.repo} added ${added} forks over ${hours} hours; the median of the ${peers} ${category} repositories measured was ${median}.`;
   }
 
+  if (event.kind === 'dependency-shift') {
+    const manifest = metricString(metrics, 'manifest');
+    const added = metricNumber(metrics, 'added');
+    const removed = metricNumber(metrics, 'removed');
+    const bumps = metricNumber(metrics, 'majorBumps');
+    if (manifest === null || added === null || removed === null || bumps === null) return null;
+
+    // Counts of what moved in one file in one repository, and nothing about
+    // why. A manifest says what changed; it does not say a project migrated
+    // off anything, and the sentence must not imply that it does.
+    const parts = [
+      added > 0 ? `${added} added` : '',
+      removed > 0 ? `${removed} removed` : '',
+      bumps > 0 ? `${bumps} moved a major version` : '',
+    ].filter((part) => part !== '');
+    if (parts.length === 0) return null;
+
+    const listed =
+      parts.length === 1
+        ? (parts[0] as string)
+        : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1] as string}`;
+
+    return `${event.repo} changed its ${manifest}: ${listed}.`;
+  }
+
   if (event.kind === 'fork-spike') {
     const added = metricNumber(metrics, 'forksAdded');
     const hours = metricNumber(metrics, 'observationHours');

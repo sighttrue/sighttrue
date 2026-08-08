@@ -22,6 +22,15 @@ beforeEach(() => {
   rmSync(dataDir, { recursive: true, force: true });
 });
 
+/**
+ * A fixed clock, hours after the findings below were detected.
+ *
+ * Announcing is time-sensitive now: a finding older than two days is a backlog
+ * entry rather than news, and a test that leans on the real date would start
+ * failing on its own once it aged past that.
+ */
+const NOW_AT = new Date('2026-08-04T12:00:00Z');
+
 const SPIKE_METRICS = {
   forksAdded: 60,
   observationHours: 24,
@@ -120,7 +129,7 @@ describe('what gets announced', () => {
   it('never announces a detection that was not confirmed', async () => {
     ledger.appendEvents('2026-08', [finding('a', { confidence: 'detected' })]);
     const client = stubX();
-    const result = await runAnnounce({ client });
+    const result = await runAnnounce({ client, now: NOW_AT });
 
     expect(result.eligible).toBe(0);
     expect(client.sent).toHaveLength(0);
@@ -135,7 +144,7 @@ describe('what gets announced', () => {
     ]);
 
     const client = stubX();
-    await runAnnounce({ client });
+    await runAnnounce({ client, now: NOW_AT });
     expect(client.sent).toHaveLength(0);
   });
 
@@ -143,10 +152,10 @@ describe('what gets announced', () => {
     ledger.appendEvents('2026-08', [finding('a'), finding('b')]);
     const client = stubX();
 
-    await runAnnounce({ client });
+    await runAnnounce({ client, now: NOW_AT });
     expect(client.sent).toHaveLength(2);
 
-    await runAnnounce({ client });
+    await runAnnounce({ client, now: NOW_AT });
     expect(client.sent).toHaveLength(2);
   });
 
@@ -154,7 +163,7 @@ describe('what gets announced', () => {
     ledger.appendEvents('2026-08', ['a', 'b', 'c', 'd', 'e'].map((id) => finding(id)));
     const client = stubX();
 
-    await runAnnounce({ client, limit: 2 });
+    await runAnnounce({ client, limit: 2, now: NOW_AT });
     expect(client.sent).toHaveLength(2);
     expect(ledger.readAnnouncements()).toHaveLength(2);
   });
@@ -168,12 +177,12 @@ describe('what gets announced', () => {
       },
     };
 
-    const first = await runAnnounce({ client: failing });
+    const first = await runAnnounce({ client: failing, now: NOW_AT });
     expect(first.failed).toHaveLength(1);
     expect(ledger.readAnnouncements()).toHaveLength(0);
 
     const client = stubX();
-    await runAnnounce({ client });
+    await runAnnounce({ client, now: NOW_AT });
     expect(client.sent).toHaveLength(1);
   });
 
@@ -181,10 +190,134 @@ describe('what gets announced', () => {
     ledger.appendEvents('2026-08', [finding('a', { kind: 'lineage', metrics: {} })]);
     const client = stubX();
 
-    const result = await runAnnounce({ client });
+    const result = await runAnnounce({ client, now: NOW_AT });
     expect(result.skipped).toBe(1);
     expect(client.sent).toHaveLength(0);
     expect(ledger.readAnnouncements()[0]?.state).toBe('failed');
+  });
+});
+
+describe('the bar, above confirmed', () => {
+  it('says nothing at all when nothing cleared it', async () => {
+    // The ordinary outcome. Nothing is invented to fill the silence, and the
+    // announcement ledger is not rewritten to record that nothing happened.
+    const client = stubX();
+    const result = await runAnnounce({ client, now: NOW_AT });
+
+    expect(result.eligible).toBe(0);
+    expect(result.posted).toBe(0);
+    expect(client.sent).toHaveLength(0);
+    expect(ledger.readAnnouncements()).toHaveLength(0);
+  });
+
+  it('leaves releases to the ships lens', async () => {
+    // Twenty to forty a day, almost all patch bumps. A timeline carrying all of
+    // them carries nothing else.
+    ledger.appendEvents('2026-08', [
+      finding('release:a/one:v1.2.3', {
+        kind: 'release',
+        metrics: { tag: 'v1.2.3', previousTag: 'v1.2.2' },
+      }),
+    ]);
+
+    const client = stubX();
+    const result = await runAnnounce({ client, now: NOW_AT });
+
+    expect(result.eligible).toBe(0);
+    expect(client.sent).toHaveLength(0);
+  });
+
+  it('announces the readings that change what somebody would do', async () => {
+    ledger.appendEvents('2026-08', [
+      finding('lic', { kind: 'licence', metrics: { from: 'Apache-2.0', to: 'BUSL-1.1' } }),
+      finding('arc', { kind: 'archived', metrics: {} }),
+    ]);
+
+    const client = stubX();
+    await runAnnounce({ client, limit: 5, now: NOW_AT });
+
+    expect(client.sent).toHaveLength(2);
+    expect(client.sent.join('\n')).toContain('changed its licence from Apache-2.0 to BUSL-1.1');
+  });
+
+  it('does not post a backlog as though it had just happened', async () => {
+    // The first run with working credentials would otherwise announce every
+    // confirmed finding ever recorded, dated today by implication.
+    ledger.appendEvents('2026-08', [
+      finding('old', { kind: 'archived', detectedAt: '2026-07-01T00:00:00Z', metrics: {} }),
+      finding('new', { kind: 'archived', detectedAt: '2026-08-04T06:00:00Z', metrics: {} }),
+    ]);
+
+    const client = stubX();
+    const result = await runAnnounce({ client, limit: 5, now: NOW_AT });
+
+    expect(result.eligible).toBe(1);
+    expect(ledger.readAnnouncements().map((row) => row.eventId)).toEqual(['new']);
+  });
+
+  it('stops at the monthly ceiling rather than failing at somebody else’s', async () => {
+    // X's free tier allows 500 posts a month. Running out mid-month means the
+    // findings that go unsaid are whichever ones happened to be last.
+    ledger.appendEvents('2026-08', [
+      finding('a', { kind: 'archived', metrics: {} }),
+      finding('b', { kind: 'archived', repo: 'other/repo', metrics: {} }),
+    ]);
+
+    const client = stubX();
+    await runAnnounce({ client, limit: 5, monthlyCap: 1, now: NOW_AT });
+
+    expect(client.sent).toHaveLength(1);
+
+    // A second run in the same month adds nothing.
+    await runAnnounce({ client, limit: 5, monthlyCap: 1, now: NOW_AT });
+    expect(client.sent).toHaveLength(1);
+
+    // The cap is per calendar month, so the next one opens again.
+    await runAnnounce({ client, limit: 5, monthlyCap: 1, now: new Date('2026-09-01T00:00:00Z'), maxAgeHours: 24 * 40 });
+    expect(client.sent).toHaveLength(2);
+  });
+});
+
+describe('withdrawing something already said', () => {
+  it('posts the correction when the finding it retracts was posted', async () => {
+    // A post cannot be deleted out of somebody's memory. The retraction goes to
+    // the same place with the same prominence as the claim.
+    ledger.appendEvents('2026-08', [finding('a', { kind: 'archived', metrics: {} })]);
+
+    const client = stubX();
+    await runAnnounce({ client, now: NOW_AT });
+    expect(client.sent).toHaveLength(1);
+
+    ledger.appendEvents('2026-08', [
+      finding('c1', {
+        kind: 'correction',
+        supersedes: 'a',
+        metrics: { withdrawn: 'archived', reason: 'The repository was never archived.' },
+      }),
+    ]);
+
+    await runAnnounce({ client, now: NOW_AT });
+    expect(client.sent).toHaveLength(2);
+    expect(client.sent[1]).toContain('Withdrawn');
+    expect(client.sent[1]).toContain('The repository was never archived.');
+  });
+
+  it('stays quiet about a correction to something never announced', async () => {
+    // Most corrections retract findings that only ever appeared on the site.
+    // Posting those would announce a mistake nobody was told about.
+    ledger.appendEvents('2026-08', [
+      finding('a', { kind: 'archived', metrics: {} }),
+      finding('c1', {
+        kind: 'correction',
+        supersedes: 'a',
+        metrics: { withdrawn: 'archived', reason: 'wrong' },
+      }),
+    ]);
+
+    const client = stubX();
+    await runAnnounce({ client, limit: 5, now: NOW_AT });
+
+    expect(client.sent).toHaveLength(0);
   });
 });
 
