@@ -411,7 +411,14 @@ ${band(
     path: packagePath(data.registry, data.name),
     index,
     meta,
-    feed: { href: `/repo/${data.repo}.xml`, title: `Sighttrue — ${data.repo}` },
+    // The repository's feed, named for the package, because that is what the
+    // reader of this page is following. No package gets a feed of its own:
+    // every tracked repository here publishes exactly one tracked package, so
+    // a second file would be the same items under a different address.
+    feed: {
+      href: `/repo/${data.repo}.xml`,
+      title: `Sighttrue — ${data.name} (${data.repo})`,
+    },
     body,
   });
 }

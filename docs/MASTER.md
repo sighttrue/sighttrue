@@ -1335,7 +1335,8 @@ cannot copy without also being honest.
 | Published claim turns out wrong | Append a correction event. Never delete, never force push. |
 | Ask endpoint quota drained by one client | Per-IP, per-colo limit through the cache API; identical questions answered from cache. |
 | pypistats refuses a read | Paced at 1200ms and still refuses some. A refused read carries the previous count forward and is counted in the run record — the figure goes stale, never missing, and never zero. |
-| A package is mapped to the wrong repository | Mappings are verified against the registry's own declared repository, matched as a whole path segment. Never on a name match. |
+| A package is mapped to the wrong repository | `scripts/audit-packages.ts` compares each mapping against the repository the registry itself declares, matched as a whole path segment. Never on a name match. Written after the row above sat here for weeks describing a check nothing performed. |
+| A mapping points at a name the project abandoned | The check above passes and the reading is still wrong: `npm:babel` really was published from `babel/babel`, in 2017, before the project moved to `@babel/core`. Fourteen mappings were in this state, and all three "withdrawn by its publisher" findings ever raised came from them. The tell is this product's own divergence reading turned inward — a package withdrawn or silent for years while its repository was pushed to this week. Same script, second pass. |
 | Ask endpoint down or out of quota | It answers with the reason and the site is untouched. No page may depend on it. |
 
 ---
@@ -1389,3 +1390,110 @@ The limiter charges for answers, not for requests. The quota is spent by
 generation, so a cached answer, a refusal and an outage all cost nothing and
 are billed nothing — the first version charged for every request, which meant a
 broken endpoint rate-limited the people discovering it was broken.
+
+---
+
+# PART 10 — SURFACES ADDED AFTER THE BUILD PROMPTS
+
+Parts 6 and 7 describe the instrument as it was specified. What follows was
+built afterwards, and each entry records the reason rather than the feature,
+because the reason is the part that stops it being undone by somebody who does
+not know why it is shaped that way.
+
+## The readings the registries were already sending
+
+The staleness collector fetched one document per package and took one field out
+of it. It takes five. `withdrawn` is the publisher's own instruction not to
+install — npm calls it deprecated, PyPI and crates.io call it yanked.
+`installScripts` names what npm will run on the installing machine, which is
+the main path by which a compromised package becomes code execution. Then
+install weight and the maintainers' funding link. None costs a request; all
+four were being discarded.
+
+Two findings come out of it. `package-withdrawn` is worded as a standing state
+rather than a transition, because the field gets read for the first time on
+some particular run and "npm marks this deprecated" is true whenever that run
+happens where "was deprecated today" would not be. `package-woke` fires when a
+package quiet for over a year publishes — the event-stream shape, and equally a
+maintainer returning to a finished library. The record says how long the gap
+was and stops there.
+
+## Per-package pages
+
+"Is X still maintained" is the sentence people type. The readings that answer
+it were reachable only by knowing which repository publishes the package, which
+is exactly what somebody asking does not know. `/npm/<name>`, `/pypi/<name>`,
+`/crates/<name>`, one per tracked package, titled with the question.
+
+The page never answers with a verdict. It does not say maintained, abandoned,
+safe or risky: those are conclusions and the readings exist so the reader can
+reach their own. Five places have to change together for one of these to exist
+and be findable — renderer, build registration, sitemap, and both tests — which
+is why `tests/headers.test.ts` now walks the registry directories.
+
+## `/api/verdict` and `check_before_install`
+
+An agent deciding on a dependency has five questions across four services, so
+in practice it asks none and answers from training data. Both surfaces return
+every reading in one call with a `source` on each, because a figure an agent
+pastes into a code review has to be checkable by the person reading it.
+
+Neither scores, ranks or totals anything, and a test asserts the response
+carries no score, rank or recommendation key. `check_before_install` returns
+only what a reviewer would be annoyed to discover afterwards. No field is
+called safe or clear: an agent handed a boolean named `safe` will report the
+package as safe, so an empty result says in words that these particular facts
+are absent rather than that the package is fine.
+
+## The GitHub App
+
+`functions/api/github/webhook.ts`. The Action needs a workflow file in every
+repository that wants it; the App needs one install. One comment per pull
+request that adds a tracked runtime dependency, edited on every later push.
+
+It reads the manifest, not the diff — both versions of every changed manifest,
+parsed by the same reader the collector uses. Patch hunks arrive without the
+context that says whether a line is a dependency or a script, and this project
+has been caught by that class of pattern before. Silence is the default and the
+common outcome, and every failure after the signature check is reported in the
+response rather than in a stranger's code review.
+
+## SBOM
+
+CycloneDX 1.6 from `/stack`, built in the browser like the rest of that page —
+an SBOM endpoint would have turned a page that reads a stack into a service
+that collects them. No component carries a `version`, because a manifest
+declares a range and does not say what was installed, and the document states
+that in its own metadata. An SBOM that guessed would be a compliance artefact
+asserting something nobody resolved.
+
+## Incidents, read from JSON
+
+The RSS reader stored each item's `pubDate` — the time of its last update — in
+a field named `startedAt`, so every resolved row held the time it *ended*. Of
+the rows that could still be checked, 369 of 379 matched `resolved_at` exactly
+and none matched `started_at`.
+
+`/api/v2/incidents.json` publishes both, which also made duration computable.
+Intervals are merged rather than summed: adding them overstated one provider by
+3,277 minutes, two days invented out of records that ran in parallel. No
+availability percentage is published, and the column is named "time with a
+record open" — the arithmetic is trivial and the answer would have been
+"Supabase 77%", which is wrong about somebody else's service in the most
+damaging direction.
+
+The same switch retired 65 scheduled-maintenance rows that the RSS history feed
+had been mixing in with incidents, some of them dated in the future.
+
+## Reach
+
+A badge per package, not only per repository: a repository badge belongs in one
+README and a package badge belongs in the README of everything that depends on
+it. `/llms.txt` for the reader that arrives without a browser, with its figures
+drawn from the same bundle the pages render from so it cannot drift into
+claiming a corpus the ledger does not hold. And the install line for the MCP
+server now sits on every package page, because an agent with the page open was
+one line away from it and nothing said so.
+
+No per-package feeds. Every tracked repository publishes exactly one tracked
+package, so 152 more files would have been the same items at a second address.
