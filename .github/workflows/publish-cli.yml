@@ -34,10 +34,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Deliberately no `registry-url`. Setting it makes setup-node write an
+      # .npmrc containing `_authToken=${NODE_AUTH_TOKEN}` and point
+      # NPM_CONFIG_USERCONFIG at it. With trusted publishing there is no such
+      # token to set, so it resolves to an empty string, npm sends an empty
+      # credential, and the registry answers 404 — which is how npm hides "not
+      # authorised" from anyone probing for private package names.
+      #
+      # The failure is doubly confusing because provenance still succeeds: that
+      # is signed from the OIDC token directly and never touches registry auth,
+      # so the log shows a signed statement published to the transparency log
+      # and then a 404 on the upload immediately after.
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
 
       # The CLI has no dependencies and no build step, so there is nothing to
       # install and nothing to compile. What there is to check is that the thing
