@@ -111,6 +111,38 @@ jobs:
           printf '%s' "${OAUTH_GITHUB_SECRET}" \
             | npx --yes wrangler@4 pages secret put OAUTH_GITHUB_SECRET --project-name=readout
 
+      - name: Put the GitHub App credentials in the Pages project
+        # The pull-request bot. Named APP_GITHUB_* for the same reason the OAuth
+        # pair is named OAUTH_GITHUB_*: GitHub refuses to store a secret whose
+        # name begins with GITHUB_.
+        #
+        # The private key is multi-line PEM. It is written to a file and piped
+        # from there rather than echoed, because `printf` with a value
+        # containing newlines is one shell quoting mistake away from storing a
+        # truncated key — which fails as "this App does not exist", not as
+        # "your key is wrong".
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          APP_GITHUB_ID: ${{ secrets.APP_GITHUB_ID }}
+          APP_GITHUB_PRIVATE_KEY: ${{ secrets.APP_GITHUB_PRIVATE_KEY }}
+          APP_GITHUB_WEBHOOK_SECRET: ${{ secrets.APP_GITHUB_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_GITHUB_ID:-}" ] || [ -z "${APP_GITHUB_PRIVATE_KEY:-}" ] || [ -z "${APP_GITHUB_WEBHOOK_SECRET:-}" ]; then
+            echo "The GitHub App credentials are not all set. Nothing to configure." >&2
+            exit 1
+          fi
+          umask 077
+          printf '%s' "${APP_GITHUB_PRIVATE_KEY}" > "${RUNNER_TEMP}/app.pem"
+          printf '%s' "${APP_GITHUB_ID}" \
+            | npx --yes wrangler@4 pages secret put APP_GITHUB_ID --project-name=readout
+          npx --yes wrangler@4 pages secret put APP_GITHUB_PRIVATE_KEY --project-name=readout \
+            < "${RUNNER_TEMP}/app.pem"
+          rm -f "${RUNNER_TEMP}/app.pem"
+          printf '%s' "${APP_GITHUB_WEBHOOK_SECRET}" \
+            | npx --yes wrangler@4 pages secret put APP_GITHUB_WEBHOOK_SECRET --project-name=readout
+
       # ------------------------------------------------------------- deploy
 
       - run: npm ci
@@ -191,6 +223,29 @@ jobs:
             sleep 15
           done
           echo "Sign-in did not redirect to GitHub." >&2
+          exit 1
+
+      - name: Confirm the pull-request bot has its webhook secret
+        # An unsigned delivery. With no secret the endpoint answers 503 before
+        # it checks anything; with one it answers 401, which proves the secret
+        # arrived without this workflow ever holding a valid signature.
+        #
+        # It does not prove the secret is the one GitHub signs with — that was
+        # transcribed from a screenshot and only a real delivery can settle it.
+        # The App's Advanced tab shows 401 if it is wrong and 200 if it is right.
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' \
+              -X POST https://sighttrue.com/api/github/webhook \
+              -H 'content-type: application/json' \
+              -H 'x-github-event: ping' \
+              --data '{"zen":"configuration check"}')
+            echo "attempt ${attempt}: the webhook answered ${code}"
+            if [ "${code}" = "401" ]; then echo "the webhook secret is live"; exit 0; fi
+            sleep 15
+          done
+          echo "The webhook still has no secret." >&2
           exit 1
 
       - name: Confirm the database is actually bound

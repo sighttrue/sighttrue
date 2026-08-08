@@ -33,6 +33,24 @@ passes.
 
 Also runs against `requirements.txt` and `Cargo.toml`.
 
+## Or install the App and change nothing
+
+The Action needs a workflow file in every repository that wants it. The GitHub
+App needs one install and then watches every repository it is given, with no
+workflow, no key and no configuration: when a pull request adds a runtime
+dependency that is on the watchlist, it leaves one comment with what is on
+record — downloads, OpenSSF scorecard, advisory count, licence, last push — and
+edits that same comment on every later push.
+
+It says nothing at all when a pull request changes no manifest, adds no
+dependency, or adds nothing that is tracked. That is the common case and it is
+the point: a bot that comments to say it found nothing gets uninstalled. It
+never calls a package safe, unsafe or recommended, because none of those are
+things this project measures.
+
+The Action fails a build; the App only reports. Both read the same published
+bundle, so they cannot disagree.
+
 ## Suggest something to watch
 
 The watchlist is curated and partial, and it was chosen by hand with no method
@@ -63,9 +81,10 @@ across 58 providers, 247 packages by real ship date, 387 commit histories for
 the bus factor. It runs every four hours on GitHub Actions, commits what it
 reads to this repository, and publishes a static site.
 
-Every page and every bundle is a file. There are four dynamic routes and no page
-depends on any of them: `/api/ask`, `/api/mcp`, `/api/chain`, and the sign-in
-and watchlist endpoints under `/api/auth` and `/api/watchlist`. Signing in with
+Every page and every bundle is a file. There are five dynamic routes and no page
+depends on any of them: `/api/ask`, `/api/mcp`, `/api/chain`,
+`/api/github/webhook` for the App, and the sign-in and watchlist endpoints under
+`/api/auth` and `/api/watchlist`. Signing in with
 GitHub saves a watchlist and nothing else — the readings on a signed-in page are
 the same published bundle anyone can download.
 

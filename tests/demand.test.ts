@@ -233,6 +233,35 @@ describe('manifest parsing', () => {
     expect(deps['httpx']).toBe('>=0.27');
     expect(deps['pydantic']).toBe('*');
   });
+
+  it('reads requirements.txt, pinned or not', () => {
+    const deps = parseManifest(
+      'requirements.txt',
+      'requests==2.31.0\nhttpx\nflask[async]>=3.0  # the web bit\n',
+    );
+
+    expect(deps).toEqual({ requests: '==2.31.0', httpx: '*', flask: '>=3.0' });
+  });
+
+  it('skips everything in requirements.txt that is not a package', () => {
+    // Read strictly rather than forgivingly: this one feeds the pull-request
+    // bot, where a misread line becomes a comment on somebody else's work.
+    const deps = parseManifest(
+      'requirements.txt',
+      [
+        '-r base.txt',
+        '--index-url https://example.test/simple',
+        '-e .',
+        'https://example.test/wheel-1.0-py3-none-any.whl',
+        './local/package',
+        '# a comment on its own',
+        '',
+        'requests==2.31.0',
+      ].join('\n'),
+    );
+
+    expect(deps).toEqual({ requests: '==2.31.0' });
+  });
 });
 
 describe('diffDependencies', () => {

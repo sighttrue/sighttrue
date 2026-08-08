@@ -124,11 +124,39 @@ function parsePyproject(text: string): Record<string, string> {
   return deps;
 }
 
+/**
+ * requirements.txt, which is a format only by convention.
+ *
+ * Read strictly rather than forgivingly: a line has to begin with a name and be
+ * followed by a version specifier, a marker, or nothing. Everything else is
+ * skipped, including the `-r`, `-e` and `--hash` directives, URLs, and paths.
+ * Nothing here is the collector's input — this exists for the pull-request bot,
+ * where a misread line becomes a comment on somebody else's work.
+ */
+function parseRequirements(text: string): Record<string, string> {
+  const deps: Record<string, string> = {};
+
+  for (const raw of text.split(/\r?\n/)) {
+    // A `#` inside a URL fragment cannot appear on a line this accepts, because
+    // a line with a URL on it has no bare name at the front.
+    const line = (raw.split('#')[0] ?? '').trim();
+    if (line === '' || line.startsWith('-')) continue;
+
+    const match = /^([A-Za-z0-9][A-Za-z0-9._-]*)\s*(\[[^\]]*\])?\s*([=<>!~].*)?$/.exec(line);
+    if (match === null) continue;
+
+    deps[match[1] as string] = (match[3] ?? '*').trim();
+  }
+
+  return deps;
+}
+
 export function parseManifest(path: string, text: string): Record<string, string> {
   if (path === 'package.json') return parsePackageJson(text);
   if (path === 'Cargo.toml') return parseCargoToml(text);
   if (path === 'go.mod') return parseGoMod(text);
   if (path === 'pyproject.toml') return parsePyproject(text);
+  if (path === 'requirements.txt') return parseRequirements(text);
   return {};
 }
 
