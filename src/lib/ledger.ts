@@ -33,8 +33,18 @@ import {
   STALENESS_PATH,
   TYPOSQUAT_PATH,
   LIFECYCLE_PATH,
+  PRICES_DIR,
+  pricesPath,
+  DOWNLOADS_DIR,
+  downloadsPath,
 } from './paths.ts';
 import { MODEL_KEYS, type ModelRow } from '../types/models.ts';
+import {
+  DOWNLOAD_KEYS,
+  PRICE_KEYS,
+  type DownloadRow,
+  type PriceRow,
+} from '../types/archive.ts';
 import { CONTRIBUTOR_KEYS, type ContributorRow } from '../types/contributors.ts';
 import { TRENDING_KEYS, type TrendingRow } from '../types/trending.ts';
 import { HIRING_KEYS, type HiringRow } from '../types/hiring.ts';
@@ -521,4 +531,69 @@ export function readMeta(): MetaRecord {
 
 export function writeMeta(meta: MetaRecord): void {
   writeJson(META_PATH, meta, META_KEYS);
+}
+
+// ------------------------------------------------------- the kept archives
+//
+// Prices and download counts are pruned to 35 days on their live rows. These
+// two files are where the rest of the series lives: append-only, monthly,
+// never rewritten and never pruned, exactly like events.
+
+export function readPrices(month: string): PriceRow[] {
+  return readJsonl<PriceRow>(pricesPath(month));
+}
+
+/** Months with a price file, oldest first. */
+export function listPriceMonths(): string[] {
+  if (!existsSync(PRICES_DIR)) return [];
+  return readdirSync(PRICES_DIR)
+    .filter((name) => /^\d{4}-\d{2}\.jsonl$/.test(name))
+    .map((name) => name.slice(0, 7))
+    .sort();
+}
+
+/**
+ * The last price archived for each model, across every month on file.
+ *
+ * The comparison the append rule needs. Read whole because the file is small
+ * by construction — a model whose price never moves contributes one row for
+ * its entire life.
+ */
+export function lastArchivedPrices(): Map<string, PriceRow> {
+  const latest = new Map<string, PriceRow>();
+  for (const month of listPriceMonths()) {
+    for (const row of readPrices(month)) latest.set(row.id, row);
+  }
+  return latest;
+}
+
+export function appendPrices(month: string, rows: readonly PriceRow[]): void {
+  appendJsonl(pricesPath(month), rows, PRICE_KEYS);
+}
+
+export function readDownloads(month: string): DownloadRow[] {
+  return readJsonl<DownloadRow>(downloadsPath(month));
+}
+
+export function listDownloadMonths(): string[] {
+  if (!existsSync(DOWNLOADS_DIR)) return [];
+  return readdirSync(DOWNLOADS_DIR)
+    .filter((name) => /^\d{4}-\d{2}\.jsonl$/.test(name))
+    .map((name) => name.slice(0, 7))
+    .sort();
+}
+
+/**
+ * One row per package per day, and never a second one for the same day.
+ *
+ * The daily job can run more than once — a rerun, a manual dispatch, a retry
+ * after a failure — and an append-only file has no way to correct a duplicate
+ * afterwards. So the day already on file wins and the rerun writes nothing.
+ */
+export function appendDownloads(month: string, rows: readonly DownloadRow[]): void {
+  const seen = new Set(
+    readDownloads(month).map((row) => `${row.registry}:${row.name}:${row.date}`),
+  );
+  const fresh = rows.filter((row) => !seen.has(`${row.registry}:${row.name}:${row.date}`));
+  appendJsonl(downloadsPath(month), fresh, DOWNLOAD_KEYS);
 }

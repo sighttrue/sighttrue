@@ -17,6 +17,17 @@ const LIVE_DIR = join(DATA_DIR, 'live');
 export const HISTORY_DIR = join(DATA_DIR, 'history');
 export const EVENTS_DIR = join(DATA_DIR, 'events');
 
+/**
+ * The two series that were being pruned out of existence.
+ *
+ * Prices and download counts live inline on their row as a 35-day trend and
+ * are cut on every run. `history/` carries forks, stars and open issues and
+ * nothing else, so past 35 days there was no answer and never would be. These
+ * are append-only and monthly, like events.
+ */
+export const PRICES_DIR = join(DATA_DIR, 'prices');
+export const DOWNLOADS_DIR = join(DATA_DIR, 'downloads');
+
 export const WATCHLIST_PATH = join(DATA_DIR, 'watchlist.jsonl');
 
 /** Base models whose descendants are traced. Curated, like the watchlist. */
@@ -200,6 +211,22 @@ export function eventsPath(month: string): string {
     throw new Error(`eventsPath: expected YYYY-MM, got "${month}"`);
   }
   return join(EVENTS_DIR, `${month}.jsonl`);
+}
+
+/** `data/prices/YYYY-MM.jsonl`. Append-only, never pruned. */
+export function pricesPath(month: string): string {
+  if (!MONTH_PATTERN.test(month)) {
+    throw new Error(`pricesPath: expected YYYY-MM, got "${month}"`);
+  }
+  return join(PRICES_DIR, `${month}.jsonl`);
+}
+
+/** `data/downloads/YYYY-MM.jsonl`. Append-only, never pruned. */
+export function downloadsPath(month: string): string {
+  if (!MONTH_PATTERN.test(month)) {
+    throw new Error(`downloadsPath: expected YYYY-MM, got "${month}"`);
+  }
+  return join(DOWNLOADS_DIR, `${month}.jsonl`);
 }
 
 /** `YYYY-MM-DD` in UTC. Local time would shift the snapshot date by timezone. */

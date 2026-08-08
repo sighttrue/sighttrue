@@ -40,6 +40,9 @@ import {
   readHealth,
   writeHealth,
   writeModels,
+  appendPrices,
+  appendDownloads,
+  lastArchivedPrices,
   writeHiring,
   writeImages,
   writeQuestions,
@@ -374,6 +377,24 @@ export async function runDaily(options: DailyOptions = {}): Promise<MetaRecord> 
     try {
       const adoption = await collectAdoption(readWatchlist(), readAdoption(), { now: nowIso });
       writeAdoption(adoption.rows);
+
+      // One row per package per day, kept forever. The count on the row above
+      // is pruned to 35 days, and "was this package growing when we adopted
+      // it" is a question that cannot be answered later if it is not written
+      // down now. A count that could not be read is not archived as zero.
+      appendDownloads(
+        month,
+        adoption.rows
+          .filter((row) => row.count !== null)
+          .map((row) => ({
+            registry: row.registry,
+            name: row.name,
+            date: today,
+            count: row.count as number,
+            window: row.window,
+          })),
+      );
+
       errors.push(...adoption.errors);
       for (const registry of adoption.missed) {
         errors.push(`adoption ${registry}: no reading this run, last known counts carried forward`);
@@ -411,6 +432,31 @@ export async function runDaily(options: DailyOptions = {}): Promise<MetaRecord> 
         seen: new Set(readEvents(month).map((event) => event.id)),
       });
       writeModels(models.rows);
+
+      // The archive, before the trend on the row above is pruned past it. A
+      // row is written only when a price differs from the last one on file, so
+      // a model that never moves costs one line for its whole life — the same
+      // rule window.jsonl uses for fork samples.
+      const archived = lastArchivedPrices();
+      const moved = models.rows.filter((row) => {
+        const last = archived.get(row.id);
+        return (
+          last === undefined ||
+          last.prompt !== row.prompt ||
+          last.completion !== row.completion ||
+          last.context !== row.context
+        );
+      });
+      appendPrices(
+        month,
+        moved.map((row) => ({
+          id: row.id,
+          at: nowIso,
+          prompt: row.prompt,
+          completion: row.completion,
+          context: row.context,
+        })),
+      );
       // Written here rather than added to `events`, which is appended in one go
       // at the end. Doing both appended every model finding twice, and the
       // second append is rejected outright — `appendEvents` refuses to rewrite
