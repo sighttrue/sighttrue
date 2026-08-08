@@ -1,7 +1,7 @@
 {
   "name": "sighttrue",
-  "version": "1.0.0",
-  "description": "Dated readings on the dependencies you are about to install. No account, no key, and your manifest never leaves the machine.",
+  "version": "1.1.0",
+  "description": "Dated readings on what you are about to install: dependencies and base images. No account, no key, and nothing you read leaves the machine.",
   "keywords": [
     "dependencies",
     "supply-chain",

@@ -29,6 +29,34 @@ esbuild — evanw/esbuild
     https://www.npmjs.com/package/esbuild
 ```
 
+It also flags a dependency name that is one character from a package on the
+watchlist. Both names exist on the registry; which one you meant is your call.
+
+## Base images
+
+```
+npx sighttrue docker
+```
+
+Reads the `FROM` lines and joins two readings nobody puts together: when the
+runtime stops receiving fixes, and when the image you are pinning was last
+rebuilt.
+
+```
+node:18
+  • nodejs 18 stopped receiving fixes on 2025-04-30, according to endoflife.date.
+    https://endoflife.date/nodejs
+
+python:3.10-slim
+  • python 3.10 stops receiving fixes on 2026-10-31, in 84 days, according to
+    endoflife.date.
+    https://endoflife.date/python
+```
+
+Multi-stage builds are handled: a `FROM builder` referring to an earlier stage
+is not an image and is not reported as one. Fifteen official images are tracked;
+anything else reports nothing either way rather than guessing.
+
 ## One package
 
 ```
