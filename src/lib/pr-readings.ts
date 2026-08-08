@@ -91,6 +91,15 @@ export interface Added {
 }
 
 export interface Reading extends Added {
+  /**
+   * The index key this matched, `registry:name`.
+   *
+   * The link is built from this rather than from the name in the manifest,
+   * because the page is built from this too. `PyYAML` in somebody's
+   * requirements.txt and `pypi:pyyaml` in the index are the same package, and
+   * only one of those two spellings has a page.
+   */
+  key: string;
   entry: StackEntry;
 }
 
@@ -113,7 +122,7 @@ export function readingsFor(added: readonly Added[], index: StackIndex): Reading
     if (entry === undefined) continue;
 
     seen.add(key);
-    found.push({ ...item, entry });
+    found.push({ ...item, key, entry });
   }
 
   return found.sort((a, b) => a.name.localeCompare(b.name));
@@ -190,7 +199,7 @@ export function commentBody(options: CommentOptions): string | null {
   const rows = shown
     .map((reading) => {
       const { entry } = reading;
-      return `| [${escapeCell(reading.name)}](${site}/repo/${entry.repo}) | ${downloads(entry.installs)} | ${
+      return `| [${escapeCell(reading.name)}](${site}/${reading.key.replace(':', '/')}) | ${downloads(entry.installs)} | ${
         entry.scorecard === null ? '—' : entry.scorecard.toFixed(1)
       } | ${entry.advisories === null ? '—' : entry.advisories} | ${
         entry.license === null ? '—' : escapeCell(entry.license)

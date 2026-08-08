@@ -134,6 +134,10 @@ if (stackForm) {
       const also = data.dependents?.[shown.toLowerCase().replace(/_/g, '-')] ?? null;
       rows.push({
         name: shown,
+        // The index key, which is also the address of that package's page. The
+        // pasted spelling is not: PyYAML and pyyaml are the same package and
+        // only one of the two has a page.
+        key,
         tracked: Boolean(tracked),
         also,
         advisories: osv.has(key) ? osv.get(key) : (tracked ? tracked.advisories : null),
@@ -228,7 +232,7 @@ if (stackForm) {
       rows.map((r) => {
         const age = AGE_DAYS(r.pushedAt);
         return '<tr>' +
-          '<td>' + r.name + '</td>' +
+          '<td>' + (r.tracked ? link('/' + r.key.replace(':', '/'), r.name) : r.name) + '</td>' +
           '<td class="n num">' + (r.also ? r.also : '<span class="dim">—</span>') + '</td>' +
           '<td>' + (r.tracked ? link('/repo/' + r.repo, r.repo) : '<span class="dim">not tracked</span>') + '</td>' +
           '<td class="n num">' + (typeof r.scorecard === 'number' ? r.scorecard.toFixed(1) : '<span class="dim">—</span>') + '</td>' +

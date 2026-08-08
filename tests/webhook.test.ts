@@ -209,6 +209,8 @@ describe('matching added packages to readings', () => {
 
     expect(found).toHaveLength(1);
     expect(found[0]?.name).toBe('PyYAML');
+    // Linked by the key, which is the spelling the page was built under.
+    expect(found[0]?.key).toBe('pypi:pyyaml');
   });
 
   it('reports a package once when two manifests add it', () => {
@@ -252,7 +254,9 @@ describe('the comment', () => {
     const body = commentBody(options()) as string;
 
     expect(body).toContain('axios');
-    expect(body).toContain('https://sighttrue.com/repo/axios/axios');
+    // The package page, not the repository page: the reader is holding a
+    // package name and does not know which repository publishes it.
+    expect(body).toContain('https://sighttrue.com/npm/axios');
     expect(body).toContain('58.0M');
     expect(body).toContain('6.2');
     expect(body).toContain('MIT');

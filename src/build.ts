@@ -53,7 +53,15 @@ const CALIBRATED_COLLECTORS = ['fork-spike', 'fork-outlier', 'demand', 'lineage'
 const CALIBRATION_WINDOW_DAYS = 30;
 import { templatedSentence } from './lib/validate.ts';
 import { scoreFindings } from './lib/scorecard.ts';
-import { assertSafeRepoId, DIST_DATA_DIR, DIST_DIR, ROOT, utcDate } from './lib/paths.ts';
+import {
+  assertSafePackageName,
+  assertSafeRepoId,
+  DIST_DATA_DIR,
+  DIST_DIR,
+  isSafePackageName,
+  ROOT,
+  utcDate,
+} from './lib/paths.ts';
 import { buildAskContext, MAX_CONTEXT_BYTES } from './site/ask-context.ts';
 import {
   eventSlug,
@@ -94,6 +102,7 @@ import {
 } from './lib/spikes.ts';
 import { windowAnchor } from './lib/window.ts';
 import { renderRepoPage, type RepoSeriesPoint } from './site/repo.ts';
+import { packagePath, renderPackagePage } from './site/package.ts';
 import {
   LENSES,
   type Disclosure,
@@ -903,6 +912,73 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
     pages.set(`e/${slug}.html`, renderEventPage(event, index, previous));
   }
 
+  // One page per package, which is the object a reader actually holds. Every
+  // reading here was already collected and was reachable only by knowing which
+  // repository publishes the package — the one thing somebody searching "is X
+  // still maintained" does not know.
+  const adoptionByPackage = new Map(
+    readAdoption().map((row) => [`${row.registry}:${row.name.toLowerCase()}`, row]),
+  );
+  const stalenessByPackage = new Map(
+    readStaleness().map((row) => [`${row.registry}:${row.name.toLowerCase()}`, row]),
+  );
+  const contributorsByRepo = new Map(readContributors().map((row) => [row.id, row]));
+  const packagePaths: string[] = [];
+
+  for (const [packageId, entry] of Object.entries(stackIndex)) {
+    const separator = packageId.indexOf(':');
+    const registry = packageId.slice(0, separator);
+    const name = packageId.slice(separator + 1);
+    if (registry !== 'npm' && registry !== 'pypi' && registry !== 'crates') continue;
+    // The name becomes a filesystem path on the next line but one.
+    if (!isSafePackageName(name)) continue;
+
+    const reading = entry as {
+      repo: string;
+      installs: number | null;
+      scorecard: number | null;
+      advisories: number | null;
+      license: string | null;
+      archived: boolean;
+      pushedAt: string | null;
+    };
+    const adoption = adoptionByPackage.get(`${registry}:${name.toLowerCase()}`);
+    const stale = stalenessByPackage.get(`${registry}:${name.toLowerCase()}`);
+    const commits = contributorsByRepo.get(reading.repo);
+
+    pages.set(
+      `${registry}/${assertSafePackageName(name)}.html`,
+      renderPackagePage(
+        {
+          registry,
+          name,
+          repo: reading.repo,
+          archived: reading.archived,
+          pushedAt: reading.pushedAt,
+          license: reading.license,
+          scorecard: reading.scorecard,
+          advisories: reading.advisories,
+          latestReleaseTag: liveById.get(reading.repo)?.latestReleaseTag ?? null,
+          // The count for this package, not the largest across the repository's
+          // packages: this page is about one of them.
+          installs: adoption?.count ?? null,
+          window: adoption?.window ?? null,
+          samples: adoption?.samples ?? [],
+          lastPublish: stale?.lastPublish ?? null,
+          version: stale?.version ?? null,
+          busFactor: commits?.busFactor ?? null,
+          topShare: commits?.topShare ?? null,
+          dependents: dependents.get(name.toLowerCase().replace(/_/g, '-')) ?? 0,
+          findings: findingsByRepo.get(reading.repo) ?? 0,
+          today,
+        },
+        index,
+        previous,
+      ),
+    );
+    packagePaths.push(packagePath(registry, name));
+  }
+
   pages.set('method.html', renderMethod(index, previous));
   pages.set('compare.html', renderCompare(index, previous));
   pages.set('stack.html', renderStack(index, previous));
@@ -976,6 +1052,9 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
       (path) => !READINGS.some((reading) => reading.href === path),
     ),
     ...[...profiles.keys()].map((repo) => `/repo/${repo}`),
+    // The largest indexable surface here after the repository pages, and the
+    // one that answers a question people type rather than one they browse to.
+    ...packagePaths,
     ...addressable.map((event) => eventPath(event)),
     ...LENSES.flatMap((lens) =>
       [...(lensArchives.get(lens)?.keys() ?? [])].map((month) => archivePath(lens, month)),

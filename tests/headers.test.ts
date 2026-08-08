@@ -166,6 +166,19 @@ describe('the sitemap lists every page that was published', () => {
     .filter((entry) => entry.isFile() && entry.name.endsWith('.html'))
     .map((entry) => (entry.name === 'index.html' ? '/' : `/${entry.name.slice(0, -'.html'.length)}`));
 
+  // The package pages, which live a directory down and would have been invisible
+  // to a scan of the top level — the same way /readings was once published into
+  // no sitemap at all.
+  const packages = ['npm', 'pypi', 'crates'].flatMap((registry) =>
+    htmlFiles(join(DIST, registry)).map(
+      (path) =>
+        `/${registry}/${path
+          .slice(join(DIST, registry).length + 1)
+          .replace(/\\/g, '/')
+          .slice(0, -'.html'.length)}`,
+    ),
+  );
+
   it('covers each of them', () => {
     for (const path of emitted) {
       // Archive pages are reachable from their lens and deliberately not
@@ -173,6 +186,19 @@ describe('the sitemap lists every page that was published', () => {
       if (/^\/(ships|forks|demand|stack|lineage)-\d{4}-\d{2}$/.test(path)) continue;
       expect(sitemap, `${path} is published but not in the sitemap`).toContain(
         `<loc>https://sighttrue.com${path === '/' ? '/' : path}</loc>`,
+      );
+    }
+  });
+
+  it('covers every package page, including the scoped ones', () => {
+    // A page nobody can navigate to and no crawler is told about is a page that
+    // does not exist. These are the ones a search brings people to.
+    expect(packages.length).toBeGreaterThan(0);
+    expect(packages.some((path) => path.includes('/@'))).toBe(true);
+
+    for (const path of packages) {
+      expect(sitemap, `${path} is published but not in the sitemap`).toContain(
+        `<loc>https://sighttrue.com${path}</loc>`,
       );
     }
   });

@@ -30,8 +30,8 @@ function read<T>(name: string): T {
   return JSON.parse(readFileSync(join(DIST_DATA, name), 'utf8')) as T;
 }
 
-function entry(id: string): WatchlistEntry {
-  return { id, category: 'devtool', added: '2026-08-04', active: true, packages: [] };
+function entry(id: string, packages: string[] = []): WatchlistEntry {
+  return { id, category: 'devtool', added: '2026-08-04', active: true, packages };
 }
 
 function stateRow(id: string, forks: number): LiveStateRow {
@@ -70,7 +70,12 @@ function releaseEvent(id: string, repo: string, detectedAt: string): EventRecord
 }
 
 beforeAll(() => {
-  ledger.writeWatchlist([entry('a/one'), entry('b/two')]);
+  // One repository publishes packages, including a scoped npm name — the shape
+  // that turns into a nested directory on disk and an `@` in a URL.
+  ledger.writeWatchlist([
+    entry('a/one', ['npm:@scope/widget', 'crates:widget']),
+    entry('b/two', ['pypi:Widget_Tools']),
+  ]);
   ledger.writeLiveState([stateRow('a/one', 10), stateRow('b/two', 20)]);
   ledger.appendEvents('2026-08', [
     releaseEvent('release:a/one:v1.0.0', 'a/one', '2026-08-04T04:17:00Z'),
@@ -275,7 +280,14 @@ describe('output hygiene', () => {
     const pages = result.files
       .filter(
         (f) =>
-          f.name.endsWith('.html') && !f.name.startsWith('repo/') && !f.name.startsWith('e/'),
+          f.name.endsWith('.html') &&
+          !f.name.startsWith('repo/') &&
+          !f.name.startsWith('e/') &&
+          // One page per package. Counted by the test below rather than listed
+          // here, because that list is a hundred and fifty names long.
+          !f.name.startsWith('npm/') &&
+          !f.name.startsWith('pypi/') &&
+          !f.name.startsWith('crates/'),
       )
       .map((f) => f.name);
     expect(pages.sort()).toEqual([
@@ -310,6 +322,47 @@ describe('output hygiene', () => {
       // Everything the ledger already holds, arranged for somebody who was away.
       'week.html',
     ]);
+  });
+
+  it('gives every package a page at the address people would type', () => {
+    // "Is X still maintained" is the question, and the reading that answers it
+    // was reachable only by knowing which repository publishes X — which is
+    // exactly what somebody asking does not know.
+    const result = runBuild({ now: NOW });
+    const pages = result.files.map((file) => file.name);
+
+    expect(pages).toContain('npm/@scope/widget.html');
+    expect(pages).toContain('crates/widget.html');
+    expect(pages).toContain('pypi/Widget_Tools.html');
+  });
+
+  it('puts every package page in the sitemap', () => {
+    // Five places have to change together for one of these pages to exist and
+    // be findable. This is the one that catches the page that was built and
+    // submitted nowhere.
+    const result = runBuild({ now: NOW });
+    const sitemap = result.files.find((file) => file.name === 'sitemap.xml');
+    expect(sitemap).toBeDefined();
+
+    const xml = readFileSync(join(distDir, 'sitemap.xml'), 'utf8');
+    expect(xml).toContain('<loc>https://sighttrue.com/npm/@scope/widget</loc>');
+    expect(xml).toContain('<loc>https://sighttrue.com/crates/widget</loc>');
+    expect(xml).toContain('<loc>https://sighttrue.com/pypi/Widget_Tools</loc>');
+  });
+
+  it('asks the question in the title, because that is what gets typed', () => {
+    runBuild({ now: NOW });
+    const html = readFileSync(join(distDir, 'crates/widget.html'), 'utf8');
+
+    expect(html).toContain('<title>Is widget still maintained? — crates.io readings</title>');
+    expect(html).toContain('<link rel="canonical" href="https://sighttrue.com/crates/widget">');
+
+    // The page asks the question and answers it with dated measurements. The
+    // answer is never a verdict — the words below appear further down the page
+    // only in the sentences that refuse to make one.
+    const hero = /<section class="hero">([\s\S]*?)<\/section>/.exec(html)?.[1] ?? '';
+    expect(hero).toContain('Is widget still maintained?');
+    expect(hero).not.toMatch(/\b(unmaintained|abandoned|dead|safe|unsafe|risky|healthy)\b/i);
   });
 
   it('gives every finding its own address, and none to retractions', () => {

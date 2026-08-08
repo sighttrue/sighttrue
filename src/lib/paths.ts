@@ -154,6 +154,35 @@ export function assertSafeRepoId(id: string): string {
   return id;
 }
 
+/**
+ * A package name that can become a file path without becoming a different one.
+ *
+ * Same guard as a repository id and one more shape to allow: npm scopes, which
+ * are `@scope/name` and contain the only `@` and the only slash any of these
+ * may have. Everything else — a bare slash, a second segment, `..`, a name that
+ * is only dots — is refused, because the name arrives from a registry and is
+ * written to disk a few lines later.
+ */
+export function isSafePackageName(name: string): boolean {
+  if (name.length === 0 || name.length > 214 || name.includes('..')) return false;
+
+  const parts = name.split('/');
+  if (parts.length > 2) return false;
+  if (parts.length === 2 && !(parts[0] as string).startsWith('@')) return false;
+
+  return parts.every((part) => {
+    const bare = part.startsWith('@') ? part.slice(1) : part;
+    return isSafeSegment(bare);
+  });
+}
+
+export function assertSafePackageName(name: string): string {
+  if (!isSafePackageName(name)) {
+    throw new Error(`unsafe package name ${JSON.stringify(name)}`);
+  }
+  return name;
+}
+
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const MONTH_PATTERN = /^\d{4}-\d{2}$/;
 
