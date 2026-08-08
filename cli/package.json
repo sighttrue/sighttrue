@@ -13,7 +13,7 @@
   "homepage": "https://sighttrue.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kaitzyy-dev/sighttrue.git",
+    "url": "git+https://github.com/sighttrue/sighttrue.git",
     "directory": "cli"
   },
   "license": "MIT",
