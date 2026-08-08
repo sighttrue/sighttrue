@@ -1,6 +1,7 @@
 import { COMPARISON, isCapped, readingsOf, SIGNAL_LABEL } from './vocabulary.ts';
 import { REACHABLE_SHARE } from '../lib/calibration.ts';
 import { MIN_INSTALLS } from '../lib/divergence.ts';
+import { allowedMinutes } from '../lib/incidents-summary.ts';
 import { COMPARE_SCRIPT } from './compare.ts';
 import { SBOM_SCRIPT } from './sbom-script.ts';
 import { STACK_SCRIPT } from './stack.ts';
@@ -1732,6 +1733,8 @@ export function renderIncidents(index: IndexBundle, meta: MetaRecord): string {
     <th scope="col" class="n">Incidents</th>
     <th scope="col" class="n">Marked resolved</th>
     <th scope="col" class="n">Median length</th>
+    <th scope="col" class="n">Time with a record open</th>
+    <th scope="col" class="n">Graded major or critical</th>
     <th scope="col">Most recent</th>
   </tr></thead>
   <tbody>${busiest
@@ -1746,6 +1749,14 @@ export function renderIncidents(index: IndexBundle, meta: MetaRecord): string {
         row.medianMinutes === null
           ? '<span class="dim">—</span>'
           : `${humanMinutes(row.medianMinutes)} <span class="label">of ${row.timed}</span>`
+      }</td>
+      <td class="n num">${
+        row.timed === 0 ? '<span class="dim">—</span>' : humanMinutes(row.openMinutes)
+      }</td>
+      <td class="n num">${
+        row.graded === 0
+          ? '<span class="dim">ungraded</span>'
+          : humanMinutes(row.seriousMinutes)
       }</td>
       <td>${row.latestTitle === null ? '<span class="dim">—</span>' : esc(row.latestTitle)}
         ${row.latestAt === null ? '' : `<span class="label">${esc(row.latestAt.slice(0, 10))}</span>`}</td>
@@ -1817,7 +1828,31 @@ ${band(
   'By provider',
   `${table}
   ${silent}`,
-  'A count is how often a provider announced something, not how often it broke. A company that publishes every degradation will out-count one that publishes nothing, so this ranks disclosure as much as reliability. Never read a low number as a good one. Where the resolved figure carries a second number, the difference is rows kept from before this read the providers’ own JSON, which have no status on record either way.',
+  'A count is how often a provider announced something, not how often it broke. A company that publishes every degradation will out-count one that publishes nothing, so this ranks disclosure as much as reliability. Never read a low number as a good one. Time with a record open is not downtime: an incident record usually covers one component or one region while everything else keeps serving, and it stays open until the provider closes it. Where the resolved figure carries a second number, the difference is rows kept from before this read the providers’ own JSON, which have no status on record either way.',
+)}
+
+${band(
+  'How long they stayed open',
+  `<div class="method-prose">
+    <p><strong>This is not uptime, and it must not be read as uptime.</strong> The figure counts
+    minutes during which the provider had an incident record open. Most incidents affect one
+    component or one region while everything else keeps serving, and the clock runs until the
+    provider closes the record, which is after the impact ends. A provider that writes careful
+    postmortems and closes records slowly will look worse here than one that closes them in
+    five minutes.</p>
+    <p>Overlapping incidents are merged, so two open at once count once. Summing them instead
+    would have invented two days of one provider's quarter out of records that ran in parallel.</p>
+    <p><strong>For the scale you already have in your head:</strong> a 99.9% target allows
+    ${allowedMinutes(99.9)} minutes over ${incidents.windowDays} days, and 99.99% allows
+    ${allowedMinutes(99.99)}. Those are contractual credit thresholds, they differ by product and
+    by plan, and this page does not know which one applies to you — they are here as arithmetic,
+    not as a bar anybody above is being measured against.</p>
+    <p>The comparison this page can support is between a provider and itself over time, and
+    between what a provider announced and what it graded major. ${incidents.timed} of
+    ${incidents.total} incidents in this window published both a start and an end; the rest are
+    counted but not timed.</p>
+  </div>`,
+  'Every figure here is built from two timestamps the provider published. Nothing is measured independently, and nothing here is a reliability rating.',
 )}
 
 ${band(

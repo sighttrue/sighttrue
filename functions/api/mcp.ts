@@ -71,6 +71,8 @@ interface IncidentBundle {
     startedAt: string | null;
     resolvedAt: string | null;
     updatedAt: string;
+    /** The provider's own grading: none, minor, major, critical. */
+    impact: string | null;
     /** Null where no status was ever on record — not the same as unresolved. */
     resolved: boolean | null;
     url: string;
@@ -96,6 +98,38 @@ function incidentMinutes(row: IncidentEntry): number | null {
   const to = Date.parse(row.resolvedAt);
   if (Number.isNaN(from) || Number.isNaN(to) || to < from) return null;
   return Math.round((to - from) / 60_000);
+}
+
+/**
+ * Minutes covered by these incidents between them, overlaps merged.
+ *
+ * Summing durations instead double-counts a provider that files three records
+ * for one bad afternoon, and an agent given that number will repeat it.
+ */
+function openMinutes(rows: readonly IncidentEntry[]): number {
+  const spans = rows
+    .map((row) => [Date.parse(row.startedAt ?? ''), Date.parse(row.resolvedAt ?? '')] as const)
+    .filter(([from, to]) => Number.isFinite(from) && Number.isFinite(to) && to >= from)
+    .sort((a, b) => a[0] - b[0]);
+
+  let total = 0;
+  let from: number | null = null;
+  let to = 0;
+
+  for (const [start, end] of spans) {
+    if (from === null) {
+      from = start;
+      to = end;
+    } else if (start <= to) to = Math.max(to, end);
+    else {
+      total += to - from;
+      from = start;
+      to = end;
+    }
+  }
+
+  if (from !== null) total += to - from;
+  return Math.round(total / 60_000);
 }
 
 interface EolBundle {
@@ -683,6 +717,14 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
       // covered every incident.
       timed: lengths.length,
       medianMinutes: lengths.length === 0 ? null : (lengths[Math.floor(lengths.length / 2)] ?? null),
+      // Minutes with a record open, overlaps merged. Named for what it is: an
+      // agent handed a field called "downtime" will report downtime.
+      minutesWithAnIncidentOpen: openMinutes(scoped.map((entry) => entry.row)),
+      minutesGradedMajorOrCritical: openMinutes(
+        scoped
+          .map((entry) => entry.row)
+          .filter((row) => row.impact === 'major' || row.impact === 'critical'),
+      ),
       incidents: scoped
         .sort((a, b) => (a.at < b.at ? 1 : -1))
         .slice(0, MAX_RESULTS)
@@ -692,6 +734,7 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
           startedAt: row.startedAt,
           resolvedAt: row.resolvedAt,
           minutes: incidentMinutes(row),
+          impact: row.impact,
           resolved: row.resolved,
           url: row.url,
         })),
@@ -701,6 +744,8 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
         'Unresolved covers both "still going" and "never closed out", which this cannot tell apart. A null resolved is neither: it means no status was ever on record for that row.',
         'A null startedAt is a row kept from before this read the providers’ JSON, where only the time of their last update survives. It is dated by that and has no length.',
         'Length is the gap between the start and resolution the provider published, not a measure of how long anything was broken, and it covers only the incidents where they published both.',
+        'minutesWithAnIncidentOpen is not downtime and must not be reported as downtime or as uptime. An open incident usually affects one component or one region while everything else keeps serving, and the clock runs until the provider closes the record, which is after the impact ends. Overlapping incidents are merged, so it is not a sum of the lengths above.',
+        'impact is the provider’s own grading — none, minor, major or critical — and is null where the source publishes no grading, which is not the same as an incident being minor.',
         'History only goes back as far as this project has been keeping it, which is shorter than the providers have existed.',
       ],
     });

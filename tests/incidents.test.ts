@@ -9,7 +9,12 @@ import {
   type IncidentClient,
   type Provider,
 } from '../src/collectors/incidents.ts';
-import { summariseIncidents, WINDOW_DAYS } from '../src/lib/incidents-summary.ts';
+import {
+  allowedMinutes,
+  mergedMinutes,
+  summariseIncidents,
+  WINDOW_DAYS,
+} from '../src/lib/incidents-summary.ts';
 import { incidentAt, incidentMinutes, type IncidentRow } from '../src/types/incidents.ts';
 
 /**
@@ -49,12 +54,14 @@ function incident(
     created_at?: string;
     resolved_at?: string | null;
     updated_at?: string;
+    impact?: string;
   } = {},
 ): Record<string, unknown> {
   return {
     id: over.id ?? 'abc123',
     name: over.name ?? 'Incident with Actions',
     status: over.status ?? 'resolved',
+    impact: over.impact ?? 'minor',
     created_at: over.created_at ?? '2026-08-07T02:04:44.000Z',
     started_at: over.started_at === undefined ? '2026-08-07T02:04:44.000Z' : over.started_at,
     resolved_at: over.resolved_at === undefined ? '2026-08-07T02:30:44.000Z' : over.resolved_at,
@@ -90,6 +97,7 @@ function row(over: Partial<IncidentRow> = {}): IncidentRow {
     startedAt: '2026-08-01T02:04:44.000Z',
     resolvedAt: '2026-08-01T02:30:44.000Z',
     updatedAt: '2026-08-01T02:30:44.000Z',
+    impact: 'minor',
     resolved: true,
     url: 'https://status.test/incidents/abc123',
     ...over,
@@ -327,6 +335,41 @@ describe('collectIncidents', () => {
   });
 });
 
+describe('mergedMinutes', () => {
+  const at = (hour: number): number => Date.parse(`2026-08-06T${String(hour).padStart(2, '0')}:00:00Z`);
+
+  it('adds intervals that do not touch', () => {
+    expect(mergedMinutes([[at(0), at(1)], [at(4), at(5)]])).toBe(120);
+  });
+
+  it('counts overlapping intervals once', () => {
+    expect(mergedMinutes([[at(0), at(2)], [at(1), at(3)]])).toBe(180);
+  });
+
+  it('counts a contained interval not at all', () => {
+    expect(mergedMinutes([[at(0), at(4)], [at(1), at(2)]])).toBe(240);
+  });
+
+  it('joins intervals that meet exactly', () => {
+    expect(mergedMinutes([[at(0), at(1)], [at(1), at(2)]])).toBe(120);
+  });
+
+  it('is empty for no intervals, and ignores one that ends before it starts', () => {
+    expect(mergedMinutes([])).toBe(0);
+    expect(mergedMinutes([[at(4), at(1)]])).toBe(0);
+  });
+});
+
+describe('allowedMinutes', () => {
+  it('states what the targets people quote actually allow over the window', () => {
+    // Arithmetic, shown for scale. Not a bar anybody on the page is measured
+    // against — see the wording beside it.
+    expect(allowedMinutes(99.9)).toBe(130);
+    expect(allowedMinutes(99.99)).toBe(13);
+    expect(allowedMinutes(99.9, 30)).toBe(43);
+  });
+});
+
 describe('incidentAt', () => {
   it('prefers the published start', () => {
     expect(incidentAt(row())).toBe('2026-08-01T02:04:44.000Z');
@@ -426,6 +469,54 @@ describe('summariseIncidents', () => {
       resolved: 1,
       withStatus: 2,
     });
+  });
+
+  it('merges overlapping incidents instead of adding them up', () => {
+    // Three records for one bad afternoon is one bad afternoon. Adding the
+    // durations instead invented two days of one real provider's quarter.
+    const summary = summariseIncidents(
+      [
+        row({ provider: 'github', id: 'a', startedAt: '2026-08-06T00:00:00.000Z', resolvedAt: '2026-08-06T02:00:00.000Z' }),
+        row({ provider: 'github', id: 'b', startedAt: '2026-08-06T01:00:00.000Z', resolvedAt: '2026-08-06T03:00:00.000Z' }),
+        // Wholly inside the first, and must add nothing at all.
+        row({ provider: 'github', id: 'c', startedAt: '2026-08-06T00:30:00.000Z', resolvedAt: '2026-08-06T01:00:00.000Z' }),
+        // Separate afternoon, so it does add.
+        row({ provider: 'github', id: 'd', startedAt: '2026-08-07T00:00:00.000Z', resolvedAt: '2026-08-07T01:00:00.000Z' }),
+      ],
+      TODAY,
+    );
+
+    // 00:00–03:00 is three hours, plus one the next day. Summed it would be six.
+    expect(summary.byProvider[0]?.openMinutes).toBe(240);
+  });
+
+  it('counts the grading the provider gave, and only that', () => {
+    const summary = summariseIncidents(
+      [
+        row({ provider: 'github', id: 'a', impact: 'critical', startedAt: '2026-08-06T00:00:00.000Z', resolvedAt: '2026-08-06T01:00:00.000Z' }),
+        row({ provider: 'github', id: 'b', impact: 'minor', startedAt: '2026-08-06T04:00:00.000Z', resolvedAt: '2026-08-06T06:00:00.000Z' }),
+        // Ungraded: not counted as serious, and not counted as minor either.
+        row({ provider: 'github', id: 'c', impact: null, startedAt: '2026-08-06T08:00:00.000Z', resolvedAt: '2026-08-06T09:00:00.000Z' }),
+      ],
+      TODAY,
+    );
+
+    expect(summary.byProvider[0]).toMatchObject({
+      openMinutes: 240,
+      seriousMinutes: 60,
+      graded: 2,
+    });
+  });
+
+  it('reports no open time for a provider whose incidents were never timed', () => {
+    // Rows kept from the RSS era have one timestamp. A zero here would read as
+    // a spotless quarter; the page shows a dash because `timed` is zero.
+    const summary = summariseIncidents(
+      [row({ provider: 'github', startedAt: null, resolvedAt: null, updatedAt: '2026-08-06T00:00:00.000Z' })],
+      TODAY,
+    );
+
+    expect(summary.byProvider[0]).toMatchObject({ count: 1, timed: 0, openMinutes: 0 });
   });
 
   it('says when the date it shows is a last update rather than a start', () => {

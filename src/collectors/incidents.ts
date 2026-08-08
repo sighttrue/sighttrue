@@ -205,6 +205,10 @@ export function parseStatuspage(payload: unknown, provider: Provider): IncidentR
       startedAt,
       resolvedAt,
       updatedAt,
+      // Their grading, lowercased and otherwise untouched. `none` is a real
+      // value here and means the provider filed something it considered
+      // non-impacting, which is different from not having said.
+      impact: text(record['impact'])?.toLowerCase() ?? null,
       resolved: status === 'resolved' || status === 'postmortem' || resolvedAt !== null,
       url,
     });
@@ -250,6 +254,9 @@ export function parseHeroku(payload: unknown, provider: Provider): IncidentRow[]
       startedAt,
       resolvedAt,
       updatedAt,
+      // Heroku grades nothing. Null is unpublished, not "not serious", and
+      // nothing downstream may read it as the second.
+      impact: null,
       resolved: text(record['state'])?.toLowerCase() === 'resolved',
       url,
     });

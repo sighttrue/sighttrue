@@ -42,6 +42,14 @@ export interface IncidentRow {
    */
   updatedAt: string;
   /**
+   * How bad the provider said it was: `none`, `minor`, `major`, `critical`.
+   *
+   * Their own grading, not a reading taken here, and it is the only thing that
+   * separates a degraded dashboard from an outage. Null where the source
+   * publishes no such field — Heroku, and every row kept from the RSS era.
+   */
+  impact: string | null;
+  /**
    * Whether the provider marked it resolved, or null when there is no status on
    * record at all.
    *
@@ -64,6 +72,7 @@ export const INCIDENT_KEYS = [
   'startedAt',
   'resolvedAt',
   'updatedAt',
+  'impact',
   'resolved',
   'url',
 ] as const satisfies readonly (keyof IncidentRow)[];
@@ -96,4 +105,17 @@ export function incidentMinutes(row: IncidentRow): number | null {
   const to = Date.parse(row.resolvedAt);
   if (Number.isNaN(from) || Number.isNaN(to) || to < from) return null;
   return Math.round((to - from) / 60_000);
+}
+
+/**
+ * The gradings a provider uses for something worse than a degraded dashboard.
+ *
+ * Their words, and the only thing separating "one API endpoint returned 500s
+ * for six minutes" from "the region was gone". A row with no grading is not
+ * counted as either.
+ */
+const SERIOUS = new Set(['major', 'critical']);
+
+export function isSerious(row: IncidentRow): boolean {
+  return row.impact !== null && SERIOUS.has(row.impact.toLowerCase());
 }

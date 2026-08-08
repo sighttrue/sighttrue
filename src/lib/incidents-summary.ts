@@ -1,5 +1,5 @@
 import { PROVIDERS } from '../collectors/incidents.ts';
-import { incidentAt, incidentMinutes, type IncidentRow } from '../types/incidents.ts';
+import { incidentAt, incidentMinutes, isSerious, type IncidentRow } from '../types/incidents.ts';
 
 /**
  * Providers side by side, over one window.
@@ -35,6 +35,19 @@ export interface ProviderIncidents {
   timed: number;
   /** Median announced length in minutes across the `timed` rows, or null. */
   medianMinutes: number | null;
+  /**
+   * Minutes of the window during which this provider had an incident open.
+   *
+   * Overlapping incidents are merged, so two open at once count once. This is
+   * not downtime and nothing may render it as downtime: an open incident is
+   * usually one component or one region, and the clock runs until the provider
+   * closes the record, which is after impact ends.
+   */
+  openMinutes: number;
+  /** The same, over the incidents the provider graded major or critical. */
+  seriousMinutes: number;
+  /** Of `timed`, how many carry a grading at all. The denominator for above. */
+  graded: number;
   /** ISO 8601 of the most recent, or null when the window is empty. */
   latestAt: string | null;
   latestTitle: string | null;
@@ -75,11 +88,66 @@ export interface IncidentSummary {
 export const WINDOW_DAYS = 90;
 export const RECENT_LIMIT = 12;
 
+/**
+ * What the availability targets people quote actually allow, in minutes, over
+ * the window this page uses.
+ *
+ * Here so the page can show the scale a reader already has in their head. They
+ * are not thresholds anybody is measured against on this page — see the wording
+ * beside them, and `openMinutes` for why the two are different measurements.
+ */
+export function allowedMinutes(nines: number, windowDays = WINDOW_DAYS): number {
+  return Math.round(((100 - nines) / 100) * windowDays * 24 * 60);
+}
+
 /** Upper median, so an even count returns a value one of the rows really had. */
 function median(values: readonly number[]): number | null {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[Math.floor(sorted.length / 2)] ?? null;
+}
+
+/**
+ * How much of the clock these intervals cover between them, in minutes.
+ *
+ * Merged rather than summed, and the difference is not academic: across the
+ * providers on file, adding durations overstates by up to 3,277 minutes for one
+ * of them — two days invented out of incidents that were open at the same time.
+ * A provider that files three overlapping records for one bad afternoon would
+ * otherwise be reported as having had three bad afternoons.
+ */
+export function mergedMinutes(intervals: readonly (readonly [number, number])[]): number {
+  const sorted = [...intervals]
+    .filter(([from, to]) => Number.isFinite(from) && Number.isFinite(to) && to >= from)
+    .sort((a, b) => a[0] - b[0]);
+
+  let total = 0;
+  let openFrom: number | null = null;
+  let openTo = 0;
+
+  for (const [from, to] of sorted) {
+    if (openFrom === null) {
+      openFrom = from;
+      openTo = to;
+    } else if (from <= openTo) {
+      openTo = Math.max(openTo, to);
+    } else {
+      total += openTo - openFrom;
+      openFrom = from;
+      openTo = to;
+    }
+  }
+
+  if (openFrom !== null) total += openTo - openFrom;
+  return Math.round(total / 60_000);
+}
+
+/** The published start and end of one incident, as milliseconds. */
+function span(row: IncidentRow): readonly [number, number] | null {
+  if (row.startedAt === null || row.resolvedAt === null) return null;
+  const from = Date.parse(row.startedAt);
+  const to = Date.parse(row.resolvedAt);
+  return Number.isNaN(from) || Number.isNaN(to) || to < from ? null : [from, to];
 }
 
 export function summariseIncidents(
@@ -93,7 +161,13 @@ export function summariseIncidents(
 
   // Dated once, here. A row with no usable timestamp cannot be placed in a
   // window and is not counted into one — it is not dated as today instead.
+  //
+  // A row the provider graded `maintenance` is a scheduled window and was never
+  // an incident. The JSON collector never files one; a handful survive from when
+  // this read the RSS history feed, which mixed them in, and counting them would
+  // report planned work as an outage.
   const dated = rows
+    .filter((row) => row.impact?.toLowerCase() !== 'maintenance')
     .map((row) => ({ row, at: incidentAt(row) }))
     .filter((entry): entry is { row: IncidentRow; at: string } => entry.at !== null);
 
@@ -108,6 +182,14 @@ export function summariseIncidents(
       .map((entry) => incidentMinutes(entry.row))
       .filter((minutes): minutes is number => minutes !== null);
 
+    const spans = mine
+      .map((entry) => span(entry.row))
+      .filter((pair): pair is readonly [number, number] => pair !== null);
+    const serious = mine
+      .filter((entry) => isSerious(entry.row))
+      .map((entry) => span(entry.row))
+      .filter((pair): pair is readonly [number, number] => pair !== null);
+
     return {
       slug: provider.slug,
       name: provider.name,
@@ -116,6 +198,9 @@ export function summariseIncidents(
       withStatus: mine.filter((entry) => entry.row.resolved !== null).length,
       timed: lengths.length,
       medianMinutes: median(lengths),
+      openMinutes: mergedMinutes(spans),
+      seriousMinutes: mergedMinutes(serious),
+      graded: mine.filter((entry) => entry.row.impact !== null).length,
       latestAt: mine[0]?.at ?? null,
       latestTitle: mine[0]?.row.title ?? null,
     };
