@@ -40,6 +40,13 @@ interface JsonRpcRequest {
   params?: unknown;
 }
 
+import {
+  findEntry,
+  noticesFor,
+  type VerdictEntry,
+  type VerdictRegistry,
+} from '../../src/lib/verdict.ts';
+
 interface StackEntry {
   repo: string;
   installs: number | null;
@@ -194,6 +201,20 @@ function asString(value: unknown, max = MAX_NAME): string | null {
 }
 
 const TOOLS = [
+  {
+    name: 'check_before_install',
+    description:
+      'Call this before adding a dependency to a project. Returns only the facts a reviewer would be annoyed to discover afterwards: whether the publisher has withdrawn the package, whether it runs scripts on the installing machine, whether its repository is archived, how many advisories are on record, whether the licence is source-available, and how long since it was actually published. Each fact carries the address of the body that published it. It does not say whether to install; it says what is on record so the decision is made knowing it.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        registry: { type: 'string', enum: ['npm', 'pypi', 'crates'] },
+        name: { type: 'string', description: 'Package name as the registry spells it.' },
+      },
+      required: ['registry', 'name'],
+      additionalProperties: false,
+    },
+  },
   {
     name: 'check_package',
     description:
@@ -424,6 +445,53 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
 
   const toolName = typeof params['name'] === 'string' ? params['name'] : '';
   const args = (params['arguments'] ?? {}) as Record<string, unknown>;
+
+  if (toolName === 'check_before_install') {
+    const registry = asString(args['registry'], 12);
+    if (registry === null || !['npm', 'pypi', 'crates'].includes(registry)) {
+      return toolResult(id, { error: 'registry must be one of npm, pypi, crates.' }, true);
+    }
+    const name = asString(args['name']);
+    if (name === null) {
+      return toolResult(id, { error: 'name is required and must be a string.' }, true);
+    }
+
+    const index = await loadJson<StackIndex>(origin, '/data/stack-index.json');
+    if (index === null) {
+      return toolResult(id, { error: 'The readings could not be loaded.' }, true);
+    }
+
+    const wanted = { registry: registry as VerdictRegistry, name };
+    const found = findEntry(index.packages as Record<string, VerdictEntry>, wanted);
+
+    if (found === null) {
+      return toolResult(id, {
+        package: `${registry}:${name}`,
+        covered: false,
+        notices: [],
+        note: 'Not on the watchlist, so nothing has been collected for it. This is not a judgement about the package, and an empty notices list here means nothing was checked rather than nothing was found.',
+        limits: LIMITS,
+      });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const notices = noticesFor(wanted, found.entry, today);
+
+    return toolResult(id, {
+      package: `${registry}:${name}`,
+      covered: true,
+      repository: found.entry.repo,
+      page: `${origin}/${found.key.replace(':', '/')}`,
+      notices,
+      // Never "clear" or "ok". An agent handed a field called `safe` will
+      // report the package as safe, which is a claim nothing here supports.
+      note:
+        notices.length === 0
+          ? 'Nothing on the short list above is on record for this package. That is not a statement that it is safe to install — it means these particular facts are absent, from a curated watchlist, in readings taken up to four hours ago.'
+          : 'Each notice is a fact on record with the address of the body that published it. None of them is a recommendation; whether any of them should stop the install is the reviewer’s call.',
+      limits: LIMITS,
+    });
+  }
 
   if (toolName === 'check_package' || toolName === 'check_stack') {
     const registry = asString(args['registry'], 12);

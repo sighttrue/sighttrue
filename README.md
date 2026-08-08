@@ -84,7 +84,16 @@ data a year old.
 { "mcpServers": { "readout": { "url": "https://sighttrue.com/api/mcp" } } }
 ```
 
-Seven tools: `check_package`, `check_stack`, `check_eol`, `check_provider`,
+Eight tools. `check_before_install` is the one to reach for while writing code:
+given a package it returns only what a reviewer would be annoyed to discover
+afterwards — a publisher that withdrew it, scripts it runs on the installing
+machine, an archived repository, advisories, a source-available licence, a long
+silence — each with the address of the body that published it. It does not say
+whether to install. It says what is on record so the decision is made knowing
+it, and an empty result says plainly that it means nothing was found rather
+than that the package is safe.
+
+Then `check_package`, `check_stack`, `check_eol`, `check_provider`,
 `compare_repositories`, `search_repositories`, `find_model`. Read-only, no key, no account. Every result carries the
 limits of what it can support, because an agent will paste these figures into a
 code review and a scorecard quoted without "measures declared practices, not

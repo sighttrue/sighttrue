@@ -167,6 +167,92 @@ export function cycleFor(
   return best;
 }
 
+export interface Notice {
+  /** Machine-readable, so a caller can act without parsing English. */
+  kind:
+    | 'withdrawn'
+    | 'repository-archived'
+    | 'runs-on-install'
+    | 'source-available-licence'
+    | 'advisories'
+    | 'long-unpublished';
+  /** One sentence stating the fact. Never a recommendation. */
+  statement: string;
+  source: string;
+}
+
+/** Past this, "when did this last ship" is a question worth putting in front of somebody. */
+const LONG_UNPUBLISHED_DAYS = 730;
+
+/**
+ * The things a reviewer would be annoyed to discover after merging.
+ *
+ * Ordered by how much they would want to know it, which is not the same as
+ * ordering by severity — nothing here is scored. A publisher saying "do not
+ * install this" comes first because it is an instruction rather than a
+ * measurement, and it is theirs.
+ *
+ * An empty list is not a clean bill of health and the caller is told so in the
+ * same breath. It means nothing on this short list is on record, out of a
+ * curated watchlist, from readings taken up to four hours ago.
+ */
+export function noticesFor(id: PackageId, entry: VerdictEntry, today: string): Notice[] {
+  const found: Notice[] = [];
+  const registry = registryUrl(id.registry, id.name);
+  const repository = `https://github.com/${entry.repo}`;
+
+  if (entry.withdrawn !== null) {
+    found.push({
+      kind: 'withdrawn',
+      statement: `The publisher has withdrawn this package: ${entry.withdrawn}`,
+      source: registry,
+    });
+  }
+
+  if (entry.archived) {
+    found.push({
+      kind: 'repository-archived',
+      statement: `The repository that publishes it, ${entry.repo}, is archived and read-only. Published versions keep working; nothing new is coming.`,
+      source: repository,
+    });
+  }
+
+  if (entry.installScripts !== null) {
+    found.push({
+      kind: 'runs-on-install',
+      statement: `It runs ${entry.installScripts} on the machine that installs it. Most such scripts fetch a platform binary; this does not read what they contain.`,
+      source: registry,
+    });
+  }
+
+  if (entry.license !== null && SOURCE_AVAILABLE.test(entry.license)) {
+    found.push({
+      kind: 'source-available-licence',
+      statement: `Its licence is ${entry.license}, which is source-available rather than open source. That is a licensing fact, not a quality one.`,
+      source: repository,
+    });
+  }
+
+  if (entry.advisories !== null && entry.advisories > 0) {
+    found.push({
+      kind: 'advisories',
+      statement: `${entry.advisories} ${entry.advisories === 1 ? 'advisory has' : 'advisories have'} been filed against it, all time and all versions — not against the version you are installing.`,
+      source: advisoryUrl(id.registry, id.name),
+    });
+  }
+
+  const quiet = daysSince(entry.lastPublish, today);
+  if (quiet !== null && quiet >= LONG_UNPUBLISHED_DAYS && entry.lastPublish !== null) {
+    found.push({
+      kind: 'long-unpublished',
+      statement: `Its newest published version is from ${entry.lastPublish}, ${quiet} days ago. A finished library is finished, so this is a question rather than a fault.`,
+      source: registry,
+    });
+  }
+
+  return found;
+}
+
 export interface Reading<T> {
   value: T;
   /** Where a reader checks this without trusting this project. */

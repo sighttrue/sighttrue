@@ -6,6 +6,7 @@ import {
   cycleFor,
   findEntry,
   LIMITS,
+  noticesFor,
   parsePkg,
   registryUrl,
   type EolProduct,
@@ -222,6 +223,43 @@ describe('end of life', () => {
 
     expect(reading?.value).toBeNull();
     expect(reading?.note).toContain('not the same as being supported');
+  });
+});
+
+describe('what a reviewer would want flagged', () => {
+  const at = (over: Partial<VerdictEntry> = {}) => noticesFor({ registry: 'npm', name: 'axios' }, entry(over), TODAY);
+
+  it('leads with the publisher, because that one is an instruction', () => {
+    const found = at({ withdrawn: 'no longer maintained', archived: true, advisories: 3 });
+    expect(found[0]?.kind).toBe('withdrawn');
+    expect(found.map((n) => n.kind)).toEqual(['withdrawn', 'repository-archived', 'advisories']);
+  });
+
+  it('puts a source on every one of them', () => {
+    for (const notice of at({ withdrawn: 'gone', archived: true, installScripts: 'postinstall', license: 'BUSL-1.1', advisories: 2 })) {
+      expect(notice.source).toMatch(/^https:\/\//);
+    }
+  });
+
+  it('never recommends, and never calls anything safe or unsafe', () => {
+    const said = JSON.stringify(at({ withdrawn: 'gone', archived: true, installScripts: 'postinstall' }));
+    expect(said).not.toMatch(/\b(safe|unsafe|risky|dangerous|recommend|avoid|should not)\b/i);
+  });
+
+  it('says nothing about an ordinary package', () => {
+    expect(at({ advisories: 0, license: 'MIT' })).toEqual([]);
+  });
+
+  it('asks the question about a long silence rather than calling it dead', () => {
+    const found = at({ lastPublish: '2019-01-01', advisories: 0 });
+    expect(found.map((n) => n.kind)).toEqual(['long-unpublished']);
+    expect(found[0]?.statement).toContain('finished library is finished');
+  });
+
+  it('counts advisories as all-time, in the sentence itself', () => {
+    // The number is quoted into code reviews. The qualifier has to travel with
+    // it, not sit in a limits array the caller may drop.
+    expect(at({ advisories: 12 })[0]?.statement).toContain('all time and all versions');
   });
 });
 
