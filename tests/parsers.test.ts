@@ -1,9 +1,11 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-
 import { describe, expect, it } from 'vitest';
 
+// @ts-expect-error — plain ESM with no types, which is the point of it.
+import { names as sharedNames } from '../cli/lib/manifest.mjs';
+// @ts-expect-error — same.
+import { noticesFor as esmNotices } from '../cli/lib/notices.mjs';
 import { parseManifest } from '../src/lib/manifests.ts';
+import { noticesFor as tsNotices } from '../src/lib/verdict.ts';
 import { STACK_SCRIPT } from '../src/site/stack.ts';
 
 /**
@@ -25,15 +27,24 @@ import { STACK_SCRIPT } from '../src/site/stack.ts';
  * `flask[async]>=3.0` entirely, which is the quieter failure: a dependency that
  * simply does not appear in the readout.
  *
+ * Three became two when the CLI arrived: it and the Action now import the same
+ * `cli/lib/manifest.mjs`, rather than the CLI becoming a fourth copy on the day
+ * that fix shipped. The browser one stays separate because a page has no
+ * imports, so its agreement is asserted here instead.
+ *
+ * The same applies to the notices those readings turn into — one set in
+ * TypeScript for the endpoint and the MCP tool, one in ESM for the CLI, and a
+ * test that they say the same thing rather than a hope.
+ *
  * Where they differ on purpose, this says so out loud rather than passing.
  */
 
-const ACTION = fileURLToPath(new URL('../action/check.mjs', import.meta.url));
-
-/** The Action's reader, lifted out of a module that runs on import. */
-const actionNames = new Function(
-  `${/function names\(text, registry\) \{[\s\S]*?\n\}/.exec(readFileSync(ACTION, 'utf8'))?.[0] ?? ''}; return names;`,
-)() as (text: string, registry: string) => string[];
+/**
+ * The reader the CLI and the Action both import. Plain ESM with no build step,
+ * because it runs on a stranger's Node and on whatever a runner happens to
+ * have — the TypeScript one needs 22.18 to be stripped at run time.
+ */
+const actionNames = sharedNames as (text: string, registry: string) => string[];
 
 /** The page's reader, lifted out of the script it ships as. */
 const stackNames = new Function(
@@ -138,5 +149,45 @@ describe('where they differ, they differ on purpose', () => {
     for (const found of [actionNames(PACKAGE_JSON, 'npm'), fromStack(PACKAGE_JSON)]) {
       expect(found).not.toContain('build');
     }
+  });
+});
+
+describe('the notices say the same thing in both languages', () => {
+  const entry = {
+    repo: 'axios/axios',
+    installs: 58_000_000,
+    scorecard: 6.2,
+    scoredAt: '2026-07-27',
+    advisories: 12,
+    license: 'BUSL-1.1',
+    archived: true,
+    pushedAt: '2026-08-05T00:00:00Z',
+    lastPublish: '2019-01-01',
+    version: '1.7.4',
+    withdrawn: 'no longer maintained',
+    installScripts: 'postinstall',
+    bytes: 209_281,
+    funding: null,
+    busFactor: 3,
+    topShare: 0.42,
+  };
+
+  const TODAY = '2026-08-09';
+
+  it('produces identical notices for the same reading', () => {
+    // The CLI cannot import the TypeScript one — it runs on a stranger's Node
+    // with no build step — so the two exist separately and this is what stops
+    // them drifting into telling different stories about one package.
+    const ts = tsNotices({ registry: 'npm', name: 'axios' }, entry, TODAY);
+    const esm = esmNotices('npm', 'axios', entry, TODAY) as typeof ts;
+
+    expect(esm).toEqual(ts);
+  });
+
+  it('agrees that an ordinary package has nothing to report', () => {
+    const plain = { ...entry, withdrawn: null, archived: false, installScripts: null, license: 'MIT', advisories: 0, lastPublish: '2026-08-01' };
+
+    expect(tsNotices({ registry: 'npm', name: 'axios' }, plain, TODAY)).toEqual([]);
+    expect(esmNotices('npm', 'axios', plain, TODAY)).toEqual([]);
   });
 });

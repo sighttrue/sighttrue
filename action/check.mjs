@@ -24,6 +24,8 @@
 import { readFileSync, appendFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
+import { names } from '../cli/lib/manifest.mjs';
+
 const endpoint = (process.env.READOUT_ENDPOINT || 'https://sighttrue.com').replace(/\/$/, '');
 const manifestPath = process.env.READOUT_MANIFEST || 'package.json';
 const failOn = new Set(
@@ -45,54 +47,14 @@ function registryFor(path) {
 }
 
 /**
- * Deliberately forgiving. A real manifest carries comments, version ranges and
- * extras, and refusing one for not being clean JSON would fail exactly the
- * repositories this is for.
+ * The manifest reader is imported from `cli/lib/manifest.mjs` rather than
+ * copied. There were three implementations of it and they disagreed: a
+ * Cargo.toml reported a dependency called `name`, because every line in one is
+ * `key = value` and a reader that skips the table headers cannot tell the
+ * [package] block from the [dependencies] block. There is a real crate called
+ * `name`. A fourth copy, for the CLI, would have undone that fix on the day it
+ * shipped, so both now read through the same file.
  */
-function names(text, registry) {
-  const found = new Set();
-
-  if (registry === 'npm') {
-    try {
-      const pkg = JSON.parse(text);
-      for (const group of ['dependencies', 'devDependencies', 'peerDependencies']) {
-        for (const name of Object.keys(pkg[group] || {})) found.add(name);
-      }
-      return [...found];
-    } catch {
-      return [];
-    }
-  }
-
-  // Which TOML table the reader is inside. Load-bearing for Cargo: every line
-  // in a Cargo.toml is `key = value`, so a reader that ignores the headers
-  // reports `name = "my-app"` under [package] as a dependency called `name` —
-  // and there is a real crate called `name` on crates.io, so the lookup would
-  // have attached somebody else's readings to it.
-  let table = null;
-
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.split('#')[0].trim();
-    if (!line || line.startsWith('-')) continue;
-    if (line.startsWith('[')) {
-      table = line.toLowerCase();
-      continue;
-    }
-
-    if (registry === 'crates') {
-      // [dependencies], [dev-dependencies], [build-dependencies] and the
-      // target- and workspace-qualified forms all end the same way.
-      if (table === null || !/dependencies\]$/.test(table)) continue;
-      const match = /^([A-Za-z0-9._-]+)\s*=/.exec(line);
-      if (match) found.add(match[1]);
-    } else {
-      const match = /^([A-Za-z0-9._-]+)\s*(?:[=<>!~[]|$)/.exec(line);
-      if (match) found.add(match[1].toLowerCase());
-    }
-  }
-
-  return [...found];
-}
 
 async function getJson(url, init) {
   const response = await fetch(url, init);

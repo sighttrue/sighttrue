@@ -1,0 +1,65 @@
+# Publish the CLI to npm.
+#
+# No secret. npm accepts a short-lived OIDC token from GitHub Actions and mints
+# provenance from it, which proves the package on the registry was built by this
+# workflow in this repository — the same claim the MCP registry publish makes,
+# and the same reason: nothing to rotate, nothing to leak, and a fork cannot use
+# it. An `NPM_TOKEN` in the repository secrets would be a long-lived credential
+# with publish rights sitting in a settings page forever.
+#
+# Manual and on release rather than on every push. A CLI whose version moves six
+# times a day is noise to everybody who installed it.
+#
+# The first publish has to happen by hand, once, because npm will not create a
+# package from a trusted publisher that does not exist yet. After that this is
+# the only route.
+
+name: Publish CLI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # The whole point. Lets the job request an OIDC token npm will accept.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      # The CLI has no dependencies and no build step, so there is nothing to
+      # install and nothing to compile. What there is to check is that the thing
+      # about to be published actually runs.
+      - name: Prove it runs before publishing it
+        run: |
+          set -euo pipefail
+          node cli/sighttrue.mjs --help > /dev/null
+          node cli/sighttrue.mjs npm:esbuild > /dev/null
+          echo "the CLI answered"
+
+      # Both readers import the same manifest file. If that import is broken the
+      # package installs and fails on first use, which is the worst way to find
+      # out.
+      - name: Prove the shared reader resolves from the package
+        run: |
+          set -euo pipefail
+          cd cli
+          node -e "import('./lib/manifest.mjs').then(m => { if (typeof m.names !== 'function') throw new Error('manifest reader missing'); })"
+          node -e "import('./lib/notices.mjs').then(m => { if (typeof m.noticesFor !== 'function') throw new Error('notices missing'); })"
+          echo "both modules resolve"
+
+      - name: Publish
+        working-directory: cli
+        run: npm publish --provenance --access public

@@ -1,0 +1,32 @@
+{
+  "name": "sighttrue",
+  "version": "1.0.0",
+  "description": "Dated readings on the dependencies you are about to install. No account, no key, and your manifest never leaves the machine.",
+  "keywords": [
+    "dependencies",
+    "supply-chain",
+    "sbom",
+    "deprecated",
+    "end-of-life",
+    "advisories"
+  ],
+  "homepage": "https://sighttrue.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaitzyy-dev/sighttrue.git",
+    "directory": "cli"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "sighttrue": "./sighttrue.mjs"
+  },
+  "files": [
+    "sighttrue.mjs",
+    "lib/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
