@@ -208,8 +208,12 @@ const CARDS = [
     file: 'post-4-staleness',
     eyebrow: 'Shipped · from the registry, not the repo',
     figure: n(bundle.staleness.measured),
-    unit: 'packages, by real release date',
-    say: 'A green commit graph is what a maintainer does for themselves. A release is what reaches you. They are not the same date, across six registries.',
+    // Six registries belongs on the figure line, not in the sentence. Adding it
+    // to the sentence pushed that block to six lines, which drove the figure
+    // down until it sat against the wordmark — the card has room across, not
+    // down.
+    unit: 'packages across six registries, by real release date',
+    say: 'A green commit graph is what a maintainer does for themselves. A release is what reaches you. They are not the same date.',
   },
   {
     file: 'post-6-calendar',
