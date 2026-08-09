@@ -799,14 +799,6 @@ function humanMinutes(minutes: number): string {
   return `${Math.round(minutes / 1440)}d`;
 }
 
-function metric(label: string, value: string): string {
-  return `<div class="metric"><span class="label">${esc(label)}</span><span class="metric-value num">${esc(value)}</span></div>`;
-}
-
-/**
- * The only card in the product: a confirmed event that has prose attached.
- * Everything else is a table row.
- */
 /**
  * A sentence, and where it came from.
  *
@@ -832,24 +824,65 @@ export function basisHtml(event: EventRecord): string {
   return `<p class="basis label">${esc(basis)}.${esc(capped)}</p>`;
 }
 
-function findingCard(event: EventRecord): string {
-  const numbers = readingsOf(event)
-    .slice(0, 5)
-    .map((reading) => metric(reading.label, reading.value))
+/**
+ * Findings as rows, which is what a page listing many of them should be.
+ *
+ * These were cards. `/ships` rendered 388 of them and came to 2,241 words with
+ * not one table cell — longer than the page that exists to explain the method.
+ * `instrument-ui` is unambiguous: a card is for a single confirmed event with
+ * a written explanation, forty rows on screen is correct, six cards is not.
+ * Ninety-seven releases in a table can be scanned in seconds; the same
+ * ninety-seven as cards is a scroll nobody finishes.
+ *
+ * The prose is not deleted, it moves. Every finding already has a page at
+ * `/e/<slug>` carrying its basis, every reading and the written explanation,
+ * and that page is where a card belongs — one event, one explanation.
+ * Repeating all of it inline, 388 times, buried the measurement under its own
+ * disclosure.
+ *
+ * Two readings per row rather than fixed columns: a release, a fork outlier and
+ * a licence change do not measure the same things, and a shared column set
+ * would be mostly empty cells.
+ */
+function findingTable(events: readonly EventRecord[], caption: string): string {
+  const rows = events
+    .map((event) => {
+      const readings = readingsOf(event)
+        .slice(0, 2)
+        .map(
+          (reading) =>
+            `<span class="label">${esc(reading.label)}</span> <span class="num">${esc(reading.value)}</span>`,
+        )
+        .join('  ');
+
+      return `<tr>
+      <td>${repoLink(event.repo)}</td>
+      <td class="dim">${esc(SIGNAL_LABEL[event.kind])}</td>
+      <td>${stateBadge(event.confidence)}</td>
+      <td class="dim">${readings}</td>
+      <td class="n num"><a href="/e/${esc(eventSlug(event.id))}">${esc(event.detectedAt.slice(0, 10))}</a></td>
+      <td class="dim"><a href="${esc(event.evidenceUrl)}">Evidence</a></td>
+    </tr>`;
+    })
     .join('');
 
-  return `<article class="finding finding-${esc(event.confidence)}">
-  <div class="finding-head">
-    <span class="finding-repo">${repoLink(event.repo)}</span>
-    <span class="label">${esc(SIGNAL_LABEL[event.kind])}</span>
-    ${stateBadge(event.confidence)}
-    <a class="label" href="/e/${esc(eventSlug(event.id))}">${esc(event.detectedAt.replace('T', ' ').slice(0, 16))} UTC</a>
-    <a class="label" href="${esc(event.evidenceUrl)}">Evidence</a>
-  </div>
-  ${basisHtml(event)}
-  <div class="finding-metrics">${numbers}</div>
-  ${proseHtml(event)}
-</article>`;
+  return `<div class="wrap"><table class="readout">
+  ${caption === '' ? '' : `<caption class="label">${esc(caption)}</caption>`}
+  <thead><tr>
+    <th scope="col">Repository</th>
+    <th scope="col">Signal</th>
+    <th scope="col">State</th>
+    <th scope="col">Readings</th>
+    <th scope="col" class="n">Detected</th>
+    <!-- Kept as its own column rather than folded into the finding page. Every
+         claim here links to the thing it rests on, and a test caught the row
+         dropping that link when these stopped being cards. -->
+    <th scope="col">Source</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+</table></div>
+<p class="basis label">Each date opens the finding: its basis, every reading taken, and the
+evidence it rests on.</p>`;
 }
 
 function quietNotice(checked: number, at: string | null, what: string): string {
@@ -2153,7 +2186,9 @@ export function renderLens(
   } else if (bundle.records.length === 0) {
     body = quietNotice(index.watchlist.active, meta.lastSuccessfulRunAt, copy.noun);
   } else {
-    body = bundle.records.map(findingCard).join('\n');
+    // No caption: the band above already states the count and the window, and
+    // a table repeating its own heading is the reader reading twice.
+    body = findingTable(bundle.records, '');
   }
 
   // Scope sits above the findings, not in a footnote. A reader who takes one of

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import { renderEventPage } from '../src/site/event.ts';
 import { renderIndex, renderLens, renderMethod, stripSvg } from '../src/site/render.ts';
 import type { IndexBundle, LensBundle, StripMark } from '../src/types/bundles.ts';
 import type { EventRecord } from '../src/types/events.ts';
@@ -277,31 +278,16 @@ describe('telling one kind of claim from another', () => {
     // evidence and available at different times. Rendered identically, a reader
     // cannot tell whether 12x means twelve times this project's own history or
     // twelve times the rest of its category.
-    const own = renderLens(lens({ records: [event()], count: 1 }), index(), meta(), COPY);
+    const own = renderEventPage(event(), index(), meta());
     expect(own).toContain('own trailing baseline');
 
-    const peer = renderLens(
-      lens({ records: [event({ kind: 'fork-outlier' })], count: 1 }),
-      index(),
-      meta(),
-      COPY,
-    );
+    const peer = renderEventPage(event({ kind: "fork-outlier" }), index(), meta());
     expect(peer).toContain('other repositories in its category');
   });
 
   it('marks a written sentence differently from an assembled one', () => {
-    const written = renderLens(
-      lens({ records: [event({ summarySource: 'model' })], count: 1 }),
-      index(),
-      meta(),
-      COPY,
-    );
-    const assembled = renderLens(
-      lens({ records: [event({ summarySource: 'template' })], count: 1 }),
-      index(),
-      meta(),
-      COPY,
-    );
+    const written = renderEventPage(event({ summarySource: "model" }), index(), meta());
+    const assembled = renderEventPage(event({ summarySource: "template" }), index(), meta());
 
     expect(written).toContain('Written from the readings above');
     expect(written).toContain('explains-written');
@@ -311,7 +297,7 @@ describe('telling one kind of claim from another', () => {
 
   it('says a bounded figure is bounded', () => {
     const capped = event({ metrics: { multiplier: 50, multiplierCapped: 'yes' } });
-    const html = renderLens(lens({ records: [capped], count: 1 }), index(), meta(), COPY);
+    const html = renderEventPage(capped, index(), meta());
     expect(html).toContain('a bound, not a measurement');
   });
 
@@ -339,7 +325,14 @@ describe('telling one kind of claim from another', () => {
 
 describe('honesty of presentation', () => {
   it('sets generated prose in its own face, apart from the measurements', () => {
-    const html = renderLens(lens({ records: [event()], count: 1 }), index(), meta(), COPY);
+    // Asserted on the finding's own page rather than on the lens.
+    //
+    // A lens listing findings is a table now: /ships rendered 388 cards and ran
+    // to 2,241 words with no table cell in it. The basis, the full readings and
+    // the written sentence moved to /e/<slug>, which every row links to — so
+    // the guarantee is unchanged and this had been pinned to where it was
+    // rendered rather than to whether it is rendered.
+    const html = renderEventPage(event(), index(), meta());
     expect(html).toContain('<p class="prose">');
     expect(html).toContain("24× this repository's 19-day baseline.");
   });
