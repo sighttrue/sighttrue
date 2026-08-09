@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { WATCHABLE_IDS } from '../src/lib/registries-table.ts';
 import {
   checkItem,
   checkRoom,
@@ -36,6 +37,15 @@ describe('folding a name', () => {
   });
 });
 
+describe('the two registry lists', () => {
+  it('accepts exactly what the table says is watchable', () => {
+    // `REGISTRIES` is spelled out so the union type survives. That makes it a
+    // copy, and a copy that drifts means the API accepts a registry with no
+    // collector or refuses one with readings already in the ledger.
+    expect([...REGISTRIES].sort()).toEqual([...WATCHABLE_IDS].sort());
+  });
+});
+
 describe('what may be watched', () => {
   it('takes a real package from each registry', () => {
     expect(checkItem({ registry: 'npm', name: '@angular/compiler' })).toEqual({
@@ -49,6 +59,35 @@ describe('what may be watched', () => {
       registry: 'pypi',
       name: 'pyyaml',
     });
+  });
+
+  it('takes the name shape each registry actually uses', () => {
+    // `/stack` offers all seven in its selector. For a week after four of them
+    // opened, one shared pattern rejected every real Packagist and Maven name,
+    // so the selector offered a choice that could not be completed.
+    expect(checkItem({ registry: 'packagist', name: 'laravel/framework' })).toEqual({
+      ok: true,
+      registry: 'packagist',
+      name: 'laravel/framework',
+    });
+    expect(checkItem({ registry: 'maven', name: 'com.google.guava:guava' }).ok).toBe(true);
+    expect(checkItem({ registry: 'gem', name: 'rails' }).ok).toBe(true);
+    expect(checkItem({ registry: 'nuget', name: 'Newtonsoft.Json' })).toEqual({
+      ok: true,
+      registry: 'nuget',
+      name: 'newtonsoft.json',
+    });
+  });
+
+  it('holds each registry to its own shape rather than to a common one', () => {
+    // A Packagist name without a vendor is not a Packagist name, a Maven name
+    // without a group is not a Maven name, and npm's only slash follows a
+    // scope. Accepting any of these stores a row that can never match a reading.
+    expect(checkItem({ registry: 'packagist', name: 'framework' }).ok).toBe(false);
+    expect(checkItem({ registry: 'packagist', name: 'a/b/c' }).ok).toBe(false);
+    expect(checkItem({ registry: 'maven', name: 'guava' }).ok).toBe(false);
+    expect(checkItem({ registry: 'npm', name: 'unscoped/slash' }).ok).toBe(false);
+    expect(checkItem({ registry: 'gem', name: 'rails/rails' }).ok).toBe(false);
   });
 
   it('refuses a registry nothing is collected from, and says which are', () => {

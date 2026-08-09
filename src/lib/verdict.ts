@@ -18,7 +18,7 @@
  * Pure. The endpoint fetches the bundles and calls in here.
  */
 
-import { registryFacts } from './registries-table.ts';
+import { PAGED_IDS, registryFacts } from './registries-table.ts';
 import { foldName, REGISTRIES, type Registry } from './watchlist-api.ts';
 
 /**
@@ -33,6 +33,9 @@ export type VerdictRegistry = Registry;
 
 /** Longest name any of these registries permits, plus scope and slash. */
 const MAX_NAME = 214;
+
+/** Registries whose packages have a page here. Maven's names are not URLs. */
+const PAGED: ReadonlySet<string> = new Set(PAGED_IDS);
 
 export interface PackageId {
   registry: VerdictRegistry;
@@ -418,7 +421,11 @@ export function buildVerdict(input: VerdictInput): Verdict {
     registry: id.registry,
     name: id.name,
     repository: entry.repo,
-    page: `/${key.replace(':', '/')}`,
+    // Null where no page exists. Maven names are `group:artifact` and get no
+    // page, so building one from the key handed an agent `/maven/com.acme:x` —
+    // an address that has never been published, in an answer that carries a
+    // source link precisely so it can be checked.
+    page: PAGED.has(id.registry) ? `/${key.replace(':', '/')}` : null,
     asOf,
     readings,
     limits: LIMITS,

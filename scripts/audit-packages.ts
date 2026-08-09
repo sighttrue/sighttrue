@@ -130,7 +130,30 @@ async function declaredRepo(registry: string, name: string): Promise<string | nu
     const body = (await json(
       `https://azuresearch-usnc.nuget.org/query?q=packageid:${encodeURIComponent(name.toLowerCase())}&take=1`,
     )) as { data?: { projectUrl?: unknown }[] } | null;
-    return repoFrom(body?.data?.[0]?.projectUrl);
+    const stated = repoFrom(body?.data?.[0]?.projectUrl);
+    if (stated !== null) return stated;
+
+    // `projectUrl` is optional and increasingly unset — xunit.v3 leaves it
+    // empty. The `repository` block in the catalogue entry is what modern
+    // packages fill in instead, and reading only the first would report a
+    // correct mapping as unverifiable.
+    const registration = (await json(
+      `https://api.nuget.org/v3/registration5-gz-semver2/${encodeURIComponent(name.toLowerCase())}/index.json`,
+    )) as { items?: { '@id'?: string; items?: { catalogEntry?: { '@id'?: string } }[] }[] } | null;
+
+    const pages = registration?.items ?? [];
+    const last = pages.at(-1);
+    const entries =
+      last?.items ??
+      ((await json(last?.['@id'] ?? '')) as { items?: { catalogEntry?: { '@id'?: string } }[] } | null)
+        ?.items ??
+      [];
+
+    const catalogUrl = entries.at(-1)?.catalogEntry?.['@id'];
+    if (catalogUrl === undefined) return null;
+
+    const entry = (await json(catalogUrl)) as { repository?: unknown } | null;
+    return repoFrom(entry?.repository);
   }
 
   // Maven Central's search index publishes no project URL, so there is nothing
@@ -139,6 +162,27 @@ async function declaredRepo(registry: string, name: string): Promise<string | nu
   // own repository instead, and this says so out loud rather than passing them.
   return null;
 }
+
+/**
+ * Disagreements that were checked and stand.
+ *
+ * A registry states where a package was *built*, which is not always where it
+ * is written. Microsoft builds every .NET package out of the `dotnet/dotnet`
+ * mono-repo, so its catalogue names that for Entity Framework Core — but the
+ * readings this project takes are pushes, contributors and bus factor, and
+ * about the whole of .NET those answer a different question than about EF Core.
+ *
+ * Written down with a reason rather than silently skipped. An audit that cries
+ * wolf every run is an audit somebody stops reading, and one that hides a
+ * disagreement is worse than one that never found it.
+ */
+const CHECKED_EXCEPTIONS: Record<string, { declared: string; because: string }> = {
+  'nuget:Microsoft.EntityFrameworkCore': {
+    declared: 'dotnet/dotnet',
+    because:
+      'the catalogue names the .NET build mono-repo; EF Core is developed in dotnet/efcore and that is what the readings are about',
+  },
+};
 
 const mapped: { repo: string; registry: string; name: string }[] = [];
 for (const entry of readWatchlist()) {
@@ -156,6 +200,7 @@ process.stdout.write(`${mapped.length} package mappings to check.\n\n`);
 
 const wrong: string[] = [];
 const unstated: string[] = [];
+const excepted: string[] = [];
 let agreed = 0;
 
 for (const [index, entry] of mapped.entries()) {
@@ -177,12 +222,23 @@ for (const [index, entry] of mapped.entries()) {
     continue;
   }
 
+  // A disagreement somebody already looked at. Still printed, so it can be
+  // re-examined when the reason stops holding — an exception that goes quiet is
+  // an exception nobody revisits.
+  const allowed = CHECKED_EXCEPTIONS[`${entry.registry}:${entry.name}`];
+  if (allowed !== undefined && allowed.declared === declared) {
+    excepted.push(`${line}\n            registry says ${declared} — kept, because ${allowed.because}`);
+    process.stdout.write(`  checked   ${line}\n            registry says ${declared}, kept on purpose\n`);
+    continue;
+  }
+
   wrong.push(`${line}\n            the registry says it comes from ${declared}`);
   process.stdout.write(`  MISMATCH  ${line}\n            registry says ${declared}\n`);
 }
 
 process.stdout.write(
-  `\n${agreed} agree, ${wrong.length} disagree, ${unstated.length} state no repository.\n`,
+  `\n${agreed} agree, ${wrong.length} disagree, ${excepted.length} disagree by design, ` +
+    `${unstated.length} state no repository.\n`,
 );
 
 // ---- the second fault: a name the project has moved on from ---------------

@@ -31,7 +31,6 @@
 {"id":"ArweaveTeam/arweave","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"astral-sh/ruff","category":"devtool","added":"2026-08-04","active":true,"packages":["brew:ruff","pypi:ruff"]}
 {"id":"astral-sh/uv","category":"devtool","added":"2026-08-04","active":true,"packages":["brew:uv","pypi:uv"]}
-{"id":"AutoMapper/AutoMapper","category":"devtool","added":"2026-08-09","active":true,"packages":["nuget:AutoMapper"]}
 {"id":"AUTOMATIC1111/stable-diffusion-webui","category":"ai-ml","added":"2026-08-04","active":true,"packages":[]}
 {"id":"axolotl-ai-cloud/axolotl","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:axolotl"]}
 {"id":"AztecProtocol/aztec-packages","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
@@ -222,6 +221,7 @@
 {"id":"lightningnetwork/lnd","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"lit/lit","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:lit"]}
 {"id":"livewire/livewire","category":"web-framework","added":"2026-08-09","active":true,"packages":["packagist:livewire/livewire"]}
+{"id":"LuckyPennySoftware/AutoMapper","category":"devtool","added":"2026-08-09","active":true,"packages":["nuget:AutoMapper"]}
 {"id":"makerdao/dss","category":"crypto-web3","added":"2026-08-04","active":true,"packages":[]}
 {"id":"MariaDB/server","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"matplotlib/matplotlib","category":"ai-ml","added":"2026-08-04","active":true,"packages":["pypi:matplotlib"]}
@@ -422,7 +422,7 @@
 {"id":"wevm/viem","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["npm:viem"]}
 {"id":"wevm/wagmi","category":"crypto-web3","added":"2026-08-04","active":true,"packages":["npm:wagmi"]}
 {"id":"withastro/astro","category":"web-framework","added":"2026-08-04","active":true,"packages":["npm:astro"]}
-{"id":"xunit/xunit","category":"devtool","added":"2026-08-09","active":true,"packages":["nuget:xunit"]}
+{"id":"xunit/xunit","category":"devtool","added":"2026-08-09","active":true,"packages":["nuget:xunit","nuget:xunit.v3"]}
 {"id":"yarnpkg/berry","category":"devtool","added":"2026-08-04","active":true,"packages":[]}
 {"id":"yugabyte/yugabyte-db","category":"database","added":"2026-08-04","active":true,"packages":[]}
 {"id":"zed-industries/zed","category":"devtool","added":"2026-08-04","active":true,"packages":[]}

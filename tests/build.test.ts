@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { PAGED_IDS, REGISTRY_IDS } from '../src/lib/registries-table.ts';
 import type { IndexBundle, LensBundle } from '../src/types/bundles.ts';
 import type { EventRecord } from '../src/types/events.ts';
 import type { LiveStateRow } from '../src/types/state.ts';
@@ -346,6 +347,22 @@ describe('output hygiene', () => {
     expect(pages).toContain('crates/widget.html');
     expect(pages).toContain('pypi/Widget_Tools.html');
     expect(pages).toContain('packagist/acme/widget.html');
+  });
+
+  it('publishes a page for exactly the registries the endpoints link to', () => {
+    // Three places hand out a package URL — this build, /api/verdict and the
+    // MCP server — and they all read PAGED_IDS. Asserted against the files on
+    // disk rather than against the constant, because the failure this catches
+    // is a page that is linked and was never built.
+    const result = runBuild({ now: NOW });
+    const built = new Set(
+      result.files
+        .filter((file) => file.name.endsWith('.html') && file.name.includes('/'))
+        .map((file) => file.name.slice(0, file.name.indexOf('/')))
+        .filter((prefix) => REGISTRY_IDS.includes(prefix)),
+    );
+
+    for (const id of built) expect(PAGED_IDS, `${id} pages are built`).toContain(id);
   });
 
   it('gives Maven no page rather than inventing a spelling for it', () => {

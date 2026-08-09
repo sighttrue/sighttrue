@@ -40,7 +40,7 @@ interface JsonRpcRequest {
   params?: unknown;
 }
 
-import { WATCHABLE_IDS } from '../../src/lib/registries-table.ts';
+import { PAGED_IDS, WATCHABLE_IDS } from '../../src/lib/registries-table.ts';
 import {
   findEntry,
   noticesFor,
@@ -57,6 +57,9 @@ import {
  * the project had five readings on.
  */
 const MCP_REGISTRIES: readonly string[] = WATCHABLE_IDS;
+
+/** Registries whose packages have a page here. Maven's names are not URLs. */
+const PAGED_REGISTRIES: ReadonlySet<string> = new Set(PAGED_IDS);
 
 interface StackEntry {
   repo: string;
@@ -492,7 +495,10 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
       package: `${registry}:${name}`,
       covered: true,
       repository: found.entry.repo,
-      page: `${origin}/${found.key.replace(':', '/')}`,
+      // Null where no page exists. Maven names are `group:artifact` and get no
+      // page, so building one from the key handed an agent a URL that has never
+      // been published — and an agent quotes what it is given.
+      page: PAGED_REGISTRIES.has(registry) ? `${origin}/${found.key.replace(':', '/')}` : null,
       notices,
       // Never "clear" or "ok". An agent handed a field called `safe` will
       // report the package as safe, which is a claim nothing here supports.

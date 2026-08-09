@@ -80,7 +80,8 @@ export function resourcesFrom(index: IndexBundle, sizes: Map<string, number>): D
       row: 'registry publish dates, base image sizes, question volume, near-miss names',
       count: index.staleness.measured,
       countLabel: 'packages by real publish date, plus base images and tags',
-      source: 'npm, PyPI, crates.io, Docker Hub and Stack Overflow.',
+      source:
+        'npm, PyPI, crates.io, RubyGems, Packagist, NuGet, Docker Hub and Stack Overflow.',
       bytes: size('ecosystem.json'),
     },
     {
@@ -138,6 +139,10 @@ export function renderDataPackage(
         { title: 'npm registry', path: 'https://registry.npmjs.org' },
         { title: 'PyPI', path: 'https://pypi.org' },
         { title: 'crates.io', path: 'https://crates.io' },
+        { title: 'RubyGems', path: 'https://rubygems.org' },
+        { title: 'Packagist', path: 'https://packagist.org' },
+        { title: 'NuGet', path: 'https://www.nuget.org' },
+        { title: 'Maven Central', path: 'https://central.sonatype.com' },
         { title: 'GitHub REST API', path: 'https://api.github.com' },
         { title: 'Provider status pages', path: `${SITE_ORIGIN}/incidents` },
       ],

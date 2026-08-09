@@ -36,6 +36,29 @@ export interface RegistryFacts {
   fold: (name: string) => string;
   /** Files that declare dependencies for this ecosystem. */
   manifests: readonly string[];
+  /**
+   * What a name may look like here, after folding.
+   *
+   * Shape only — the checks that stop a name becoming a path live with the
+   * caller, because they are the same everywhere and are not a fact about the
+   * registry. These genuinely differ: npm allows one `@scope/`, Packagist
+   * *requires* `vendor/package`, and Maven is `group:artifact`. One shared
+   * pattern was in force when four registries were opened, so `/stack` offered
+   * Packagist and Maven in its selector and then refused every real name in
+   * either of them.
+   */
+  namePattern: RegExp;
+  /**
+   * Whether a package here gets a page on this site.
+   *
+   * False for Maven only, and for one reason: its names are `group:artifact`,
+   * which is not a legal filename on Windows and not a URL segment anywhere.
+   * `src/build.ts` publishes no page, so anything that hands out a package URL
+   * — `/api/verdict`, the MCP server — has to know that, or it answers with an
+   * address that has never existed inside a response whose whole point is that
+   * every figure can be followed to its source.
+   */
+  paged: boolean;
 }
 
 function lower(name: string): string {
@@ -46,6 +69,19 @@ function lower(name: string): string {
 function pep503(name: string): string {
   return lower(name).replace(/[-_.]+/g, '-');
 }
+
+/** One unscoped segment: starts alphanumeric, then word characters and dots. */
+const SEGMENT = '[a-z0-9][a-z0-9._-]*';
+
+const NAME_SHAPE = {
+  /** npm allows a single `@scope/` and nothing else with a slash in it. */
+  npm: new RegExp(`^(@${SEGMENT}/)?${SEGMENT}$`),
+  plain: new RegExp(`^${SEGMENT}$`),
+  /** Packagist requires `vendor/package` — one slash, never zero, never two. */
+  packagist: new RegExp(`^${SEGMENT}/${SEGMENT}$`),
+  /** Maven is `group:artifact`, the group dotted. */
+  maven: new RegExp(`^${SEGMENT}:${SEGMENT}$`),
+} as const;
 
 const encode = (name: string): string =>
   name
@@ -62,6 +98,8 @@ export const REGISTRY_TABLE: readonly RegistryFacts[] = [
     page: (name) => `https://www.npmjs.com/package/${encode(name)}`,
     fold: lower,
     manifests: ['package.json'],
+    namePattern: NAME_SHAPE.npm,
+    paged: true,
   },
   {
     id: 'pypi',
@@ -71,6 +109,8 @@ export const REGISTRY_TABLE: readonly RegistryFacts[] = [
     page: (name) => `https://pypi.org/project/${encode(name)}/`,
     fold: pep503,
     manifests: ['requirements.txt', 'pyproject.toml'],
+    namePattern: NAME_SHAPE.plain,
+    paged: true,
   },
   {
     id: 'crates',
@@ -80,6 +120,8 @@ export const REGISTRY_TABLE: readonly RegistryFacts[] = [
     page: (name) => `https://crates.io/crates/${encode(name)}`,
     fold: lower,
     manifests: ['Cargo.toml'],
+    namePattern: NAME_SHAPE.plain,
+    paged: true,
   },
   {
     id: 'gem',
@@ -90,6 +132,8 @@ export const REGISTRY_TABLE: readonly RegistryFacts[] = [
     // Gem names are case-sensitive in principle and lowercase in practice.
     fold: lower,
     manifests: ['Gemfile', 'gems.rb'],
+    namePattern: NAME_SHAPE.plain,
+    paged: true,
   },
   {
     id: 'packagist',
@@ -100,6 +144,8 @@ export const REGISTRY_TABLE: readonly RegistryFacts[] = [
     // Always `vendor/package`, and Packagist treats it case-insensitively.
     fold: lower,
     manifests: ['composer.json'],
+    namePattern: NAME_SHAPE.packagist,
+    paged: true,
   },
   {
     id: 'nuget',
@@ -109,6 +155,8 @@ export const REGISTRY_TABLE: readonly RegistryFacts[] = [
     page: (name) => `https://www.nuget.org/packages/${encode(name)}`,
     fold: lower,
     manifests: ['packages.config'],
+    namePattern: NAME_SHAPE.plain,
+    paged: true,
   },
   {
     id: 'maven',
@@ -121,6 +169,9 @@ export const REGISTRY_TABLE: readonly RegistryFacts[] = [
     page: (name) => `https://central.sonatype.com/artifact/${name.split(':').map(encodeURIComponent).join('/')}`,
     fold: lower,
     manifests: ['pom.xml'],
+    namePattern: NAME_SHAPE.maven,
+    // The only false in the table. See the field's own note.
+    paged: false,
   },
   {
     id: 'brew',
@@ -132,6 +183,10 @@ export const REGISTRY_TABLE: readonly RegistryFacts[] = [
     page: (name) => `https://formulae.brew.sh/formula/${encode(name)}`,
     fold: lower,
     manifests: [],
+    namePattern: NAME_SHAPE.plain,
+    // Never reached: Homebrew is not watchable, so no package is stored under
+    // it. True rather than false so this reads as "nothing special here".
+    paged: true,
   },
 ];
 
@@ -159,6 +214,11 @@ export const WATCHABLE_IDS: readonly string[] = REGISTRY_TABLE.filter(
 export function foldFor(registry: string, name: string): string {
   return (registryFacts(registry)?.fold ?? lower)(name);
 }
+
+/** Registries whose packages have a page here. Everything that hands out a URL. */
+export const PAGED_IDS: readonly string[] = REGISTRY_TABLE.filter((facts) => facts.paged).map(
+  (facts) => facts.id,
+);
 
 /** The manifest filename to registry, for readers that start from a path. */
 export function registryForManifest(filename: string): string | null {

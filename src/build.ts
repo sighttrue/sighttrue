@@ -102,7 +102,8 @@ import {
 } from './lib/spikes.ts';
 import { windowAnchor } from './lib/window.ts';
 import { renderRepoPage, type RepoSeriesPoint } from './site/repo.ts';
-import { packagePath, renderPackagePage } from './site/package.ts';
+import { PAGED_IDS } from './lib/registries-table.ts';
+import { packagePath, renderPackagePage, type PackageRegistry } from './site/package.ts';
 import { renderLlms } from './site/llms.ts';
 import { renderDataPackage, renderDataset, resourcesFrom } from './site/dataset.ts';
 import {
@@ -942,18 +943,20 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
   // repository publishes the package — the one thing somebody searching "is X
   // still maintained" does not know.
   //
-  // Maven is missing on purpose: its names are `group:artifact`, which is not a
-  // filename on Windows and not a URL segment anywhere, so those packages are
-  // collected and answered by the endpoint without getting a page.
-  const PAGED_REGISTRIES = ['npm', 'pypi', 'crates', 'gem', 'packagist', 'nuget'] as const;
+  // Which registries get pages is a fact about the registry, so it is read from
+  // the table rather than listed again here. Maven is the only false in it: its
+  // names are `group:artifact`, which is not a filename on Windows and not a
+  // URL segment anywhere. `/api/verdict` and the MCP server read the same list,
+  // so nothing can publish a page the endpoints do not link or link one the
+  // build does not publish.
   const packagePaths: string[] = [];
 
   for (const [packageId, entry] of Object.entries(stackIndex)) {
     const separator = packageId.indexOf(':');
     const registry = packageId.slice(0, separator);
     const name = packageId.slice(separator + 1);
-    if (!(PAGED_REGISTRIES as readonly string[]).includes(registry)) continue;
-    const paged = registry as (typeof PAGED_REGISTRIES)[number];
+    if (!PAGED_IDS.includes(registry)) continue;
+    const paged = registry as PackageRegistry;
     // The name becomes a filesystem path on the next line but one.
     if (!isSafePackageName(name)) continue;
 

@@ -22,6 +22,7 @@
  * is fetch bundles that are already public at their own URLs.
  */
 
+import { REGISTRIES } from '../../src/lib/watchlist-api.ts';
 import {
   buildVerdict,
   findEntry,
@@ -80,8 +81,9 @@ export async function onRequestGet(context: { request: Request }): Promise<Respo
   if (id === null) {
     return json(
       {
-        error:
-          'pkg is required and must be registry:name, where registry is npm, pypi or crates. For example pkg=npm:axios.',
+        // The list is read from the same place `parsePkg` reads it, so an
+        // opened registry cannot be accepted while the error still names three.
+        error: `pkg is required and must be registry:name, where registry is one of ${REGISTRIES.join(', ')}. For example pkg=npm:axios.`,
       },
       400,
     );

@@ -351,9 +351,41 @@ describe('the endpoint', () => {
 
   it('says what it wanted when the argument is wrong', async () => {
     const response = await get('?pkg=hex:phoenix');
+    const { error } = (await response.json()) as { error: string };
 
     expect(response.status).toBe(400);
-    expect(((await response.json()) as { error: string }).error).toContain('registry:name');
+    expect(error).toContain('registry:name');
+    // Named from the same list `parsePkg` accepts. The message said "npm, pypi
+    // or crates" for a week after four more registries were opened, so an agent
+    // that read it would have concluded gem:rails could not be asked about.
+    for (const registry of ['npm', 'pypi', 'crates', 'gem', 'packagist', 'nuget', 'maven']) {
+      expect(error).toContain(registry);
+    }
+  });
+
+  it('offers no page for a package that has none', async () => {
+    // Maven names are `group:artifact` and get no page here. Building one from
+    // the key handed back `/maven/com.acme:widget` — an address never
+    // published — inside a response whose whole point is that every figure can
+    // be followed to its source.
+    const response = await get('?pkg=maven:com.acme:widget', {
+      'maven:com.acme:widget': entry(),
+    });
+    const body = (await response.json()) as { covered: boolean; page: string | null };
+
+    expect(body.covered).toBe(true);
+    expect(body.page).toBeNull();
+  });
+
+  it('still gives a page to every registry that has one', async () => {
+    for (const [pkg, page] of [
+      ['gem:rails', '/gem/rails'],
+      ['packagist:acme/widget', '/packagist/acme/widget'],
+      ['nuget:Serilog', '/nuget/Serilog'],
+    ] as const) {
+      const response = await get(`?pkg=${encodeURIComponent(pkg)}`, { [pkg]: entry() });
+      expect(((await response.json()) as { page: string }).page).toBe(page);
+    }
   });
 
   it('is readable from a browser, and cacheable for ten minutes', async () => {

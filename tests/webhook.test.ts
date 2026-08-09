@@ -140,12 +140,23 @@ describe('the App JWT', () => {
 // -------------------------------------------------------------- what to read
 
 describe('which files are manifests', () => {
-  it('reads the four it can parse, at any depth', () => {
+  it('reads every one it can parse, at any depth', () => {
     expect(registryFor('package.json')).toBe('npm');
     expect(registryFor('services/api/package.json')).toBe('npm');
     expect(registryFor('requirements.txt')).toBe('pypi');
     expect(registryFor('pyproject.toml')).toBe('pypi');
     expect(registryFor('crates/core/Cargo.toml')).toBe('crates');
+    expect(registryFor('Gemfile')).toBe('gem');
+    expect(registryFor('apps/web/gems.rb')).toBe('gem');
+    expect(registryFor('composer.json')).toBe('packagist');
+  });
+
+  it('never reads a dependency directory as somebody’s own manifest', () => {
+    // Composer installs into `vendor/` and Bundler into `vendor/bundle/`, so a
+    // PHP or Ruby pull request that vendors its dependencies would otherwise
+    // produce a comment about several hundred packages the author never chose.
+    expect(registryFor('vendor/laravel/framework/composer.json')).toBeNull();
+    expect(registryFor('vendor/bundle/ruby/3.3.0/gems/rails-8.1.0/Gemfile')).toBeNull();
   });
 
   it('reads nothing else', () => {

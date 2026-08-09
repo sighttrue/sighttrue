@@ -10,13 +10,18 @@
  * Pure. The endpoint calls in, gets a decision, and does the database work.
  */
 
+import { registryFacts } from './registries-table.ts';
+
 /**
- * The three registries the instrument actually reads.
+ * The registries the instrument actually reads.
  *
- * Accepting a fourth would be one line and it would be a lie: an entry for a
+ * Accepting one more would be a line and it would be a lie: an entry for a
  * registry nothing is collected from can never produce a reading, so the
  * watchlist would quietly contain packages it is not watching. Refusing is the
  * honest answer until a collector exists.
+ *
+ * Spelled here rather than derived so the union type survives, and held to
+ * `registries-table.ts` by a test.
  */
 export const REGISTRIES = ['npm', 'pypi', 'crates', 'gem', 'packagist', 'nuget', 'maven'] as const;
 export type Registry = (typeof REGISTRIES)[number];
@@ -78,11 +83,16 @@ function validName(registry: Registry, name: string): boolean {
 
   // A leading dot or slash is how a name becomes a path. Nothing here builds a
   // filesystem path from a package name today, but a URL is built from it, and
-  // `../` in the middle of one is somebody else's endpoint.
+  // `../` in the middle of one is somebody else's endpoint. The same everywhere,
+  // so it stays here rather than in the per-registry shape.
   if (name.includes('..') || name.startsWith('.') || name.startsWith('/')) return false;
 
-  if (registry === 'npm') return /^(@[a-z0-9][\w.-]*\/)?[a-z0-9][\w.-]*$/.test(name);
-  return /^[a-z0-9][a-z0-9._-]*$/.test(name);
+  // The shape comes from `registries-table.ts`. One pattern for everything but
+  // npm was in force when four registries were opened, so `/stack` listed
+  // Packagist and Maven in its selector and then refused `laravel/framework`
+  // and `com.google.guava:guava` — every real name in either of them.
+  const shape = registryFacts(registry)?.namePattern;
+  return shape !== undefined && shape.test(name);
 }
 
 /**

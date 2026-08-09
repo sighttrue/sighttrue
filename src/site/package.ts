@@ -1,4 +1,5 @@
 import { band, esc, layout, SITE_ORIGIN } from './render.ts';
+import { isGeneratedNotice } from '../collectors/staleness.ts';
 import { registryUrl } from '../lib/verdict.ts';
 import type { IndexBundle } from '../types/bundles.ts';
 import type { MetaRecord } from '../types/meta.ts';
@@ -340,16 +341,26 @@ export function renderPackagePage(
     )}
   </div>`;
 
-  // The publisher's own instruction not to install this, in their words. First
-  // on the page, above every other reading, because nothing else here matters
-  // if the answer is "they have told you to stop".
+  // The publisher's own instruction not to install this. First on the page,
+  // above every other reading, because nothing else here matters if the answer
+  // is "they have told you to stop".
+  //
+  // What follows the flag is only called their notice when it is one. RubyGems
+  // and Packagist can set the flag with no text at all — `yanked: true`,
+  // `abandoned: true` — and the sentence shown then is this project's, written
+  // to describe the flag. Crediting it to the publisher would be putting words
+  // in the mouth of somebody who wrote none.
+  const theirWords = isGeneratedNotice(data.withdrawn)
+    ? 'the registry sets the flag and publishes no message with it'
+    : "the publisher's own notice, republished unchanged";
+
   const withdrawn =
     data.withdrawn === null
       ? ''
       : `<div class="notice notice-alert"><strong>${esc(registryName)} marks this ${
           WITHDRAWN_VERB[data.registry]
         }</strong>
-      ${esc(data.withdrawn)} — the publisher's own notice, republished unchanged.</div>`;
+      ${esc(data.withdrawn)} — ${theirWords}.</div>`;
 
   const funding =
     data.funding === null

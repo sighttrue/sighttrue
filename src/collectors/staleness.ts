@@ -119,6 +119,53 @@ function notice(value: unknown): string | null {
 }
 
 /**
+ * The sentences written here when a registry raises a flag and says nothing.
+ *
+ * RubyGems yanks with `yanked: true` and Packagist abandons with
+ * `abandoned: true` — a boolean and no text. The phrase stored then describes
+ * the flag, and it is this project's phrase, not the maintainer's. Anything
+ * that presents a withdrawal as "the publisher's own notice" has to be able to
+ * tell the two apart, so the list lives here, beside where the phrases are
+ * written, rather than being copied to whatever renders them.
+ */
+const GENERATED_NOTICES: readonly string[] = [
+  'withdrawn by the publisher',
+  'yanked by the publisher',
+  'deprecated by the publisher',
+  'marked abandoned by the publisher',
+];
+
+/** Whether a withdrawal string is one of ours rather than the publisher's. */
+export function isGeneratedNotice(withdrawn: string | null): boolean {
+  if (withdrawn === null) return false;
+  // Prefix, not equality: Packagist's carries the successor's name on the end.
+  return GENERATED_NOTICES.some((phrase) => withdrawn.startsWith(phrase));
+}
+
+/**
+ * NuGet's deprecation, in the publisher's words rather than a summary of them.
+ *
+ * Their message where there is one, and the package they name as the successor
+ * where they name one. A generated phrase would read the same on the page but
+ * would not be their notice, and the page says the notice is republished
+ * unchanged.
+ */
+export function deprecationNotice(deprecation: unknown): string {
+  const record = deprecation as { message?: unknown; alternatePackage?: { id?: unknown } };
+  const message = notice(record?.message);
+  const alternate = typeof record?.alternatePackage?.id === 'string' ? record.alternatePackage.id : null;
+
+  // The successor is appended after the message is already bounded, not before.
+  // Trimming the pair together would cut the one part a reader most needs.
+  if (message !== null && alternate !== null) {
+    return `${message} The publisher names ${alternate} as the replacement.`;
+  }
+  if (message !== null) return message;
+  if (alternate !== null) return `Deprecated. The publisher names ${alternate} as the replacement.`;
+  return 'deprecated by the publisher';
+}
+
+/**
  * The scripts npm will run on the installing machine, named in the order it
  * runs them. Anything else in `scripts` is a thing the maintainers run.
  */
@@ -335,10 +382,18 @@ export function createStalenessClient(): StalenessClient {
         const at = match?.catalogEntry?.published;
         if (at === undefined) return null;
 
+        // NuGet publishes the maintainer's own sentence and, often, the package
+        // they want you to move to. The first version of this stored the string
+        // "deprecated by the publisher" and threw both away — under a heading
+        // that says the notice is republished unchanged, which made this
+        // project's words look like theirs. xunit's actual notice names
+        // `xunit.v3` and says feature work has moved; none of that reached the
+        // page.
+        const deprecation = match?.catalogEntry?.deprecation;
         return {
           at,
           version: found.version,
-          withdrawn: match?.catalogEntry?.deprecation ? 'deprecated by the publisher' : null,
+          withdrawn: deprecation ? deprecationNotice(deprecation) : null,
           installScripts: null,
           bytes: null,
           funding: null,
