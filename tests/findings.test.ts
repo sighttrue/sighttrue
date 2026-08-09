@@ -19,6 +19,7 @@ const EMPTY: IndexBundle = {
   scorecard: { resolved: 0, followed: 0, rate: null, windowDays: 7, pending: 0 },
   today: [],
   watchlist: { total: 0, active: 0, byCategory: {} },
+  archive: { measured: 0, from: null, to: null, rows: 0 },
   coverage: [],
   calibration: [],
   adoption: { measured: 0, unread: 0, weekly: 0, weeklyPackages: 0, top: [], lifetime: [] },

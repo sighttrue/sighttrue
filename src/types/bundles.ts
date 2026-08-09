@@ -252,6 +252,15 @@ export interface IndexBundle {
   /** Everything detected today, across every lens, newest first. */
   today: EventRecord[];
   watchlist: WatchlistSummary;
+  /**
+   * How much of the daily archive is on file.
+   *
+   * The one dataset here that cannot be rebuilt, so the site states its extent
+   * rather than implying it. Days held is separate from the span between the
+   * endpoints: a failed run writes no snapshot, and the difference between
+   * those two numbers is the only honest way to say so.
+   */
+  archive: { measured: number; from: string | null; to: string | null; rows: number };
   /** What the watchlist is pointed at, one row per category. */
   coverage: CoverageRow[];
   /**

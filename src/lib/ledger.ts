@@ -12,6 +12,7 @@ import {
   ANNOUNCEMENTS_PATH,
   EVENTS_DIR,
   eventsPath,
+  HISTORY_DIR,
   historyPath,
   LINEAGE_ROOTS_PATH,
   LIVE_STATE_PATH,
@@ -338,6 +339,21 @@ export function writeManifests(rows: readonly ManifestRow[]): void {
 
 export function readSnapshot(date: string): HistorySnapshotRow[] {
   return readJsonl<HistorySnapshotRow>(historyPath(date));
+}
+
+/**
+ * Days with a snapshot on disk, oldest first.
+ *
+ * The filename is the authority on the date, and only a filename that is
+ * exactly a date counts — the build publishes one file per entry here, so a
+ * stray `.jsonl` in this directory would become a URL.
+ */
+export function listSnapshotDates(): string[] {
+  if (!existsSync(HISTORY_DIR)) return [];
+  return readdirSync(HISTORY_DIR)
+    .filter((name) => /^\d{4}-\d{2}-\d{2}\.jsonl$/.test(name))
+    .map((name) => name.slice(0, 10))
+    .sort();
 }
 
 /**

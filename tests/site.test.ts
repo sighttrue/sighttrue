@@ -34,6 +34,7 @@ function index(over: Partial<IndexBundle> = {}): IndexBundle {
     scorecard: { resolved: 0, followed: 0, rate: null, windowDays: 7, pending: 0 },
     today: [],
     watchlist: { total: 400, active: 400, byCategory: { devtool: 400 } },
+    archive: { measured: 0, from: null, to: null, rows: 0 },
     coverage: [
       { category: 'devtool', repositories: 400, measured: 0, forksAdded: null, findings: 0, busiest: null },
     ],
@@ -475,6 +476,7 @@ describe('the method page', () => {
     const html = renderMethod(
       index({
         watchlist: { total: 400, active: 400, byCategory: {} },
+        archive: { measured: 0, from: null, to: null, rows: 0 },
         coverage: [
           { category: 'crypto-web3', repositories: 80, measured: 0, forksAdded: null, findings: 0, busiest: null },
         ],

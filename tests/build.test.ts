@@ -108,6 +108,12 @@ describe('bundle emission', () => {
       // wrong, because the answer is a date that has since passed.
       'eol.json',
       'forks.json',
+      // The daily archive, one file per day plus its index. A directory rather
+      // than a bundle because it is the one dataset here that is not derived:
+      // every other file is rebuilt from scratch each run, and a lost day of
+      // this is lost, since GitHub publishes what a star count is and never
+      // what it was.
+      'history',
       'incidents.json',
       'index.json',
       'lineage.json',
@@ -238,6 +244,23 @@ describe('deploy gate', () => {
     expect(runBuild({ now: NOW }).bundleHash).toBe(before);
   });
 
+  it('deploys when a day is added to the archive', () => {
+    // The archive is published through `emitted` for exactly this reason.
+    // Written to disk after the hash was taken — which is how it was written
+    // first — the archive would grow every day and never ship one, and the
+    // build would report a clean skip while serving a file nobody asked for.
+    const before = runBuild({ now: NOW });
+    recordDeploy(before.bundleHash, true);
+
+    ledger.writeSnapshot('2026-08-03', [
+      { id: 'a/one', date: '2026-08-03', forks: 1, stars: 2, openIssues: 3 },
+    ]);
+
+    const after = runBuild({ now: NOW });
+    expect(after.bundleHash).not.toBe(before.bundleHash);
+    expect(after.deploy).toBe(true);
+  });
+
   it('deploys again as soon as real content changes', () => {
     ledger.appendEvents('2026-08', [
       releaseEvent('release:b/two:v2.0.0', 'b/two', '2026-08-04T10:00:00Z'),
@@ -270,16 +293,26 @@ describe('output hygiene', () => {
     // it, and is reported as `data/official.json`. Both land in the same
     // directory, so the comparison is on where the file ends up rather than on
     // which mechanism put it there.
-    const inData = result.files
-      .filter((f) => f.name.endsWith('.json') && !f.name.includes('/'))
-      .map((f) => f.name)
-      .concat(
-        result.files
-          .filter((f) => f.name.startsWith('data/') && f.name.endsWith('.json'))
-          .map((f) => f.name.slice('data/'.length)),
+    // Stated as the invariant rather than as a list: every file actually on
+    // disk under /data was reported by the build. A top-level comparison could
+    // not see inside data/history/, and the archive is the one thing here that
+    // grows a file a day.
+    const onDisk = (dir: string, prefix = ''): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+        entry.isDirectory()
+          ? onDisk(join(dir, entry.name), `${prefix}${entry.name}/`)
+          : [`${prefix}${entry.name}`],
       );
 
-    expect(readdirSync(DIST_DATA).sort()).toEqual(inData.sort());
+    const reported = new Set(
+      result.files.map((f) => (f.name.startsWith('data/') ? f.name.slice('data/'.length) : f.name)),
+    );
+
+    for (const name of onDisk(DIST_DATA)) {
+      expect(reported, `${name} is on disk under /data but the build did not report it`).toContain(
+        name,
+      );
+    }
   });
 
   it('emits a page per lens alongside the bundles', () => {
@@ -347,6 +380,41 @@ describe('output hygiene', () => {
     expect(pages).toContain('crates/widget.html');
     expect(pages).toContain('pypi/Widget_Tools.html');
     expect(pages).toContain('packagist/acme/widget.html');
+  });
+
+  it('publishes the archive as the same bytes the agent committed', () => {
+    // The point of publishing it at all is that a reader can check the site
+    // against the repository. Re-serialising would defeat that: two files that
+    // mean the same thing but do not match byte for byte cannot be diffed by
+    // anybody who did not write both serialisers.
+    ledger.writeSnapshot('2026-08-01', [
+      { id: 'a/one', date: '2026-08-01', forks: 4, stars: 5, openIssues: 6 },
+    ]);
+    const result = runBuild({ now: NOW });
+
+    const published = result.files.find((file) => file.name === 'data/history/2026-08-01.jsonl');
+    expect(published, 'the archive is published under /data/history').toBeUndefined();
+    expect(result.files.some((file) => file.name === 'history/2026-08-01.jsonl')).toBe(true);
+
+    const onDisk = readFileSync(join(distDir, 'data', 'history', '2026-08-01.jsonl'), 'utf8');
+    const committed = readFileSync(
+      join(process.env['SIGNAL_DATA_DIR'] as string, 'history', '2026-08-01.jsonl'),
+      'utf8',
+    );
+    expect(onDisk).toBe(committed);
+  });
+
+  it('indexes the archive without overstating it', () => {
+    const result = runBuild({ now: NOW });
+    expect(result.files.some((file) => file.name === 'history/index.json')).toBe(true);
+
+    const index = JSON.parse(
+      readFileSync(join(distDir, 'data', 'history', 'index.json'), 'utf8'),
+    ) as { measured: number; from: string; days: { date: string }[] };
+
+    // Days on file, read off the directory. Not a span, and not a constant.
+    expect(index.measured).toBe(index.days.length);
+    expect(index.from).toBe(index.days.at(-1)?.date);
   });
 
   it('publishes a page for exactly the registries the endpoints link to', () => {

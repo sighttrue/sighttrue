@@ -100,6 +100,20 @@ export function resourcesFrom(index: IndexBundle, sizes: Map<string, number>): D
       source: 'Derived here from all of the above.',
       bytes: size('index.json'),
     },
+    {
+      // Listed last and described differently from the rest, because it is a
+      // different kind of thing. Everything above is derived and could be
+      // rebuilt from scratch tomorrow. This is the one file here that could
+      // not: GitHub publishes what a repository's star count is, never what it
+      // was last Tuesday.
+      name: 'history/index.json',
+      row: 'one archived day, with the rows and bytes it holds',
+      count: index.archive.measured,
+      countLabel: `days on file, ${index.archive.from ?? 'nothing'} onward, each at /data/history/DATE.jsonl`,
+      source:
+        'Written once a day by the agent and never rewritten. One row per repository: stars, forks and open issues, as GitHub reported them that day.',
+      bytes: size('history/index.json'),
+    },
   ];
 }
 

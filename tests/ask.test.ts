@@ -18,6 +18,7 @@ function index(over: Partial<IndexBundle> = {}): IndexBundle {
     scorecard: { resolved: 8, followed: 5, rate: 0.625, windowDays: 7, pending: 2 },
     today: [],
     watchlist: { total: 400, active: 388, byCategory: { devtool: 388 } },
+    archive: { measured: 0, from: null, to: null, rows: 0 },
     coverage: [
       { category: 'ai-ml', repositories: 74, measured: 12, forksAdded: 310, findings: 4, busiest: 'a/one' },
       { category: 'devtool', repositories: 80, measured: 20, forksAdded: 512, findings: 9, busiest: 'b/two' },

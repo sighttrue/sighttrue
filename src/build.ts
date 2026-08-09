@@ -22,6 +22,7 @@ import {
   readManifests,
   readLiveState,
   readMeta,
+  listSnapshotDates,
   readSnapshot,
   readSummarised,
   readWatchlist,
@@ -58,6 +59,7 @@ import {
   assertSafeRepoId,
   DIST_DATA_DIR,
   DIST_DIR,
+  historyPath,
   isSafePackageName,
   ROOT,
   utcDate,
@@ -102,6 +104,7 @@ import {
 } from './lib/spikes.ts';
 import { windowAnchor } from './lib/window.ts';
 import { renderRepoPage, type RepoSeriesPoint } from './site/repo.ts';
+import { archiveIndex } from './lib/history.ts';
 import { PAGED_IDS } from './lib/registries-table.ts';
 import { packagePath, renderPackagePage, type PackageRegistry } from './site/package.ts';
 import { renderLlms } from './site/llms.ts';
@@ -564,6 +567,31 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
   }
   const healthByRepo = new Map(readHealth().map((row) => [row.id, row]));
 
+  // The archive, published byte for byte rather than regenerated.
+  //
+  // Every other file under /data is derived and could be rebuilt from scratch
+  // tomorrow. These cannot: GitHub publishes what a repository's star count is,
+  // never what it was last Tuesday, so a day lost here is lost for good. The
+  // build has read these files all along — the fork baseline and every profile
+  // sparkline come from them — and published none of them, which left the only
+  // irreplaceable dataset here as the only one a reader could not fetch.
+  //
+  // Through `emitted` rather than written directly, so every day is inside the
+  // bundle hash. Written afterwards, the archive would grow without ever
+  // triggering a deploy — the same silent failure the assertion at the end of
+  // this function exists to catch.
+  const archiveDays = listSnapshotDates().map((date) => {
+    const contents = readFileSync(historyPath(date), 'utf8');
+    emitted.set(`history/${date}.jsonl`, contents);
+    return {
+      date,
+      rows: contents.split('\n').filter((line) => line !== '').length,
+      bytes: Buffer.byteLength(contents, 'utf8'),
+    };
+  });
+  const archive = archiveIndex(archiveDays);
+  emitted.set('history/index.json', stableJson(archive));
+
   const index: IndexBundle = {
     strip,
     adoption: summariseAdoption(readAdoption()),
@@ -594,6 +622,7 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
       active: readActiveWatchlist().length,
       byCategory,
     },
+    archive: { measured: archive.measured, from: archive.from, to: archive.to, rows: archive.rows },
     coverage: buildCoverage(watchlist, strip, addressable),
     calibration: CALIBRATED_COLLECTORS.map((collector) =>
       summariseWindow(calibrationWindow, collector),
@@ -1258,7 +1287,11 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
       );
     }
 
-    writeFileSync(join(DIST_DATA_DIR, name), contents, 'utf8');
+    const target = join(DIST_DATA_DIR, name);
+    // The archive nests under data/history/, so this needs the same directory
+    // handling the pages loop has.
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, contents, 'utf8');
     files.push({ name, bytes });
     totalBytes += bytes;
   }
