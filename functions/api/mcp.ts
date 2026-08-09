@@ -40,6 +40,23 @@ interface JsonRpcRequest {
   params?: unknown;
 }
 
+import { hashToken } from '../../src/lib/auth.ts';
+
+/**
+ * The one query this server makes, as a shape rather than as Cloudflare's type.
+ *
+ * `tests/mcp.test.ts` imports this module, which puts it in the same
+ * typechecking pass as `src/`, where the Workers globals are not declared.
+ * Importing `Env` for one method dragged `D1Database` into a config that has
+ * never needed it. What is actually used is one prepared statement.
+ */
+interface KeyStore {
+  prepare(query: string): {
+    bind(...values: unknown[]): { first<T>(): Promise<T | null> };
+  };
+}
+import { bearerFrom, decide, type EntitlementRow } from '../../src/lib/entitlement.ts';
+import { MCP_TOOLS, toolByName } from '../../src/lib/mcp-catalogue.ts';
 import { PAGED_IDS, WATCHABLE_IDS } from '../../src/lib/registries-table.ts';
 import {
   findEntry,
@@ -207,6 +224,52 @@ function toolResult(id: unknown, payload: unknown, isError = false): Response {
   });
 }
 
+/**
+ * The entitlement behind an Authorization header, or null.
+ *
+ * Null covers every way of not having one — no header, a malformed one, a key
+ * that was revoked, a key with no entitlement row. They are one answer here
+ * because `decide` treats them alike: a paid tool is refused and a free tool is
+ * not, and distinguishing "wrong key" from "no key" in the reply would tell an
+ * attacker which of their guesses was a real key.
+ *
+ * The database is optional. This server ran without D1 bound for its whole life
+ * and its free tools must keep working if the binding ever goes missing — an
+ * outage in the paid path is not a reason to stop answering the public one.
+ */
+async function entitlementFor(
+  context: { env?: { DB?: KeyStore } },
+  header: string | null,
+): Promise<EntitlementRow | null> {
+  const key = bearerFrom(header);
+  const db = context.env?.DB;
+  if (key === null || db === undefined) return null;
+
+  try {
+    const hash = await hashToken(key);
+    const row = await db
+      .prepare(
+        `SELECT e.plan_id, e.valid_until, e.calls_remaining
+           FROM api_keys k
+           JOIN entitlements e ON e.account_id = k.account_id
+          WHERE k.key_hash = ? AND k.revoked_at IS NULL`,
+      )
+      .bind(hash)
+      .first<{ plan_id: string; valid_until: string | null; calls_remaining: number | null }>();
+
+    if (row === null) return null;
+    return {
+      planId: row.plan_id,
+      validUntil: row.valid_until,
+      callsRemaining: row.calls_remaining,
+    };
+  } catch {
+    // A database that cannot be read is not an entitlement. Refusing the paid
+    // tools is the safe direction; throwing would take the free ones down too.
+    return null;
+  }
+}
+
 function asString(value: unknown, max = MAX_NAME): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
@@ -214,149 +277,12 @@ function asString(value: unknown, max = MAX_NAME): string | null {
   return trimmed;
 }
 
-const TOOLS = [
-  {
-    name: 'check_before_install',
-    description:
-      'Call this before adding a dependency to a project. Returns only the facts a reviewer would be annoyed to discover afterwards: whether the publisher has withdrawn the package, whether it runs scripts on the installing machine, whether its repository is archived, how many advisories are on record, whether the licence is source-available, and how long since it was actually published. Each fact carries the address of the body that published it. It does not say whether to install; it says what is on record so the decision is made knowing it.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        registry: { type: 'string', enum: MCP_REGISTRIES },
-        name: { type: 'string', description: 'Package name as the registry spells it.' },
-      },
-      required: ['registry', 'name'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'check_package',
-    description:
-      'Read the current standing of one open-source package: weekly downloads, OpenSSF scorecard, advisory count, licence, whether the repository is archived, and when it was last pushed to. Covers a curated watchlist of around 420 projects; a package that is not covered returns covered:false and is not being judged.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        registry: { type: 'string', enum: MCP_REGISTRIES },
-        name: { type: 'string', description: 'Package name as the registry spells it.' },
-      },
-      required: ['registry', 'name'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'check_stack',
-    description:
-      'Read a whole dependency list at once and report what is archived, what carries advisories, what has a source-available licence, and what has not been pushed to in a year. Also returns how the stack medians against the tracked corpus. Use this when reviewing a package.json, requirements.txt, Cargo.toml, composer.json or Gemfile.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        registry: { type: 'string', enum: MCP_REGISTRIES },
-        names: {
-          type: 'array',
-          items: { type: 'string' },
-          description: `Package names, up to ${MAX_BATCH}.`,
-        },
-      },
-      required: ['registry', 'names'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'compare_repositories',
-    description:
-      'Hold two watched repositories against each other across downloads, OpenSSF scorecard, advisories, forks, stars and findings on record. Compares only; it does not rank, and nothing is totalled across measures that share no unit.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        a: { type: 'string', description: 'Repository as owner/name.' },
-        b: { type: 'string', description: 'Repository as owner/name.' },
-      },
-      required: ['a', 'b'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'find_model',
-    description:
-      'Find language models by price and context window, from a catalogue read daily across sixty providers. Use this before choosing a model: prices move weekly and span four orders of magnitude, and no dated record of them exists anywhere else, so a model chosen from memory is usually chosen on a price that has since changed.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        minContext: { type: 'integer', description: 'Minimum context window in tokens.' },
-        maxPrice: {
-          type: 'number',
-          description: 'Maximum USD per million prompt tokens.',
-        },
-        provider: { type: 'string', description: 'Restrict to one provider, e.g. anthropic.' },
-        sort: {
-          type: 'string',
-          enum: ['price', 'context', 'price-per-context'],
-          description:
-            'price-per-context is cost per million divided by hundred-thousands of window — the right ordering when the job needs the window, and published nowhere else.',
-        },
-        limit: { type: 'integer', minimum: 1, maximum: MAX_RESULTS },
-      },
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'check_eol',
-    description:
-      'Check whether a runtime, database or framework release is still receiving security fixes, and what to move to. Covers about two dozen products read daily from endoflife.date. Use it before recommending or accepting a version pin: end-of-life dates are published years ahead, so a date held in training data is usually the one thing that has since passed.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        product: {
-          type: 'string',
-          description: 'Product as endoflife.date spells it, e.g. python, nodejs, postgresql.',
-        },
-        cycle: {
-          type: 'string',
-          description: 'Release line, e.g. 3.9 or 20. Omit for every cycle of the product.',
-        },
-      },
-      required: ['product'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'check_provider',
-    description:
-      "Read a provider's announced incident history — how many they have filed, how recently, and what they called them. Covers about twenty services developers depend on, kept after the providers' own status feeds stop carrying it. A count measures how often they announced something, not how often they broke, so a low number is not a good one.",
-    inputSchema: {
-      type: 'object',
-      properties: {
-        provider: {
-          type: 'string',
-          description: 'Provider slug, e.g. cloudflare, openai, github. Omit for every provider.',
-        },
-        days: { type: 'integer', minimum: 1, maximum: 730, description: 'Window. Default 90.' },
-      },
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'search_repositories',
-    description:
-      'Find watched repositories whose name contains a string, with their current readings. Use it to discover what is covered before calling the other tools.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string' },
-        limit: { type: 'integer', minimum: 1, maximum: MAX_RESULTS },
-      },
-      required: ['query'],
-      additionalProperties: false,
-    },
-  },
-] as const;
-
 /**
- * The caveats every answer carries.
+ * What every answer here is qualified by.
  *
- * An agent will paste these figures into a code review, so the limits have to
- * travel with them. A scorecard quoted without "measures declared practices,
- * not whether the project is safe" is a claim this project does not make.
+ * Returned with each tool result rather than documented once, because an agent
+ * reads one result and not the documentation, and a figure quoted without its
+ * limits is the failure this whole surface exists to avoid.
  */
 const LIMITS = [
   'The watchlist is curated and partial, around 420 repositories chosen by hand. A package that is not covered is not being judged; it is simply not tracked.',
@@ -364,6 +290,28 @@ const LIMITS = [
   'Advisory counts are OSV totals for all time, so a mature well-patched project carries more than a young one. A high count is not a warning on its own.',
   'Readings are taken every four hours at best. Nothing here is real-time.',
 ];
+
+/**
+ * Declared from `mcp-catalogue.ts` rather than written here.
+ *
+ * These were spelled out inline, and the pricing page counted them in a
+ * different file. It said seven while the server answered eight, and a test
+ * pinned the sentence rather than the server, so it held. One list now, read
+ * by the endpoint, the page and the gate.
+ */
+const TOOLS = MCP_TOOLS.map((tool) => ({
+  name: tool.name,
+  description:
+    tool.tier === 'paid'
+      ? `${tool.description} Requires a key; see https://sighttrue.com/pricing.`
+      : tool.description,
+  inputSchema: {
+    type: 'object',
+    properties: tool.properties,
+    required: [...tool.required],
+    additionalProperties: false,
+  },
+}));
 
 async function loadJson<T>(origin: string, path: string): Promise<T | null> {
   try {
@@ -408,7 +356,13 @@ function describe(name: string, entry: StackEntry): Record<string, unknown> {
   };
 }
 
-export async function onRequestPost(context: { request: Request }): Promise<Response> {
+export async function onRequestPost(context: {
+  request: Request;
+  // Optional, and it has to stay optional. This server answered for months with
+  // no database bound, and its free tools must keep answering if the binding
+  // disappears.
+  env?: { DB?: KeyStore };
+}): Promise<Response> {
   const { request } = context;
   const origin = new URL(request.url).origin;
 
@@ -459,6 +413,39 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
 
   const toolName = typeof params['name'] === 'string' ? params['name'] : '';
   const args = (params['arguments'] ?? {}) as Record<string, unknown>;
+
+  // The gate, before any tool runs.
+  //
+  // A tool nobody catalogued is refused rather than dispatched, so a handler
+  // added without an entry cannot quietly answer for free. And a free tool is
+  // never gated: the decision lives in `decide`, which refuses to withhold one
+  // whatever the key says, because everything already published keyless stays
+  // keyless.
+  const declared = toolByName(toolName);
+  if (declared === undefined) {
+    return toolResult(id, { error: `No tool named ${toolName || '(none)'}. Call list_readings.` }, true);
+  }
+
+  const entitlement = await entitlementFor(context, request.headers.get('authorization'));
+  const decision = decide(declared.tier, entitlement, new Date().toISOString());
+  if (!decision.allowed) {
+    return toolResult(id, { error: decision.message, tool: toolName, tier: declared.tier }, true);
+  }
+
+  if (toolName === 'list_readings') {
+    return toolResult(id, {
+      tools: MCP_TOOLS.map((tool) => ({
+        name: tool.name,
+        tier: tool.tier,
+        group: tool.group,
+        measures: tool.description,
+        // Why it is not available elsewhere. An agent choosing between this and
+        // its own training data deserves to know which one was measured today.
+        because: tool.because,
+      })),
+      note: 'Tools marked free need no key. The rest need one; see https://sighttrue.com/pricing.',
+    });
+  }
 
   if (toolName === 'check_before_install') {
     const registry = asString(args['registry'], 12);

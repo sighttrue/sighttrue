@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { bearerFrom, decide, type EntitlementRow } from '../src/lib/entitlement.ts';
@@ -96,11 +98,23 @@ describe('the catalogue', () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
-  it('keeps the tools that shipped free free', () => {
-    // These three were published with no key and no account. Moving one behind
-    // a gate later would be taking back a promise, whatever the reason.
-    for (const name of ['check_before_install', 'check_package', 'check_stack']) {
-      expect(toolByName(name)?.tier, `${name} must stay free`).toBe('free');
+  it('keeps every tool the server already answers free', () => {
+    // Read out of the endpoint rather than listed here. Written by hand this
+    // named three, and the server was already answering eight — so a catalogue
+    // that moved five of them behind a gate passed the test that existed to
+    // prevent exactly that. Anything the server answers today was published
+    // with no key and no account, and taking one back is the single change
+    // this project cannot make.
+    const source = readFileSync(
+      fileURLToPath(new URL('../functions/api/mcp.ts', import.meta.url)),
+      'utf8',
+    );
+    const served = [...source.matchAll(/toolName === '([a-z_]+)'/g)].map((match) => match[1] as string);
+
+    expect(served.length, 'the endpoint dispatches tools by name').toBeGreaterThan(0);
+    for (const name of new Set(served)) {
+      expect(toolByName(name), `${name} is served but not catalogued`).toBeDefined();
+      expect(toolByName(name)?.tier, `${name} is answered today and must stay free`).toBe('free');
     }
   });
 

@@ -83,6 +83,69 @@ export const MCP_TOOLS: readonly McpTool[] = [
     because: 'Free permanently.',
   },
   {
+    name: 'search_repositories',
+    tier: 'free',
+    group: 'Before you install',
+    description:
+      'Find watched repositories whose name contains a string, with their current readings. Use it to discover what is covered before calling the other tools.',
+    properties: { query: { type: 'string' }, limit: { type: 'integer', minimum: 1 } },
+    required: ['query'],
+    because: 'Free permanently.',
+  },
+  {
+    name: 'compare_repositories',
+    tier: 'free',
+    group: 'Before you install',
+    description:
+      'Hold two watched repositories against each other across downloads, OpenSSF scorecard, advisories, forks, stars and findings on record. Compares only; it does not pick a winner.',
+    properties: {
+      a: { type: 'string', description: 'Repository as owner/name.' },
+      b: { type: 'string', description: 'Repository as owner/name.' },
+    },
+    required: ['a', 'b'],
+    because: 'Free permanently.',
+  },
+  {
+    name: 'find_model',
+    tier: 'free',
+    group: 'AI models',
+    description:
+      'Find language models by price and context window, from a catalogue read daily across sixty providers. Use this before choosing a model: prices move without announcement and training data is out of date on the day it ships.',
+    properties: {
+      minContext: { type: 'integer', description: 'Minimum context window in tokens.' },
+      maxPrice: { type: 'number', description: 'Maximum USD per million prompt tokens.' },
+      provider: { type: 'string' },
+    },
+    required: [],
+    because: 'Free permanently.',
+  },
+  {
+    name: 'check_eol',
+    tier: 'free',
+    group: 'Runtime and infrastructure',
+    description:
+      'Check whether a runtime, database or framework release is still receiving security fixes, and what to move to. Covers about two dozen products read daily from endoflife.date.',
+    properties: {
+      product: { type: 'string', description: 'Product as endoflife.date spells it, e.g. python, nodejs, postgresql.' },
+      cycle: { type: 'string', description: 'Release line, e.g. 3.9 or 20. Omit for every cycle.' },
+    },
+    required: ['product'],
+    because: 'Free permanently.',
+  },
+  {
+    name: 'check_provider',
+    tier: 'free',
+    group: 'Providers',
+    description:
+      'Recorded incidents for a hosting or API provider over a window, kept after the provider’s own status page dropped them.',
+    properties: {
+      provider: { type: 'string', description: 'Provider slug, e.g. cloudflare, openai, github. Omit for every provider.' },
+      days: { type: 'integer', minimum: 1, maximum: 730 },
+    },
+    required: [],
+    because: 'Free permanently.',
+  },
+  {
     name: 'list_readings',
     tier: 'free',
     group: 'Before you install',
