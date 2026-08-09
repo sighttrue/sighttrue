@@ -58,7 +58,22 @@ export interface DemandThresholds {
 export const DEFAULT_DEMAND_THRESHOLDS: DemandThresholds = {
   minRepos: 2,
   maxRepoShare: 0.15,
-  minIssues: 3,
+  /**
+   * The same as `minRepos`, and measured rather than chosen.
+   *
+   * At three, this detector admitted nothing for four days — not "nothing
+   * crossed the bar", but nothing to compare against it, which the calibration
+   * ledger recorded as `measured: 0` while the page said the ecosystem was
+   * quiet. Against a live sample of 384 issues from 63 repositories: 1,571
+   * bigrams, 14 in two or more repositories, and exactly one of those with a
+   * third issue — which was generic and dropped. So the bar was not strict, it
+   * was unreachable.
+   *
+   * Two repositories with one issue each is the shape the signal actually
+   * takes: the meaningful unit is the same phrase asked for in more than one
+   * project, and demanding more issues than repositories only adds rarity.
+   */
+  minIssues: 2,
   minEngagement: 60,
 };
 
@@ -183,7 +198,48 @@ function candidatesOf(
     });
   }
 
-  return candidates;
+  return collapseOverlapping(candidates);
+}
+
+/**
+ * One request, counted once.
+ *
+ * Adjacent pairs overlap, so a title like "GPU acceleration on Apple MPS
+ * framework" yields `gpu acceleration`, `acceleration apple`, `mps framework`
+ * and `framework support`. Those are not four things developers are asking for.
+ * They are one, sliced four ways, and publishing them separately would fill the
+ * page with the same finding wearing different words — the quieter cousin of
+ * the failure that put 141 single words on this page.
+ *
+ * Terms matching an identical set of issues are therefore one candidate. The
+ * survivor is the pair that appears earliest in the title, because English puts
+ * the head of a noun phrase at the front: between `gpu acceleration` and
+ * `acceleration apple`, the first names the subject and the second is where it
+ * ran into the next clause.
+ */
+function collapseOverlapping<T extends { term: string; matched: readonly IssueSignal[] }>(
+  candidates: readonly T[],
+): T[] {
+  const byIssueSet = new Map<string, T>();
+
+  for (const candidate of candidates) {
+    const key = [...new Set(candidate.matched.map((issue) => `${issue.repo}#${issue.number}`))]
+      .sort()
+      .join('|');
+    const held = byIssueSet.get(key);
+    if (held === undefined || position(candidate) < position(held)) byIssueSet.set(key, candidate);
+  }
+
+  return [...byIssueSet.values()];
+}
+
+/** Where a term sits in the title it was taken from. Earlier is more specific. */
+function position(candidate: { term: string; matched: readonly IssueSignal[] }): number {
+  const title = candidate.matched[0]?.title.toLowerCase() ?? '';
+  const at = title.indexOf(candidate.term.split(' ')[0] as string);
+  // A term whose words were separated by a stopword will not match the raw
+  // title. Those sort last rather than being treated as the head of the phrase.
+  return at === -1 ? Number.MAX_SAFE_INTEGER : at;
 }
 
 /**

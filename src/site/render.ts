@@ -860,6 +860,41 @@ function quietNotice(checked: number, at: string | null, what: string): string {
 </div>`;
 }
 
+/**
+ * The empty page that is not a quiet one.
+ *
+ * "Nothing crossed the threshold" is true of a detector that measured a
+ * thousand things and found none big enough. It is also what this page said for
+ * four days about a detector that measured nothing at all — and those are
+ * opposite facts wearing one sentence. The first is a reading about open
+ * source; the second is a reading about us.
+ *
+ * The calibration ledger has recorded the difference since the day it was
+ * written, in `measured` against `crossed`, and no page used it. This is that
+ * record reaching a reader.
+ */
+function unreachableNotice(
+  detectors: readonly { collector: string; metric: string; threshold: number; days: number }[],
+  what: string,
+): string {
+  const named = detectors
+    .map(
+      (detector) =>
+        `<li><code>${esc(detector.collector)}</code> — nothing has been measured against its bar of ${detector.threshold} ${esc(detector.metric)}, across ${detector.days} ${detector.days === 1 ? 'day' : 'days'} on record</li>`,
+    )
+    .join('');
+
+  return `<div class="notice notice-alert">
+  <strong>This reading is not working</strong>
+  No ${esc(what)} is reported here, and that is a fault in the instrument rather than quiet in the
+  subject. A detector nothing has ever been measured against cannot report anything, and saying
+  “nothing crossed the threshold” would credit an empty page to open source being calm.
+  <ul>${named}</ul>
+  Published rather than hidden because a dashboard that cannot fail is a dashboard nobody should
+  trust. <a href="/method">How the bars are set</a>
+</div>`;
+}
+
 function pendingNotice(lens: string): string {
   return `<div class="notice">
   <strong>Not measured yet</strong>
@@ -2079,6 +2114,21 @@ ${band('Dearest', table('Highest price per million prompt tokens', models.deares
   });
 }
 
+/**
+ * Which calibrated detectors sit behind each lens.
+ *
+ * Ships and Stack are absent because they have no threshold: a release either
+ * happened or did not, and a dependency either moved or did not. There is
+ * nothing to be unreachable, so an empty page there really is a quiet one.
+ */
+const DETECTORS_BY_LENS: Record<LensName, readonly string[]> = {
+  ships: [],
+  forks: ['fork-spike', 'fork-outlier'],
+  demand: ['demand'],
+  stack: [],
+  lineage: ['lineage'],
+};
+
 export function renderLens(
   bundle: LensBundle,
   index: IndexBundle,
@@ -2088,8 +2138,18 @@ export function renderLens(
 ): string {
   let body: string;
 
+  // Which detectors feed this lens, and whether any of them has ever had
+  // anything to judge. A lens with more than one is only broken when every one
+  // of them is: forks reads two, and one working detector is a working lens.
+  const behind = index.calibration.filter(
+    (detector) => DETECTORS_BY_LENS[bundle.lens].includes(detector.collector),
+  );
+  const unreachable = behind.length > 0 && behind.every((detector) => detector.measured === 0);
+
   if (bundle.status === 'pending') {
     body = pendingNotice(copy.noun);
+  } else if (bundle.records.length === 0 && unreachable) {
+    body = unreachableNotice(behind, copy.noun);
   } else if (bundle.records.length === 0) {
     body = quietNotice(index.watchlist.active, meta.lastSuccessfulRunAt, copy.noun);
   } else {

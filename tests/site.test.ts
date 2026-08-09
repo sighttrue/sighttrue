@@ -114,6 +114,61 @@ describe('required states', () => {
     expect(notMeasured).toContain('not because nothing happened');
   });
 
+  it('separates a detector that found nothing from one that measured nothing', () => {
+    // These are opposite facts and they wore the same sentence for four days.
+    // "Nothing crossed the threshold" is a reading about open source. A
+    // detector with nothing ever measured against its bar is a reading about
+    // us, and calling it quiet credits an empty page to a calm ecosystem.
+    const detector = {
+      collector: 'fork-spike',
+      metric: 'multiplier against own baseline',
+      threshold: 3,
+      days: 4,
+      crossed: 0,
+      peak: null,
+      peakShare: null,
+    };
+
+    const broken = renderLens(
+      lens(),
+      index({ calibration: [{ ...detector, measured: 0 }] }),
+      meta(),
+      COPY,
+    );
+    const quiet = renderLens(
+      lens(),
+      index({ calibration: [{ ...detector, measured: 900 }] }),
+      meta(),
+      COPY,
+    );
+
+    expect(broken).toContain('This reading is not working');
+    expect(broken).toContain('fault in the instrument');
+    expect(broken).not.toContain('Nothing crossed the threshold');
+
+    expect(quiet).toContain('Nothing crossed the threshold');
+    expect(quiet).not.toContain('This reading is not working');
+  });
+
+  it('calls a lens working while any one of its detectors still measures', () => {
+    // Forks reads two. One dead detector is a fault worth fixing and not a
+    // reason to tell a reader the whole reading is broken.
+    const html = renderLens(
+      lens(),
+      index({
+        calibration: [
+          { collector: 'fork-spike', metric: 'm', threshold: 3, days: 4, measured: 0, crossed: 0, peak: null, peakShare: null },
+          { collector: 'fork-outlier', metric: 'm', threshold: 8, days: 4, measured: 22, crossed: 22, peak: 66, peakShare: 8.25 },
+        ],
+      }),
+      meta(),
+      COPY,
+    );
+
+    expect(html).toContain('Nothing crossed the threshold');
+    expect(html).not.toContain('This reading is not working');
+  });
+
   it('reports how many baselines are still forming, without inventing multipliers', () => {
     const html = renderIndex(
       index({ strip: [mark({ state: 'forming', multiplier: null }), mark({ id: 'b/two' })] }),

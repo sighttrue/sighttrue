@@ -282,3 +282,65 @@ describe('diffDependencies', () => {
     expect(diff).toEqual({ added: [], removed: [], bumped: [] });
   });
 });
+
+describe('one request, counted once', () => {
+  /** Distinct issue numbers, so overlapping terms share an identical set. */
+  const numbered = (repo: string, number: number, title: string): IssueSignal => ({
+    repo,
+    number,
+    title,
+    url: `https://github.com/${repo}/issues/${number}`,
+    reactions: 40,
+    comments: 30,
+  });
+
+  const overlapping = [
+    numbered('a/one', 11, 'GPU acceleration on Apple MPS framework'),
+    numbered('b/two', 22, 'GPU acceleration on Apple MPS framework please'),
+    ...background(30),
+  ];
+
+  it('collapses the slices of a single phrase into one finding', () => {
+    // Adjacent pairs overlap, so one title yields gpu acceleration,
+    // acceleration apple, mps framework and framework support. Those are not
+    // four things developers want. Publishing them apart fills the page with
+    // one finding wearing four sets of words — the quiet cousin of the run
+    // that put 141 single words on this page.
+    const found = clusterDemand(overlapping);
+    const terms = found.map((cluster) => cluster.term);
+
+    expect(terms).toContain('gpu acceleration');
+    expect(terms).not.toContain('acceleration apple');
+    expect(terms).not.toContain('mps framework');
+  });
+
+  it('keeps the pair at the head of the phrase, not the one alphabetically first', () => {
+    // English puts the head of a noun phrase at the front. Between
+    // "gpu acceleration" and "acceleration apple", the first names the subject
+    // and the second is where it ran into the next clause.
+    const [first] = clusterDemand(overlapping);
+    expect(first?.term).toBe('gpu acceleration');
+  });
+
+  it('still separates two requests that share no issues', () => {
+    // The collapse is on the issues behind a term, not on the words in it. Two
+    // genuinely different requests must survive as two findings.
+    const found = clusterDemand([
+      numbered('a/one', 11, 'add dark mode'),
+      numbered('b/two', 22, 'dark mode please'),
+      numbered('c/three', 33, 'high cpu usage when idle'),
+      numbered('d/four', 44, 'high cpu on startup'),
+      ...background(30),
+    ]);
+
+    expect(found.map((cluster) => cluster.term).sort()).toContain('dark mode');
+    expect(found.map((cluster) => cluster.term).sort()).toContain('high cpu');
+  });
+
+  it('measures a population the bar can be judged against', () => {
+    // At three issues this admitted nothing for four days — not "nothing
+    // crossed", but nothing to compare, which the calibration ledger recorded
+    // as measured: 0 while the page reported a quiet ecosystem.
+    expect(demandEngagements(overlapping).length).toBeGreaterThan(0);
+  });
+});
