@@ -9,6 +9,7 @@ import {
   type Invoice,
   type Settlement,
 } from '../src/lib/payments.ts';
+import { FREE_TOOLS } from '../src/lib/mcp-catalogue.ts';
 import { PLANS, planById, tokensFor, TOKENS_PER_CENT } from '../src/lib/plans.ts';
 
 /**
@@ -235,7 +236,15 @@ describe('what is for sale', () => {
 
     expect(free?.cents).toBe(0);
     expect(free?.summary).toContain('permanently');
-    expect(free?.includes.some((line) => line.includes('seven MCP tools'))).toBe(true);
+
+    // Keyless and free, asserted as the property rather than as a word count.
+    // This pinned the literal "seven MCP tools" — and held, while the server
+    // had three, because the number was checked against the sentence it came
+    // from and never against the catalogue. How many there are is asserted in
+    // `entitlement.test.ts`, against `mcp-catalogue.ts`.
+    const line = free?.includes.find((entry) => entry.includes('MCP tools'));
+    expect(line).toContain('no key and no account');
+    expect(line).toContain(String(FREE_TOOLS.length));
   });
 
   it('refuses to quote a price before there is a rate', () => {

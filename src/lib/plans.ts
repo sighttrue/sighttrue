@@ -86,7 +86,10 @@ export const PLANS: readonly Plan[] = [
       'Everything published here, permanently. This does not shrink when the paid tiers grow.',
     includes: [
       'Every page and every JSON bundle',
-      'All seven MCP tools, no key and no account',
+      // Counted from `mcp-catalogue.ts` by a test rather than written from
+      // memory. This said seven while the server had three, in the one place a
+      // reader is deciding whether to pay.
+      'All 4 free MCP tools, no key and no account',
       'The GitHub Action, against the public index',
       'The stack checker, which reads your manifest in your browser and sends it nowhere',
       'Per-repository feeds and badges',
