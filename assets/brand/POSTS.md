@@ -102,22 +102,52 @@ has already discounted the one that opens with "powerful".
 
 ## 3 — End of life
 
-> End-of-life dates are published years in advance and watched by almost nobody.
+Rewritten to lead with a date that has already passed rather than a count. The
+earlier draft said "518 release lines on the clock", which is a fact about our
+backlog; a reader checks their own stack when given a version number they
+recognise. Rails 7.2 is the example because it went unsupported on the day this
+was written, and because Rails is not JavaScript — the account had been reading
+as a JavaScript product.
+
+> Rails 7.2 went out of support on 9 August. Nothing will tell you.
 >
-> Most teams learn their runtime went unsupported when an auditor tells them.
+> The date was published years in advance, like every one of them. 463 release
+> lines have already ended, and 14 more end within seven months — Python 3.10,
+> .NET 8, PHP 8.2, Postgres 14, Java 17.
 >
-> 518 release lines on the clock, read every day.
+> 519 lines on the clock, read every day.
 >
 > sighttrue.com/stack
 
 *Attach `post-2-eol.png`.*
 
+The date is written out rather than said as "today", and that is not fussiness.
+A post drafted on the 9th and sent on the 10th says something false in its first
+line, about the one subject where being wrong costs this account everything.
+
+If somebody replies asking how to keep track: the site publishes a calendar file
+you subscribe to once — `sighttrue.com/eol.ics`. Say that rather than posting it
+unprompted; a second link in the first post splits the click.
+
 ---
 
 ## 4 — Bus factor
 
-> Every project health signal measures activity. Not one of them measures how
-> many people the project would survive losing.
+Now names a package instead of counting histories. `esbuild` is the right
+example: it is in the build of an enormous number of projects, so a reader
+recognises it instantly, and the figure is startling without being an accusation.
+
+The wording matters more here than anywhere else on the account. A bus factor of
+one is not a criticism, and the post has to say so out loud — otherwise this
+reads as an attack on a maintainer who has given the ecosystem a great deal, and
+deservedly gets answered that way.
+
+> 96% of the commits in esbuild come from one person. It is in your build right
+> now.
+>
+> That is not a criticism — it is how most of the tools you depend on are
+> written. It is just that no dashboard anywhere measures it, so nobody knows
+> which of their dependencies are one person.
 >
 > 387 commit histories, read for who actually writes the code.
 >
@@ -129,16 +159,39 @@ has already discounted the one that opens with "powerful".
 
 ## 5 — Shipped
 
-> A green commit graph is what a maintainer does for themselves. A release is
-> what reaches you.
+The sharpest thing this project has found, and it needs no adjectives at all.
+xunit's repository was pushed to two days before this was written; the package
+it publishes has not shipped in nineteen months and carries the maintainers' own
+notice pointing at a successor. Every "is it maintained" badge in existence
+reads the first date.
+
+Also the post that retires the GitHub framing for good, because the finding is
+not visible on GitHub at all.
+
+> The xunit repository was pushed to this week.
 >
-> They are not the same date, and it is the first one that ends up on the badge.
+> The package has not shipped since January 2025, and its own publisher has
+> marked it deprecated with a note telling you to move to v3.
 >
-> 247 packages, by real publish date from the registry.
+> Every "is it maintained" badge reads the first date. This reads the second —
+> npm, PyPI, crates.io, RubyGems, Packagist and NuGet.
 >
-> sighttrue.com/ecosystem
+> 182 packages, by the date the registry actually released them.
+>
+> sighttrue.com/nuget/xunit
 
 *Attach `post-4-staleness.png`.*
+
+"This week" rather than a day count, and an absolute publish date, for the same
+reason as post 3. Open sighttrue.com/nuget/xunit before sending and check the
+push line still reads within the week; if the repository has gone quiet since,
+the post no longer says anything and there are fourteen other packages on
+`/ecosystem` that do.
+
+The link goes to the package page rather than to `/ecosystem`, because the post
+makes a claim about one package and the page that proves it is that package's.
+Every figure in the post is on it, each with the address of whoever published
+it.
 
 ---
 

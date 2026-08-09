@@ -209,7 +209,7 @@ const CARDS = [
     eyebrow: 'Shipped · from the registry, not the repo',
     figure: n(bundle.staleness.measured),
     unit: 'packages, by real release date',
-    say: 'A green commit graph is what a maintainer does for themselves. A release is what reaches you. They are not the same date.',
+    say: 'A green commit graph is what a maintainer does for themselves. A release is what reaches you. They are not the same date, across six registries.',
   },
   {
     file: 'post-6-calendar',
@@ -223,7 +223,7 @@ const CARDS = [
     eyebrow: 'Your stack · no account, nothing installed',
     figure: n(bundle.adoption.measured),
     unit: 'packages already measured',
-    say: 'Paste a package.json, requirements.txt or Cargo.toml. Every dependency is checked for advisories, and it never leaves your browser.',
+    say: 'Paste a package.json, Gemfile, composer.json, Cargo.toml or requirements.txt. Every dependency is checked for advisories, and it never leaves your browser.',
   },
 ];
 
