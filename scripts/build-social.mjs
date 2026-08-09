@@ -26,6 +26,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+// The free tool count comes from the catalogue, never from a number typed here.
+// The pricing page carried "seven MCP tools" for weeks against a server that
+// answered eight, because two files each held their own count. A card is the
+// worst place for that to happen again: it is the one artefact quoted with no
+// way to check it.
+const { FREE_TOOLS } = await import('../src/lib/mcp-catalogue.ts');
+
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 const bundle = JSON.parse(readFileSync(`${ROOT}dist/data/index.json`, 'utf8'));
@@ -221,6 +228,25 @@ const CARDS = [
     figure: n(upcomingEol),
     unit: 'support deadlines already scheduled',
     say: 'Announced years ahead. Looked up by almost nobody, and remembered by nobody on the day.',
+  },
+  {
+    // Held back. Not to be posted until the paid tools return data and the
+    // token exists — see POSTS.md. It carries no price, no contract address and
+    // no claim about a paid tier, because none of those can be checked today
+    // and this account has nothing else to sell.
+    //
+    // The angle is the promise rather than the product. Anyone can announce a
+    // paid tier; almost nobody writes down what stays free and lets themselves
+    // be held to it. That sentence is the only reason to believe the rest.
+    file: 'post-7-freestaysfree',
+    eyebrow: 'Paid tools · the line that will not move',
+    figure: n(FREE_TOOLS.length),
+    unit: 'tools that will never need a key',
+    // Four lines. The card is a fixed 1200x675 with no overflow handling, so a
+    // sentence written to the length of prose pushes the eyebrow off the top
+    // and drops the figure onto the wordmark. The working cards run 106 to 133
+    // characters; the first draft of this one ran 160 and broke the layout.
+    say: 'Everything published free stays free. Taking one back would lose the argument this instrument exists to make.',
   },
   {
     file: 'post-5-yourstack',

@@ -7,6 +7,9 @@ carries both the handle and the domain, and the site publishes the same pair at
 
 Six posts, one or two a day. The video first; the cards in the order below.
 
+A seventh is drafted and held. It does not go out until the thing it describes
+is real — see the note on it at the bottom.
+
 ## The X profile
 
 **Name** Sighttrue &middot; **Handle** @Sighttruehq &middot; **URL** sighttrue.com
@@ -247,3 +250,40 @@ a thread to appear in.
 
 Nothing yet, and say so plainly. The paid tier is not live and promising a price
 before it exists is the one claim on this account that could not be checked.
+
+---
+
+## 7 — Held back until the token exists
+
+**Do not post this yet.** It goes out on the day the paid tier is real, and not
+before. Two things have to be true first, and neither is today:
+
+1. The paid tools return data. Twenty-two are declared, listed and correctly
+   refused without a key; none is implemented.
+2. The token exists, with a contract address and a rate. `TOKENS_PER_CENT` is 0.
+
+*Attach `post-7-freestaysfree.png`.*
+
+> Everything published free stays free. Taking one back would lose the argument
+> this instrument exists to make.
+>
+> 9 tools an agent can call with no key and no account. That number goes up, not
+> down.
+>
+> The paid tools are the ones that did not exist before today.
+>
+> sighttrue.com/pricing
+
+The card carries no price, no contract address and no claim about a token,
+because none of those can be checked on the day it is drafted, and this account
+has nothing to sell except being checkable. The figure comes from
+`mcp-catalogue.ts` at build time, so it cannot drift from the server the way
+"seven MCP tools" did for weeks against a server that answered eight.
+
+The angle is the promise rather than the product, and that is the whole reason
+it is worth posting. Anybody can announce a paid tier. Almost nobody writes down
+what stays free, publishes the count, and lets themselves be held to it — and
+that sentence is the only reason to believe anything else on the page.
+
+Say nothing about price in the replies until there is one. "Not live yet" is a
+complete answer and the only one that stays true.
