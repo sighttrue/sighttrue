@@ -115,8 +115,22 @@ const WINDOW_LABEL: Record<AdoptionWindow, string> = {
   total: 'all time',
 };
 
+/**
+ * Whole days between two dates, counted the way a reader counts them.
+ *
+ * On the calendar, not on the clock. This measured from midnight today back to
+ * the exact instant and rounded, so a push at 20:03 on the 7th read as 1.16
+ * days on the 9th and rendered as "yesterday" — while GitHub, open in the next
+ * tab, said 7 August. Two days by any reading a person would make, and the one
+ * number on the page that invites being checked against the source.
+ *
+ * Taking the date part of both sides makes a timestamped push and a bare
+ * publish date count the same way, which they did not before: a publish date
+ * arrives as `2025-01-08` and already parsed to midnight, so only the fields
+ * carrying a time were wrong.
+ */
 export function daysBetween(iso: string, today: string): number | null {
-  const at = Date.parse(iso);
+  const at = Date.parse(`${iso.slice(0, 10)}T00:00:00Z`);
   if (Number.isNaN(at)) return null;
   return Math.round((Date.parse(`${today}T00:00:00Z`) - at) / 86_400_000);
 }

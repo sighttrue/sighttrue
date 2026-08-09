@@ -168,7 +168,7 @@ reads the first date.
 Also the post that retires the GitHub framing for good, because the finding is
 not visible on GitHub at all.
 
-> The xunit repository was pushed to yesterday.
+> The xunit repository was pushed to two days ago.
 >
 > The package has not shipped since January 2025, and its own publisher has
 > marked it deprecated with a note telling you to move to v3.
@@ -183,16 +183,21 @@ not visible on GitHub at all.
 *Attach `post-4-staleness.png`.*
 
 The publish date is absolute for the same reason as post 3. The push is not,
-because "yesterday" is the whole point — a repository pushed to yesterday and a
-package silent for nineteen months is the entire argument in one line, and
+because the recency is the whole point — a repository pushed to this week beside
+a package silent for nineteen months is the entire argument in one line, and
 "recently" throws it away.
 
-So this one has a shelf life of a day. Open sighttrue.com/nuget/xunit
-immediately before sending: the hero line states the push in the same words, and
-if it no longer says yesterday, change the post to match it rather than the post
-to match the plan. If the repository has gone quiet altogether the post has
-nothing left to say, and there are fourteen other packages on `/ecosystem` in
-the same shape.
+So this one has a shelf life of a day or two. Open sighttrue.com/nuget/xunit
+immediately before sending and copy the words in its first paragraph. If they no
+longer match the draft, change the draft; if the repository has gone quiet
+altogether the post has nothing left to say, and there are fourteen other
+packages on `/ecosystem` in the same shape.
+
+This draft said "yesterday" for a day, on the strength of the page saying it,
+and the page was wrong: the count ran from midnight today back to the exact
+minute of the push, so 20:03 on the 7th came out as 1.16 days on the 9th and
+rounded down to one. GitHub, one click away, said 7 August. Fixed in
+`daysBetween`, which now counts calendar days like the person checking it does.
 
 The link goes to the package page rather than to `/ecosystem`, because the post
 makes a claim about one package and the page that proves it is that package's.
