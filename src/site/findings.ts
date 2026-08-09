@@ -190,7 +190,7 @@ export function renderFindings(index: IndexBundle, meta: MetaRecord): string {
             (finding, position) => `<article class="finding-card">
   <div class="repo-facts">
     <span class="label">Finding ${position + 1} of ${findings.length}</span>
-    <a class="label" href="${esc(finding.href)}">See the readings</a>
+    <a class="label label-link" href="${esc(finding.href)}">See the readings</a>
   </div>
   <h2 class="finding-headline">${esc(finding.headline)}</h2>
   <p class="finding-detail">${esc(finding.detail)}</p>

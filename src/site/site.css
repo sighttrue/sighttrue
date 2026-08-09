@@ -329,7 +329,20 @@ body {
      ground colour lives on `html` instead. */
   background: transparent;
   color: var(--ink-700);
-  font-family: var(--face-data);
+  /*
+    The grotesk, not the monospace.
+
+    Mono was the page default and every face was painted over it, so anything
+    that missed a rule fell back to a typewriter — including `.finding-basis`,
+    the sentence explaining how a reading was taken. A method note set in mono
+    reads as an error message or a stack trace, not as an explanation, and the
+    page had three faces competing before a reader got past the first screen.
+
+    `instrument-ui` gives mono one job: numerals. It keeps that job below, on
+    `.num` and the value classes, which 344 of the 358 numeric cells already
+    carry.
+  */
+  font-family: var(--face-label);
   font-size: var(--t-base);
   line-height: 1.5;
   /* Every number in the product. Never assumed — stated. */
@@ -353,14 +366,28 @@ a:hover {
 }
 
 /* Silkscreen. Labels on an instrument panel are small, spaced, and shouted
-   quietly — this is the one type treatment carrying the product's character. */
+   quietly — this is the one type treatment carrying the product's character.
+
+   Spacing pulled back from 0.14em. Letterspaced uppercase is the slowest text a
+   person can be asked to read, and this class is on the section headings, the
+   column headers, the basis notes and every link out — so the page asked the
+   reader to decode its signage before reaching a single measurement. It still
+   reads as silkscreen at 0.08em; it stops being a puzzle. */
 .label {
   font-family: var(--face-label);
   font-weight: 600;
   font-size: var(--t-micro);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-500);
+}
+
+/* Links out of a section are read, not scanned. Sentence case, because a
+   destination is a phrase rather than a marking on a panel. */
+.label-link {
+  letter-spacing: 0.01em;
+  text-transform: none;
+  font-size: var(--t-small);
 }
 
 .num {
@@ -1362,9 +1389,16 @@ a.lens-cell:hover {
   font-size: var(--t-small);
 }
 
+/* A caption is a sentence about the table, not a marking on a panel. Uppercase
+   and letterspaced, it was the longest and slowest line above every table on
+   the site. Column headers keep the silkscreen treatment below, because those
+   are markings and they are two words each. */
 .readout caption {
   text-align: left;
   padding: 0 0 10px;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: var(--t-small);
 }
 
 .readout th {
@@ -1372,7 +1406,7 @@ a.lens-cell:hover {
   font-family: var(--face-label);
   font-weight: 600;
   font-size: var(--t-micro);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-500);
   padding: 7px 14px 7px 0;
@@ -2184,10 +2218,15 @@ a.lens-cell:hover {
   color: var(--alert);
 }
 
+/* Cut from clamp(34px, 6vw, 80px), which rendered the account handle larger
+   than the headline beside it. The loudest thing on the page was the name of a
+   social account rather than what the product measures — and a visitor who has
+   not yet been shown a single reading has no reason to follow anything. It is
+   still the largest thing in its own column. */
 .hero-x {
   font-family: var(--face-label);
   font-weight: 600;
-  font-size: clamp(34px, 6vw, 80px);
+  font-size: clamp(22px, 2.6vw, 34px);
   letter-spacing: -0.01em;
   color: var(--ink-900);
   text-decoration: none;

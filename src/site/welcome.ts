@@ -1,4 +1,4 @@
-import { band, esc, layout } from './render.ts';
+import { band, esc, layout, repoLink } from './render.ts';
 import { findingsFrom } from './findings.ts';
 import type { IndexBundle } from '../types/bundles.ts';
 import type { MetaRecord } from '../types/meta.ts';
@@ -57,12 +57,60 @@ export function renderWelcome(index: IndexBundle, meta: MetaRecord): string {
     },
   ];
 
+  /**
+   * The instrument, before the argument for it.
+   *
+   * This page opened with a headline, four lines of prose, four prose cards and
+   * six link cards: 663 words against 11 figures, one number per sixty words.
+   * A product whose whole claim is that its figures can be checked was arguing
+   * that it measures rather than showing a measurement, and `instrument-ui` is
+   * explicit that density is the point — rows, not cards.
+   *
+   * These fifteen are the sharpest reading here and need no explaining: the
+   * repository is being pushed to and the package has not shipped in years.
+   * Every "is it maintained" badge reads the first date. Nothing else on the
+   * page states the thesis as economically as the rows do.
+   */
+  const quiet = staleness.quietest.slice(0, 15);
+  const quietRows = quiet
+    .map(
+      (row) => `<tr>
+      <td>${esc(row.name)}</td>
+      <td class="dim">${esc(row.registry)}</td>
+      <td class="dim">${repoLink(row.repo)}</td>
+      <td class="n num">${esc(row.lastPublish ?? '—')}</td>
+      <td class="n num">${row.days.toLocaleString('en')}</td>
+    </tr>`,
+    )
+    .join('');
+
+  const quietTable =
+    quiet.length === 0
+      ? ''
+      : `<div class="wrap"><table class="readout">
+  <caption class="label">Packages whose repository is still being worked on — ${staleness.measured} read across six registries</caption>
+  <thead><tr>
+    <th scope="col">Package</th>
+    <th scope="col">Registry</th>
+    <!-- The repository, so the claim in the caption can be checked in one
+         click rather than taken. It also fills a column that was otherwise
+         air: four short columns across a full-width table read as sparse,
+         which is the opposite of what this page is arguing. -->
+    <th scope="col">Published from</th>
+    <th scope="col" class="n">Last release</th>
+    <th scope="col" class="n">Days since</th>
+  </tr></thead>
+  <tbody>${quietRows}</tbody>
+</table></div>
+<p class="basis label">Read from the registry, not the repository. A long gap is not abandonment —
+a finished library is finished. <a href="/ecosystem">Everything measured</a></p>`;
+
   const cards = answers
     .map(
       (entry) => `<div class="door">
       <h3 class="door-q">${esc(entry.question)}</h3>
       <p class="door-a">${esc(entry.answer)}</p>
-      <a class="label" href="${esc(entry.href)}">See the readings</a>
+      <a class="label label-link" href="${esc(entry.href)}">See the readings</a>
     </div>`,
     )
     .join('');
@@ -95,6 +143,12 @@ export function renderWelcome(index: IndexBundle, meta: MetaRecord): string {
   </aside>
 </section>
 
+${band(
+  'What it is reading right now',
+  quietTable,
+  'Not a summary. These are rows from the published data, redrawn every four hours.',
+)}
+
 ${
   lead === undefined
     ? ''
@@ -102,7 +156,7 @@ ${
         'Something it found',
         `<p class="finding-detail" style="max-width:52ch">${esc(lead.headline)}.</p>
     <p class="finding-basis">${esc(lead.basis)}</p>
-    <p class="repo-facts"><a class="label" href="/findings">Everything else it found</a></p>`,
+    <p class="repo-facts"><a class="label label-link" href="/findings">Everything else it found</a></p>`,
         'Stated from the published data with the figures filled in, so it cannot drift from what was measured.',
       )
 }

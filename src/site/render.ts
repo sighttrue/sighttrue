@@ -778,7 +778,7 @@ export function stateBadge(state: string): string {
   return `<span class="${cls}">${esc(state)}</span>`;
 }
 
-function repoLink(repo: string): string {
+export function repoLink(repo: string): string {
   return `<a href="/repo/${esc(repo)}">${esc(repo)}</a>`;
 }
 
@@ -1280,7 +1280,7 @@ function healthHtml(index: IndexBundle): string {
       <td>${repoLink(reading.repo)}</td>
       <td class="n"><span class="score num">${(reading.scorecard as number).toFixed(1)}</span></td>
       <td class="n num">${reading.advisories === null ? '<span class="dim">—</span>' : reading.advisories}</td>
-      <td class="dim">${reading.scoredAt === null ? '<span class="dim">—</span>' : esc(reading.scoredAt)}</td>
+      <td class="dim num">${reading.scoredAt === null ? '<span class="dim">—</span>' : esc(reading.scoredAt)}</td>
     </tr>`,
     )
     .join('');
