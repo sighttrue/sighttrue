@@ -1556,3 +1556,43 @@ readers. A Gemfile needs its own pass rather than a branch in the line loop,
 because it is a Ruby program full of bare words and the requirements reader
 accepts a bare word as a package name — read together, a Gemfile comes back
 with two Python packages in it called `end` and `gemspec`.
+
+## Not built yet: watching the MCP registry
+
+Recorded rather than started. The measurements below are from 2026-08-10 and
+will go stale; re-take them before acting on any of it.
+
+`https://registry.modelcontextprotocol.io/v0/servers` is public and needs no
+key. Of 1,200 servers sampled, **1,029 declare a `remotes` URL** and only 171
+are local packages, across 245 distinct hosts.
+
+That ratio is the argument. Every other package ecosystem gives a consumer three
+defences: the code is on their machine and can be read, there is a version to
+pin, and there is a hash that proves it did not change. A remote MCP server has
+none of them — the behaviour behind a URL can change this afternoon with the
+version untouched, and there is no OSV, no audit command and no lockfile.
+
+The stakes are higher than npm rather than lower. A hostile npm package steals
+what it can reach. A hostile MCP server returns text that enters the model's
+context, inside an agent that already holds write access to the repository, so
+it can steer the agent rather than merely exfiltrate.
+
+So the only observable property of a remote server is what the registry says
+about it over time: the URL, the namespace, the status, the version. Nobody
+records that. Not badly — not at all. It is the same shape as every reading
+here: status pages delete their history, end-of-life dates vanish once passed,
+model prices move without a trace.
+
+**What it would catch:** a URL changing host, a namespace changing hands, a
+status flipping to deleted after people installed it, a version moving with no
+announcement.
+
+**What it would not catch, and must never be sold as catching:** a behaviour
+change behind a stable URL. Metadata monitoring sees none of that.
+
+**What the data does not support:** an abandonment story. Only 30 of 1,200 have
+gone untouched for over 180 days, because the ecosystem is months old. The
+argument is the absence of any record, not decay.
+
+This project already publishes to that registry, so it is not a new capability
+— it is the existing one pointed at an ecosystem that has no keeper yet.
