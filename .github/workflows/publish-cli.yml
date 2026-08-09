@@ -34,19 +34,39 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # `registry-url` is required, not optional — it is in npm's own trusted
-      # publishing example, and removing it produced ENEEDAUTH because npm had
-      # no registry context to run the OIDC exchange against. It writes an
-      # .npmrc with `_authToken=${NODE_AUTH_TOKEN}`, which stays empty here on
-      # purpose: npm detects the OIDC environment and uses it *before* falling
-      # back to a token, so the empty one is never reached.
+      # No `registry-url`, and this has now been wrong in both directions, so
+      # the reason is written down rather than the conclusion.
+      #
+      # `registry-url` writes an .npmrc containing
+      # `_authToken=${NODE_AUTH_TOKEN}`. With no token in the environment that
+      # expands to empty, npm authenticates as nobody, and the registry answers
+      # 404 — its response for "no permission", which reads like a missing
+      # package and sends you looking in the wrong place entirely.
+      #
+      # Removing it once produced ENEEDAUTH, which looked like proof the line
+      # was required. It was not: at that moment npm had no trusted publisher
+      # configured for this repository, so there was no OIDC identity to fall
+      # back to. With the trusted publisher in place, npm exchanges the OIDC
+      # token itself and needs no .npmrc at all.
+      #
+      # The tell that this run was not an OIDC publish: provenance signed
+      # successfully and the PUT still 404'd. Signing uses the OIDC token;
+      # authenticating is a separate step, and that one was reading the empty
+      # .npmrc.
       #
       # Caching is off because npm says never to cache in a release build.
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
+
+      # Trusted publishing needs npm 11.5.1 or newer. Stated in the log rather
+      # than assumed, because the failure when it is too old is another 404.
+      - name: Say which npm is about to publish
+        run: |
+          set -euo pipefail
+          npm --version
+          test ! -f ~/.npmrc || { echo "an .npmrc exists and should not:"; cat ~/.npmrc; }
 
       # The CLI has no dependencies and no build step, so there is nothing to
       # install and nothing to compile. What there is to check is that the thing
