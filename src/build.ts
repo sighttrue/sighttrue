@@ -941,13 +941,19 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
   // reading here was already collected and was reachable only by knowing which
   // repository publishes the package — the one thing somebody searching "is X
   // still maintained" does not know.
+  //
+  // Maven is missing on purpose: its names are `group:artifact`, which is not a
+  // filename on Windows and not a URL segment anywhere, so those packages are
+  // collected and answered by the endpoint without getting a page.
+  const PAGED_REGISTRIES = ['npm', 'pypi', 'crates', 'gem', 'packagist', 'nuget'] as const;
   const packagePaths: string[] = [];
 
   for (const [packageId, entry] of Object.entries(stackIndex)) {
     const separator = packageId.indexOf(':');
     const registry = packageId.slice(0, separator);
     const name = packageId.slice(separator + 1);
-    if (registry !== 'npm' && registry !== 'pypi' && registry !== 'crates') continue;
+    if (!(PAGED_REGISTRIES as readonly string[]).includes(registry)) continue;
+    const paged = registry as (typeof PAGED_REGISTRIES)[number];
     // The name becomes a filesystem path on the next line but one.
     if (!isSafePackageName(name)) continue;
 
@@ -968,7 +974,7 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
       `${registry}/${assertSafePackageName(name)}.html`,
       renderPackagePage(
         {
-          registry,
+          registry: paged,
           name,
           repo: reading.repo,
           archived: reading.archived,
@@ -998,7 +1004,7 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
         previous,
       ),
     );
-    packagePaths.push(packagePath(registry, name));
+    packagePaths.push(packagePath(paged, name));
   }
 
   pages.set('method.html', renderMethod(index, previous));
@@ -1068,15 +1074,18 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
     if (!isSafePackageName(name)) continue;
 
     const reading = entry as { repo: string };
+    // This package's own count, not the largest across the repository's
+    // packages: the badge names one package and must report that one — and with
+    // the window that count actually covers, which is not a week everywhere.
+    const measured = adoptionByPackage.get(`${registry}:${name.toLowerCase()}`);
     pages.set(
       `badge/${registry}/${assertSafePackageName(name)}.svg`,
       renderBadge({
         repo: reading.repo,
         packageName: name,
         health: healthByRepo.get(reading.repo),
-        // This package's own count, not the largest across the repository's
-        // packages: the badge names one package and must report that one.
-        installs: adoptionByPackage.get(`${registry}:${name.toLowerCase()}`)?.count ?? null,
+        installs: measured?.count ?? null,
+        ...(measured === undefined ? {} : { window: measured.window }),
       }),
     );
   }

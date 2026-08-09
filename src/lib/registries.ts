@@ -34,6 +34,16 @@ export const WINDOW_OF: Record<AdoptionRegistry, AdoptionWindow> = {
   pypi: 'week',
   crates: '90d',
   brew: '30d',
+  // These three publish no rolling figure at all — only a running total since
+  // the package first shipped. Named honestly so nothing renders one beside a
+  // weekly count as though they were the same measurement.
+  gem: 'total',
+  packagist: 'total',
+  nuget: 'total',
+  // Maven Central publishes no download count of any kind. The collector skips
+  // it rather than storing a permanently null row; this entry exists only so
+  // the record is total, and nothing ever reads it.
+  maven: 'total',
 };
 
 export interface RegistryClient {
@@ -43,6 +53,19 @@ export interface RegistryClient {
   brewInstalls(): Promise<Map<string, number>>;
   pypiDownloads(name: string): Promise<number | null>;
   cratesDownloads(name: string): Promise<number | null>;
+  /**
+   * One reader for the registries that answer a count in a single request.
+   *
+   * Four ecosystems, four URLs, one shape — written together because writing
+   * them apart is how a project ends up with four subtly different ideas of
+   * what a download count is.
+   *
+   * Every one of these reports a **total across all time**, not a window, and
+   * that is the honest thing to say about them: RubyGems, Packagist, NuGet and
+   * Maven publish no rolling figure. A caller must not put one beside npm's
+   * week as though they measured the same thing.
+   */
+  totalDownloads(registry: string, name: string): Promise<number | null>;
   /** Requests spent, for the run record. */
   requests(): number;
 }
@@ -203,6 +226,41 @@ export function createRegistryClient(
       } | null;
       const count = body?.crate?.recent_downloads;
       return typeof count === 'number' ? count : null;
+    },
+
+    async totalDownloads(registry, name) {
+      if (registry === 'gem') {
+        const body = (await json(
+          `https://rubygems.org/api/v1/gems/${encodeURIComponent(name)}.json`,
+        )) as { downloads?: unknown } | null;
+        return typeof body?.downloads === 'number' ? body.downloads : null;
+      }
+
+      if (registry === 'packagist') {
+        // `vendor/package`, and both halves belong in the path unencoded as a
+        // pair — encoding the slash asks for a package whose name contains one.
+        const body = (await json(`https://packagist.org/packages/${name}.json`)) as {
+          package?: { downloads?: { total?: unknown } };
+        } | null;
+        const total = body?.package?.downloads?.total;
+        return typeof total === 'number' ? total : null;
+      }
+
+      if (registry === 'nuget') {
+        const body = (await json(
+          `https://azuresearch-usnc.nuget.org/query?q=packageid:${encodeURIComponent(name.toLowerCase())}&take=1`,
+        )) as { data?: { totalDownloads?: unknown }[] } | null;
+        const total = body?.data?.[0]?.totalDownloads;
+        return typeof total === 'number' ? total : null;
+      }
+
+      if (registry === 'maven') {
+        // Maven Central publishes no download count at all. Saying so is the
+        // reading; inventing one from a mirror's numbers would not be.
+        return null;
+      }
+
+      return null;
     },
   };
 }

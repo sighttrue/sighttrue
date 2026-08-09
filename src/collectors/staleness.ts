@@ -25,10 +25,63 @@ const USER_AGENT = 'sighttrue-agent (+https://github.com/sighttrue/sighttrue)';
  * and reporting that as a release date would be a different fact wearing this
  * one's label.
  */
-export const REGISTRIES = ['npm', 'pypi', 'crates'] as const;
+export const REGISTRIES = ['npm', 'pypi', 'crates', 'gem', 'packagist', 'nuget'] as const;
 
 /** The same politeness the download collector uses, for the same registries. */
 export const DELAY_MS = 1200;
+
+/**
+ * One page of NuGet's registration index.
+ *
+ * `items` is present while a package is small and absent once it is not, in
+ * which case `@id` addresses the page and it has to be fetched separately. Both
+ * shapes are the documented one; a reader that only handles the first silently
+ * loses every package with a long history, which is most of the ones worth
+ * watching.
+ */
+interface RegistrationPage {
+  '@id'?: string;
+  lower?: string;
+  upper?: string;
+  items?: { catalogEntry?: { version?: string; published?: string; deprecation?: unknown } }[];
+}
+
+/**
+ * Compare two versions well enough to pick which page holds one.
+ *
+ * Numeric parts only. A prerelease tag is dropped rather than ordered, because
+ * the question here is which of ten disjoint ranges a version falls in, not
+ * whether `4.4.1-dev` precedes `4.4.1` — and treating them as equal keeps a
+ * version inside the page whose boundary carries the tag.
+ */
+function compareVersions(a: string, b: string): number {
+  const parts = (v: string): number[] =>
+    (v.split('-')[0] ?? '').split('.').map((part) => Number.parseInt(part, 10) || 0);
+
+  const left = parts(a);
+  const right = parts(b);
+  for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
+    const difference = (left[i] ?? 0) - (right[i] ?? 0);
+    if (difference !== 0) return difference < 0 ? -1 : 1;
+  }
+  return 0;
+}
+
+/** The page whose `[lower, upper]` range covers this version, latest first. */
+export function pageHolding(
+  pages: readonly RegistrationPage[],
+  version: string,
+): RegistrationPage | null {
+  for (const page of [...pages].reverse()) {
+    if (page.lower === undefined || page.upper === undefined) continue;
+    if (compareVersions(version, page.lower) >= 0 && compareVersions(version, page.upper) <= 0) {
+      return page;
+    }
+  }
+  // No range matched — a package whose newest version is a prerelease past the
+  // last boundary. The last page is where it would be.
+  return pages.at(-1) ?? null;
+}
 
 /**
  * Everything one registry document says, read once.
@@ -185,6 +238,110 @@ export function createStalenessClient(): StalenessClient {
           installScripts: null,
           bytes: size(wheel?.size),
           funding: pypiFunding(body?.info?.project_urls),
+        };
+      }
+
+      if (registry === 'gem') {
+        const body = (await json(
+          `https://rubygems.org/api/v1/gems/${encodeURIComponent(name)}.json`,
+        )) as {
+          version?: string;
+          version_created_at?: string;
+          yanked?: unknown;
+          funding_uri?: unknown;
+          gem_uri?: unknown;
+        } | null;
+        const version = body?.version;
+        const at = body?.version_created_at;
+        if (at === undefined || version === undefined) return null;
+
+        return {
+          at,
+          version,
+          withdrawn: body?.yanked === true ? 'yanked by the publisher' : null,
+          // RubyGems runs extension builds on install, but publishes no field
+          // saying which gems do. Absent, not empty.
+          installScripts: null,
+          bytes: null,
+          funding: typeof body?.funding_uri === 'string' ? body.funding_uri : null,
+        };
+      }
+
+      if (registry === 'packagist') {
+        // `vendor/package`, and the slash belongs in the path as a slash.
+        const body = (await json(`https://packagist.org/packages/${name}.json`)) as {
+          package?: {
+            abandoned?: unknown;
+            versions?: Record<string, { time?: string; version?: string }>;
+          };
+        } | null;
+        const versions = body?.package?.versions ?? {};
+        // Packagist lists branches alongside releases; a branch is not a
+        // published version and dating the package by one would be wrong.
+        const released = Object.values(versions)
+          .filter((entry) => typeof entry.version === 'string' && !/^dev-|-dev$/.test(entry.version))
+          .sort((a, b) => ((a.time ?? '') < (b.time ?? '') ? 1 : -1));
+        const newest = released[0];
+        if (newest?.time === undefined || newest.version === undefined) return null;
+
+        // `abandoned` is `true`, or the name of the package to move to.
+        const abandoned = body?.package?.abandoned;
+        return {
+          at: newest.time,
+          version: newest.version,
+          withdrawn:
+            abandoned === true
+              ? 'marked abandoned by the publisher'
+              : typeof abandoned === 'string' && abandoned !== ''
+                ? `marked abandoned by the publisher, replaced by ${abandoned}`
+                : null,
+          installScripts: null,
+          bytes: null,
+          funding: null,
+        };
+      }
+
+      if (registry === 'nuget') {
+        const body = (await json(
+          `https://azuresearch-usnc.nuget.org/query?q=packageid:${encodeURIComponent(name.toLowerCase())}&take=1`,
+        )) as { data?: { version?: string; deprecation?: unknown; published?: string }[] } | null;
+        const found = body?.data?.[0];
+        if (found?.version === undefined) return null;
+
+        // The search index carries no publish date, so the version is dated by
+        // the registration index below rather than guessed at.
+        const registration = (await json(
+          `https://api.nuget.org/v3/registration5-gz-semver2/${encodeURIComponent(name.toLowerCase())}/index.json`,
+        )) as { items?: RegistrationPage[] } | null;
+
+        const pages = registration?.items ?? [];
+        let entries = pages.flatMap((page) => page.items ?? []);
+        let match = entries.find((entry) => entry.catalogEntry?.version === found.version);
+
+        // NuGet inlines the version list only while a package is small. Past
+        // roughly a hundred versions the index becomes ten pages of `@id` and
+        // nothing else, and the page has to be fetched on its own — which is
+        // why Serilog, AutoMapper and Entity Framework Core all came back with
+        // "no published version found" while three smaller packages worked.
+        if (match === undefined) {
+          const page = pageHolding(pages, found.version);
+          if (page?.['@id'] !== undefined) {
+            const body = (await json(page['@id'])) as RegistrationPage | null;
+            entries = body?.items ?? [];
+            match = entries.find((entry) => entry.catalogEntry?.version === found.version);
+          }
+        }
+
+        const at = match?.catalogEntry?.published;
+        if (at === undefined) return null;
+
+        return {
+          at,
+          version: found.version,
+          withdrawn: match?.catalogEntry?.deprecation ? 'deprecated by the publisher' : null,
+          installScripts: null,
+          bytes: null,
+          funding: null,
         };
       }
 

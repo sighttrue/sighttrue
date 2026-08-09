@@ -406,3 +406,17 @@
 {"id":"~openai/gpt-latest","at":"2026-08-06T22:10:49.205Z","prompt":5,"completion":30,"context":1050000}
 {"id":"~openai/gpt-mini-latest","at":"2026-08-06T22:10:49.205Z","prompt":0.75,"completion":4.5,"context":400000}
 {"id":"~x-ai/grok-latest","at":"2026-08-06T22:10:49.205Z","prompt":2,"completion":6,"context":500000}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-08-09T14:22:57.682Z","prompt":0.079996,"completion":0.252,"context":1048576}
+{"id":"openrouter/auto-beta","at":"2026-08-09T14:22:57.682Z","prompt":null,"completion":null,"context":2000000}
+{"id":"z-ai/glm-5.2","at":"2026-08-09T14:22:57.682Z","prompt":0.07,"completion":0.22,"context":1048576}
+{"id":"openrouter/fusion","at":"2026-08-09T14:22:57.682Z","prompt":null,"completion":null,"context":1000000}
+{"id":"~moonshotai/kimi-latest","at":"2026-08-09T14:22:57.682Z","prompt":2.8,"completion":14,"context":1048576}
+{"id":"qwen/qwen3.6-35b-a3b","at":"2026-08-09T14:22:57.682Z","prompt":0.15,"completion":1,"context":262144}
+{"id":"openrouter/pareto-code","at":"2026-08-09T14:22:57.682Z","prompt":null,"completion":null,"context":2000000}
+{"id":"minimax/minimax-m2.7","at":"2026-08-09T14:22:57.682Z","prompt":0.3,"completion":1.2,"context":204800}
+{"id":"nvidia/nemotron-3-super-120b-a12b","at":"2026-08-09T14:22:57.682Z","prompt":0.3,"completion":0.9,"context":1000000}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-09T14:22:57.682Z","prompt":0.5,"completion":3.6,"context":262144}
+{"id":"openrouter/bodybuilder","at":"2026-08-09T14:22:57.682Z","prompt":null,"completion":null,"context":128000}
+{"id":"deepseek/deepseek-v3.2","at":"2026-08-09T14:22:57.682Z","prompt":0.269,"completion":0.4,"context":163840}
+{"id":"openrouter/auto","at":"2026-08-09T14:22:57.682Z","prompt":null,"completion":null,"context":2000000}
+{"id":"gryphe/mythomax-l2-13b","at":"2026-08-09T14:22:57.682Z","prompt":0.06,"completion":0.06,"context":8192}

@@ -1,6 +1,6 @@
 # Sighttrue — Unified Developer Signal Agent
 
-One agent watches 388 open-source repositories and takes eleven readings. Five
+One agent watches 417 open-source repositories and takes eleven readings. Five
 are the original lenses — Ships (releases), Forks (abnormal copying), Demand
 (developer requests), Stack (dependency migration), Lineage (model descent). The
 other six never touch GitHub: provider outages, end-of-life dates, model prices,
@@ -10,6 +10,13 @@ factor. One site, one token, not five — a task implying a split is wrong.
 The site has four doors: Findings, Readings, Your stack, Method. `/stack` is the
 only page about the reader — paste a manifest with no account, or sign in with
 GitHub to keep the list. Sign-in requests no OAuth scopes.
+
+Registries are described once, in `src/lib/registries-table.ts` — OSV spelling,
+purl type, package page, name folding, manifest filenames. Anything needing one
+of those reads it from there. The copies that cannot import it (`cli/lib/`, and
+the reader inside the `/stack` page) are held to agreement by
+`tests/parsers.test.ts` rather than by hope. Adding a registry should be one
+entry; it was nineteen files once and they disagreed.
 
 ## Non-negotiables
 

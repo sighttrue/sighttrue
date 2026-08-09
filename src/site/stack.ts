@@ -42,6 +42,29 @@ if (stackForm) {
       // A declared runtime, which is the one support window a manifest states
       // outright rather than implying. Kept for the calendar.
       lastEngines = pkg.engines || {};
+
+      // composer.json is also JSON, and nothing but its key names tells the
+      // two apart — a package.json has no \`require\`, a composer.json has no
+      // \`dependencies\`. Read first, so a PHP manifest is never reported as a
+      // list of npm packages that do not exist.
+      if (pkg.require || pkg['require-dev']) {
+        for (const group of ['require', 'require-dev']) {
+          const block = pkg[group] || {};
+          for (const name of Object.keys(block)) {
+            // A published name is always vendor/package. The rest of this
+            // block is platform constraints — php, ext-mbstring,
+            // composer-runtime-api — which describe the machine, not anything
+            // Packagist has ever heard of.
+            if (name.indexOf('/') === -1) continue;
+            found.set('packagist:' + name.toLowerCase(), {
+              shown: name,
+              range: String(block[name] || ''),
+            });
+          }
+        }
+        if (found.size) return found;
+      }
+
       for (const group of ['dependencies', 'devDependencies', 'peerDependencies']) {
         const block = pkg[group] || {};
         // The declared range is kept as well as the name. It is not a version —
@@ -54,6 +77,20 @@ if (stackForm) {
       }
       if (found.size) return found;
     } catch { /* not package.json — fall through to the line formats */ }
+
+    // A Gemfile gets its own pass rather than a branch in the loop below.
+    // It is a Ruby program, so it is full of bare words — \`end\`, \`gemspec\` —
+    // and the requirements reader accepts a bare word as a package name. Read
+    // together, a Gemfile comes back with two Python packages in it that do
+    // not exist. Only a \`gem\` call with a quoted first argument counts, so a
+    // name computed from a variable is skipped rather than guessed at.
+    const gems = new Map();
+    for (const raw of text.split(/\\r?\\n/)) {
+      const line = raw.split('#')[0].trim();
+      const rb = /^gem\\s+["']([A-Za-z0-9._-]+)["']\\s*(?:,\\s*["']([^"']+)["'])?/.exec(line);
+      if (rb) gems.set('gem:' + rb[1].toLowerCase(), { shown: rb[1], range: (rb[2] || '').trim() });
+    }
+    if (gems.size) return gems;
 
     // Which TOML table we are inside, for a pasted Cargo.toml. Every line in
     // one is \`key = value\`, so without this \`name = "my-app"\` under [package]
@@ -182,7 +219,16 @@ if (stackForm) {
     render(rows, data.benchmark, osv.size > 0);
   });
 
-  const OSV_ECOSYSTEM = { npm: 'npm', pypi: 'PyPI', crates: 'crates.io' };
+  // OSV spells several of these differently from the registries themselves, and
+  // a query with the wrong ecosystem comes back empty rather than failing — so
+  // a typo here reads as "no advisories", which is the worst way to be wrong.
+  const OSV_ECOSYSTEM = {
+    npm: 'npm',
+    pypi: 'PyPI',
+    crates: 'crates.io',
+    gem: 'RubyGems',
+    packagist: 'Packagist',
+  };
 
   async function advisories(wanted) {
     const keys = [...wanted.keys()];

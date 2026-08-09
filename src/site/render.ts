@@ -9,7 +9,13 @@ import { STACK_SCRIPT } from './stack.ts';
 import { ACCOUNT_SCRIPT, CHROME_ACCOUNT_SCRIPT } from './account-script.ts';
 import { DOORS, doorFor, READINGS } from './readings.ts';
 import { watchlistBands } from './account.ts';
-import type { IndexBundle, LensBundle, LensName, StripMark } from '../types/bundles.ts';
+import type {
+  AdoptionReading,
+  IndexBundle,
+  LensBundle,
+  LensName,
+  StripMark,
+} from '../types/bundles.ts';
 import { isRepositorySubject, type EventRecord } from '../types/events.ts';
 import type { MetaRecord } from '../types/meta.ts';
 
@@ -1074,12 +1080,20 @@ const REGISTRY_LABEL: Record<string, string> = {
   pypi: 'PyPI',
   crates: 'crates.io',
   brew: 'Homebrew',
+  gem: 'RubyGems',
+  packagist: 'Packagist',
+  nuget: 'NuGet',
+  maven: 'Maven Central',
 };
 
 const WINDOW_LABEL: Record<string, string> = {
   week: 'per week',
   '30d': 'per 30 days',
   '90d': 'per 90 days',
+  // RubyGems, Packagist and NuGet publish no rolling figure at all — only a
+  // running total since the package first shipped. Labelled so it can never sit
+  // in a column beside a weekly count as though they measured the same thing.
+  total: 'all time',
 };
 
 /**
@@ -1096,13 +1110,38 @@ function adoptionHtml(index: IndexBundle): string {
   const { adoption } = index;
   if (adoption.top.length === 0) return '';
 
+  return (
+    adoptionTable(
+      adoption.top,
+      `Installs — ${adoption.measured} packages read${adoption.unread === 0 ? '' : `, ${adoption.unread} not readable this run`}`,
+    ) + lifetimeTable(adoption.lifetime)
+  );
+}
+
+/**
+ * The registries that publish no window, in their own table.
+ *
+ * Separate from the one above on purpose, and the caption says why. An all-time
+ * total and a weekly count are different measurements; ranking them together
+ * would let a ten-year-old gem outrank a package installed sixty million times
+ * a week, which is true of the numbers and false about the world.
+ */
+function lifetimeTable(rows: readonly AdoptionReading[]): string {
+  if (rows.length === 0) return '';
+  return adoptionTable(
+    rows,
+    `Installs since first release — ${rows.length} packages on registries that publish no rolling figure`,
+  );
+}
+
+function adoptionTable(readings: readonly AdoptionReading[], caption: string): string {
   // Magnitude on a shared scale, so the table reads as a chart rather than as a
   // column of digits nobody compares. Bars are drawn against the largest
   // reading and the scale is stated in the caption — a bar with no stated
   // maximum is a shape, not a measurement.
-  const peak = Math.max(...adoption.top.map((reading) => reading.count));
+  const peak = Math.max(...readings.map((reading) => reading.count));
 
-  const rows = adoption.top
+  const rows = readings
     .map((reading, rank) => {
       const share = peak === 0 ? 0 : reading.count / peak;
       // Five steps of one hue. Ordered by lightness, so the step carries the
@@ -1123,7 +1162,7 @@ function adoptionHtml(index: IndexBundle): string {
     .join('');
 
   return `<div class="wrap"><table class="readout readout-adoption">
-  <caption class="label">Installs — ${adoption.measured} packages read${adoption.unread === 0 ? '' : `, ${adoption.unread} not readable this run`}</caption>
+  <caption class="label">${esc(caption)}</caption>
   <thead><tr>
     <th scope="col" class="n">#</th>
     <th scope="col">Repository</th>
@@ -1134,8 +1173,8 @@ function adoptionHtml(index: IndexBundle): string {
   </tr></thead>
   <tbody>${rows}</tbody>
 </table></div>
-<p class="basis label">Bars against ${peak.toLocaleString('en')}. Windows never added together.
-<a href="/method">How</a></p>`;
+<p class="basis label">Bars against ${peak.toLocaleString('en')}. Windows never added together,
+and never ranked against each other. <a href="/method">How</a></p>`;
 }
 
 /**
@@ -1605,7 +1644,8 @@ export function renderStack(index: IndexBundle, meta: MetaRecord): string {
     body: `<section class="hero">
   <h1 class="hero-thesis">Point it at your own project.</h1>
   <p class="hero-sub">
-    Paste a <code>package.json</code>, <code>requirements.txt</code> or <code>Cargo.toml</code>.
+    Paste a <code>package.json</code>, <code>requirements.txt</code>, <code>Cargo.toml</code>,
+    <code>composer.json</code> or <code>Gemfile</code>.
     Every dependency is checked for advisories. The ones tracked here also get a security
     scorecard, a licence and a last-push date.
   </p>

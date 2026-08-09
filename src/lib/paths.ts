@@ -168,18 +168,21 @@ export function assertSafeRepoId(id: string): string {
 /**
  * A package name that can become a file path without becoming a different one.
  *
- * Same guard as a repository id and one more shape to allow: npm scopes, which
- * are `@scope/name` and contain the only `@` and the only slash any of these
- * may have. Everything else — a bare slash, a second segment, `..`, a name that
- * is only dots — is refused, because the name arrives from a registry and is
- * written to disk a few lines later.
+ * Same guard as a repository id, and two shapes to allow: npm scopes, which are
+ * `@scope/name`, and Packagist names, which are always `vendor/package`. At most
+ * one slash either way. Everything else — a third segment, `..`, an empty
+ * segment, a name that is only dots — is refused, because the name arrives from
+ * a registry and is written to disk a few lines later.
+ *
+ * Maven names are `group:artifact` and never reach here: a colon is not a legal
+ * filename on Windows, so those packages are collected without getting a page.
  */
 export function isSafePackageName(name: string): boolean {
   if (name.length === 0 || name.length > 214 || name.includes('..')) return false;
+  if (name.includes(':')) return false;
 
   const parts = name.split('/');
   if (parts.length > 2) return false;
-  if (parts.length === 2 && !(parts[0] as string).startsWith('@')) return false;
 
   return parts.every((part) => {
     const bare = part.startsWith('@') ? part.slice(1) : part;

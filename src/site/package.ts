@@ -23,7 +23,16 @@ import type { AdoptionSample, AdoptionWindow } from '../types/adoption.ts';
  * work the reader would otherwise do across five tabs.
  */
 
-export type PackageRegistry = 'npm' | 'pypi' | 'crates';
+/**
+ * Registries whose names are path-shaped.
+ *
+ * Maven is absent, and deliberately. Its names are `group:artifact`, which is
+ * not a filename on Windows and not a URL segment anywhere; giving it a page
+ * would mean inventing a spelling for a package that has one already. It is
+ * still collected, still answered by `/api/verdict`, and still read out of a
+ * pasted manifest — it just has no page of its own.
+ */
+export type PackageRegistry = 'npm' | 'pypi' | 'crates' | 'gem' | 'packagist' | 'nuget';
 
 export interface PackagePageData {
   registry: PackageRegistry;
@@ -69,6 +78,25 @@ const REGISTRY_NAME: Record<PackageRegistry, string> = {
   npm: 'npm',
   pypi: 'PyPI',
   crates: 'crates.io',
+  gem: 'RubyGems',
+  packagist: 'Packagist',
+  nuget: 'NuGet',
+};
+
+/**
+ * The word each registry uses for "do not install this".
+ *
+ * Their word, not a translation of it. The notice republishes a publisher's own
+ * instruction, and a page that says "NuGet marks this yanked" is putting PyPI's
+ * vocabulary in NuGet's mouth about somebody else's package.
+ */
+const WITHDRAWN_VERB: Record<PackageRegistry, string> = {
+  npm: 'deprecated',
+  pypi: 'yanked',
+  crates: 'yanked',
+  gem: 'yanked',
+  packagist: 'abandoned',
+  nuget: 'deprecated',
 };
 
 /**
@@ -81,6 +109,9 @@ const WINDOW_LABEL: Record<AdoptionWindow, string> = {
   week: 'weekly',
   '30d': 'per 30 days',
   '90d': 'per 90 days',
+  // All-time, and named as such so it can never be read beside a weekly
+  // figure as though they measured the same thing.
+  total: 'all time',
 };
 
 export function daysBetween(iso: string, today: string): number | null {
@@ -316,7 +347,7 @@ export function renderPackagePage(
     data.withdrawn === null
       ? ''
       : `<div class="notice notice-alert"><strong>${esc(registryName)} marks this ${
-          data.registry === 'npm' ? 'deprecated' : 'yanked'
+          WITHDRAWN_VERB[data.registry]
         }</strong>
       ${esc(data.withdrawn)} — the publisher's own notice, republished unchanged.</div>`;
 

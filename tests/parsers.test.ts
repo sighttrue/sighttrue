@@ -1,12 +1,20 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 // @ts-expect-error — plain ESM with no types, which is the point of it.
 import { names as sharedNames } from '../cli/lib/manifest.mjs';
 // @ts-expect-error — same.
-import { noticesFor as esmNotices } from '../cli/lib/notices.mjs';
+import { noticesFor as esmNotices, registryUrl as esmUrl } from '../cli/lib/notices.mjs';
 import { parseManifest } from '../src/lib/manifests.ts';
+import { registryFacts, WATCHABLE_IDS } from '../src/lib/registries-table.ts';
 import { noticesFor as tsNotices } from '../src/lib/verdict.ts';
 import { STACK_SCRIPT } from '../src/site/stack.ts';
+
+const ESM_NOTICES = fileURLToPath(new URL('../cli/lib/notices.mjs', import.meta.url));
+const ACTION_CHECK = fileURLToPath(new URL('../action/check.mjs', import.meta.url));
+
+const esmRegistryUrl = esmUrl as (registry: string, name: string) => string;
 
 /**
  * Three readers, one manifest.
@@ -123,6 +131,95 @@ describe('the readers agree on a requirements.txt', () => {
   });
 });
 
+const GEMFILE = [
+  "source 'https://rubygems.org'",
+  "ruby '3.3.0'",
+  '',
+  "gem 'rails', '~> 7.1.0'",
+  'gem "puma", ">= 5.0"',
+  "gem 'sidekiq' # background jobs",
+  '',
+  'group :development, :test do',
+  "  gem 'rubocop', require: false",
+  'end',
+  '',
+  'gemspec',
+  'gem name_from_a_variable',
+].join('\n');
+
+const COMPOSER = JSON.stringify({
+  name: 'acme/store',
+  require: {
+    php: '^8.2',
+    'ext-mbstring': '*',
+    'composer-runtime-api': '^2.2',
+    'laravel/framework': '^11.0',
+    'guzzlehttp/guzzle': '^7.8',
+  },
+  'require-dev': { 'phpunit/phpunit': '^11.0' },
+  autoload: { 'psr-4': { 'App\\': 'app/' } },
+});
+
+describe('the readers agree on a Gemfile', () => {
+  it('reads the gems and none of the directives', () => {
+    // `source`, `ruby`, `group ... do`, `end` and `gemspec` are Bundler's own
+    // vocabulary. A Gemfile is a Ruby program, not a list.
+    expect(actionNames(GEMFILE, 'gem').sort()).toEqual(['puma', 'rails', 'rubocop', 'sidekiq']);
+    expect(fromStack(GEMFILE)).toEqual(['puma', 'rails', 'rubocop', 'sidekiq']);
+    expect(Object.keys(parseManifest('Gemfile', GEMFILE)).sort()).toEqual([
+      'puma',
+      'rails',
+      'rubocop',
+      'sidekiq',
+    ]);
+  });
+
+  it('skips a gem whose name is computed rather than guessing at it', () => {
+    // `gem name_from_a_variable` names a gem this cannot know. Guessing would
+    // put a stranger's readings in somebody's pull request.
+    for (const found of [actionNames(GEMFILE, 'gem'), fromStack(GEMFILE)]) {
+      expect(found).not.toContain('name_from_a_variable');
+    }
+  });
+});
+
+describe('the readers agree on a composer.json', () => {
+  it('drops the platform constraints, which are not packages', () => {
+    // `php`, `ext-mbstring` and `composer-runtime-api` sit in the same block as
+    // real dependencies and describe the machine. Packagist has never heard of
+    // any of them, and a lookup would report whatever it found under the name.
+    for (const found of [actionNames(COMPOSER, 'packagist'), fromStack(COMPOSER)]) {
+      expect(found).not.toContain('php');
+      expect(found).not.toContain('ext-mbstring');
+      expect(found).not.toContain('composer-runtime-api');
+    }
+  });
+
+  it('is never read as a package.json', () => {
+    // Both are JSON and nothing but the key names tells them apart. Read as npm
+    // this would report an empty manifest, which looks exactly like a clean one.
+    expect(actionNames(COMPOSER, 'packagist').sort()).toEqual([
+      'guzzlehttp/guzzle',
+      'laravel/framework',
+      'phpunit/phpunit',
+    ]);
+    expect(fromStack(COMPOSER)).toEqual([
+      'guzzlehttp/guzzle',
+      'laravel/framework',
+      'phpunit/phpunit',
+    ]);
+  });
+
+  it('reads require only where the reading is about shipping', () => {
+    // Same split as package.json: the collector's claim is about what a project
+    // ships, so phpunit does not belong in it.
+    expect(Object.keys(parseManifest('composer.json', COMPOSER)).sort()).toEqual([
+      'guzzlehttp/guzzle',
+      'laravel/framework',
+    ]);
+  });
+});
+
 describe('where they differ, they differ on purpose', () => {
   const PACKAGE_JSON = JSON.stringify({
     dependencies: { axios: '^1.6.0' },
@@ -149,6 +246,50 @@ describe('where they differ, they differ on purpose', () => {
     for (const found of [actionNames(PACKAGE_JSON, 'npm'), fromStack(PACKAGE_JSON)]) {
       expect(found).not.toContain('build');
     }
+  });
+});
+
+describe('every copy of a registry fact agrees with the table', () => {
+  /** A map lifted out of a file that cannot import one. */
+  function mapIn(source: string, name: string): Record<string, string> {
+    // The closing brace sits at whatever indentation its file uses — column
+    // zero in the ESM files, two spaces inside the page's script.
+    const body = new RegExp(`const ${name} = (\\{[\\s\\S]*?\\n *\\};)`).exec(source)?.[1];
+    if (body === undefined) throw new Error(`${name} not found — has it been renamed?`);
+    return new Function(`return ${body.slice(0, -1)}`)() as Record<string, string>;
+  }
+
+  const copies: [string, Record<string, string>][] = [
+    ['cli/lib/notices.mjs', mapIn(readFileSync(ESM_NOTICES, 'utf8'), 'OSV_ECOSYSTEM')],
+    ['action/check.mjs', mapIn(readFileSync(ACTION_CHECK, 'utf8'), 'OSV_ECOSYSTEM')],
+    ['the /stack page', mapIn(STACK_SCRIPT, 'OSV_ECOSYSTEM')],
+  ];
+
+  it('spells every OSV ecosystem the way the table does', () => {
+    // A query with the wrong ecosystem comes back empty rather than failing, so
+    // a copy that drifted reports "no advisories" about a package that has
+    // them. That is the worst available way to be wrong here, and it is silent.
+    for (const [where, copy] of copies) {
+      for (const [registry, ecosystem] of Object.entries(copy)) {
+        expect(registryFacts(registry)?.osv, `${where} names ${registry}`).toBe(ecosystem);
+      }
+    }
+  });
+
+  it('never links a package to a registry that does not publish it', () => {
+    // `registryUrl` in the CLI used to end in a bare fallback to crates.io, so
+    // the day RubyGems opened, a `gem:` reading printed a link to a crates.io
+    // page that has never existed — in somebody's build log, under this
+    // project's name.
+    for (const id of WATCHABLE_IDS) {
+      const url = esmRegistryUrl(id, id === 'maven' ? 'com.acme:widget' : 'widget');
+      expect(url, `${id} has no page in the CLI`).not.toBe('');
+      expect(url).toBe(registryFacts(id)?.page(id === 'maven' ? 'com.acme:widget' : 'widget'));
+    }
+  });
+
+  it('refuses to invent a page for a registry it does not know', () => {
+    expect(esmRegistryUrl('hex', 'phoenix')).toBe('');
   });
 });
 

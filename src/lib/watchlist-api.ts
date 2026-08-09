@@ -18,7 +18,7 @@
  * watchlist would quietly contain packages it is not watching. Refusing is the
  * honest answer until a collector exists.
  */
-export const REGISTRIES = ['npm', 'pypi', 'crates'] as const;
+export const REGISTRIES = ['npm', 'pypi', 'crates', 'gem', 'packagist', 'nuget', 'maven'] as const;
 export type Registry = (typeof REGISTRIES)[number];
 
 /**

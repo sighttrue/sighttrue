@@ -55,7 +55,7 @@ describe('what may be watched', () => {
     // Accepting it would be one line and a lie: an entry for a registry with no
     // collector can never produce a reading, so the watchlist would contain
     // packages it is not watching and report nothing about them forever.
-    const result = checkItem({ registry: 'maven', name: 'guava' });
+    const result = checkItem({ registry: 'hex', name: 'phoenix' });
 
     expect(result.ok).toBe(false);
     if (!result.ok) {

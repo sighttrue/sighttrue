@@ -29,6 +29,7 @@ function stub(over: Partial<RegistryClient> = {}): RegistryClient {
     npmDownloads: async () => new Map(),
     brewInstalls: async () => new Map(),
     pypiDownloads: async () => null,
+    totalDownloads: async () => null,
     cratesDownloads: async () => null,
     requests: () => 0,
     ...over,
@@ -46,7 +47,10 @@ describe('package identifiers', () => {
     // A bare name would silently pick a registry, and picking wrong attributes
     // one ecosystem's downloads to another.
     expect(parsePackageId('react')).toBeNull();
-    expect(parsePackageId('maven:junit')).toBeNull();
+    // Maven, RubyGems, Packagist and NuGet are read now. Hex is not, and a
+    // registry nothing is collected from must stay unreadable rather than
+    // becoming a row that can never produce a reading.
+    expect(parsePackageId('hex:phoenix')).toBeNull();
     expect(parsePackageId('npm:')).toBeNull();
   });
 });
@@ -138,7 +142,7 @@ describe('collecting', () => {
   });
 
   it('reports an unmappable identifier instead of guessing at it', async () => {
-    const result = await collectAdoption([entry('a/one', ['maven:junit'])], [], {
+    const result = await collectAdoption([entry('a/one', ['hex:phoenix'])], [], {
       now: NOW,
       client: stub(),
     });

@@ -11,7 +11,7 @@ branding:
 
 inputs:
   manifest:
-    description: 'Path to package.json, requirements.txt or Cargo.toml.'
+    description: 'Path to package.json, requirements.txt, pyproject.toml, Cargo.toml, composer.json or Gemfile.'
     required: false
     default: 'package.json'
   registry:

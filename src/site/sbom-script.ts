@@ -47,6 +47,16 @@ function sighttrueSbom(rows, options) {
     if (registry === 'pypi') {
       return 'pkg:pypi/' + encodeURIComponent(name.toLowerCase().replace(/[-_.]+/g, '-'));
     }
+    if (registry === 'packagist') {
+      // pkg:composer/vendor/package, and the slash is a namespace separator
+      // rather than a character in the name.
+      var vendor = name.split('/');
+      return vendor.length === 2
+        ? 'pkg:composer/' + encodeURIComponent(vendor[0]) + '/' + encodeURIComponent(vendor[1])
+        : 'pkg:composer/' + encodeURIComponent(name);
+    }
+    if (registry === 'gem') return 'pkg:gem/' + encodeURIComponent(name);
+    if (registry === 'nuget') return 'pkg:nuget/' + encodeURIComponent(name);
     return 'pkg:cargo/' + encodeURIComponent(name);
   }
 

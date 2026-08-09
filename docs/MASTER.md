@@ -27,7 +27,7 @@ disk in that layout before they take effect.
 
 ## What this is
 
-One web product that watches 388 open-source repositories and takes eleven
+One web product that watches 417 open-source repositories and takes eleven
 readings. Five of them are the original lenses, below. The other six — provider
 outages, end-of-life dates, model prices, registry health, packages by real ship
 date, commit histories for the bus factor — never touch GitHub, and are the
@@ -1404,7 +1404,8 @@ not know why it is shaped that way.
 
 The staleness collector fetched one document per package and took one field out
 of it. It takes five. `withdrawn` is the publisher's own instruction not to
-install — npm calls it deprecated, PyPI and crates.io call it yanked.
+install — npm calls it deprecated, PyPI and crates.io call it yanked, RubyGems
+yanked, Packagist abandoned, NuGet deprecated.
 `installScripts` names what npm will run on the installing machine, which is
 the main path by which a compromised package becomes code execution. Then
 install weight and the maintainers' funding link. None costs a request; all
@@ -1423,7 +1424,15 @@ was and stops there.
 "Is X still maintained" is the sentence people type. The readings that answer
 it were reachable only by knowing which repository publishes the package, which
 is exactly what somebody asking does not know. `/npm/<name>`, `/pypi/<name>`,
-`/crates/<name>`, one per tracked package, titled with the question.
+`/crates/<name>`, `/gem/<name>`, `/packagist/<vendor>/<name>` and
+`/nuget/<name>`, one per tracked package, titled with the question.
+
+Maven has no pages, and that is a decision rather than an omission. Its names
+are `group:artifact`; a colon is not a legal filename on Windows and not a URL
+segment anywhere, and rewriting the name to make one would publish a package
+under an address its own registry does not use. Maven packages are still
+collected, still answered by `/api/verdict`, and still read out of a pasted
+manifest.
 
 The page never answers with a verdict. It does not say maintained, abandoned,
 safe or risky: those are conclusions and the readings exist so the reader can
@@ -1497,3 +1506,53 @@ one line away from it and nothing said so.
 
 No per-package feeds. Every tracked repository publishes exactly one tracked
 package, so 152 more files would have been the same items at a second address.
+
+## Four more registries
+
+RubyGems, Packagist, NuGet and Maven Central. Twenty-nine repositories added,
+thirty-three package mappings, and the reason is not coverage for its own sake:
+every reading here that does not touch GitHub comes from a registry, and a
+project reading three of them was a project that could only answer the question
+for JavaScript, Python and Rust developers.
+
+Each mapping was checked against its registry before it was written. Two of the
+thirty-five proposed were wrong and are not here: RubyGems states `rspec-core`
+is published from the consolidated `rspec/rspec` monorepo rather than from a
+repository of its own, and Packagist states `filament/filament` comes from
+`filamentphp/panels`. Fourteen wrong mappings shipped once before because
+nobody did this first, and three of this project's own published findings were
+about packages the repositories in question do not publish.
+
+**One list, not nineteen.** Adding Ruby meant touching nineteen files, because
+each fact about a registry — how OSV spells it, how a purl names it, where its
+package page lives, how it folds a name, which file declares its dependencies
+— was written wherever it happened to be needed. `src/lib/registries-table.ts`
+holds them once. The copies that could not import it, because they run on a
+stranger's Node or inside a page with no build step, are checked against it by
+`tests/parsers.test.ts` instead.
+
+**The window that is not a window.** RubyGems, Packagist and NuGet publish no
+rolling figure at all — only a running total since the package first shipped.
+NuGet's largest is around six billion, against roughly sixty million for the
+largest weekly count here. Dropped into the ranked installs table, that total
+takes first place and sets the bar scale, and every weekly figure beside it
+renders as a sliver: each number true, the comparison between them false. So
+`summariseAdoption` splits before ranking and the page draws two tables with
+two scales. The badge carries the window in its label for the same reason —
+`installs, total`, never `installs/wk`, because a badge is quoted out of
+context by definition.
+
+**What broke on contact.** Three of six NuGet packages came back with no
+publish date. NuGet inlines a package's version list only while the package is
+small; past roughly a hundred versions the registration index becomes ten pages
+of `@id` and the page has to be fetched separately. Serilog, AutoMapper and
+Entity Framework Core all failed on that, and all three are exactly the kind of
+package worth watching. `cli/lib/notices.mjs` also ended in a bare fallback to
+crates.io, so a `gem:` reading would have printed a link to a crates.io page
+that has never existed — in somebody's build log, under this project's name.
+
+Manifests followed: `Gemfile`, `gems.rb` and `composer.json` in all three
+readers. A Gemfile needs its own pass rather than a branch in the line loop,
+because it is a Ruby program full of bare words and the requirements reader
+accepts a bare word as a package name — read together, a Gemfile comes back
+with two Python packages in it called `end` and `gemspec`.

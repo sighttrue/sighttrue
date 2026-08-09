@@ -168,7 +168,24 @@ export interface AdoptionSummary {
   weekly: number;
   /** Packages behind `weekly`. A total without its sample is not a reading. */
   weeklyPackages: number;
+  /**
+   * Ranked packages whose counts cover a window — a week, thirty days, ninety.
+   *
+   * Not added together, and now not ranked against a lifetime total either.
+   * RubyGems, Packagist and NuGet publish only a running total since a package
+   * first shipped, and NuGet's largest is some six billion. Dropped into this
+   * list it takes first place and sets the bar scale, and every weekly figure
+   * beside it becomes a sliver — a true number arranged into a false comparison.
+   */
   top: AdoptionReading[];
+  /**
+   * The same reading for registries that publish no window at all.
+   *
+   * Its own list, with its own scale, because an all-time total and a weekly
+   * count are different measurements and the only honest thing to do with them
+   * is not put them in one column.
+   */
+  lifetime: AdoptionReading[];
 }
 
 /** One project as another body assessed it. */

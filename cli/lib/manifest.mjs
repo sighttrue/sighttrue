@@ -25,6 +25,9 @@ export function registryFor(path) {
   if (name === 'package.json') return 'npm';
   if (name === 'requirements.txt' || name === 'pyproject.toml') return 'pypi';
   if (name === 'Cargo.toml') return 'crates';
+  // Bundler reads `gems.rb` under exactly the same rules as `Gemfile`.
+  if (name === 'Gemfile' || name === 'gems.rb') return 'gem';
+  if (name === 'composer.json') return 'packagist';
   return null;
 }
 
@@ -47,6 +50,39 @@ export function names(text, registry) {
       }
     } catch {
       return [];
+    }
+    return [...found];
+  }
+
+  if (registry === 'packagist') {
+    try {
+      const composer = JSON.parse(text);
+      for (const group of ['require', 'require-dev']) {
+        for (const name of Object.keys(composer[group] || {})) {
+          // A Packagist name is always `vendor/package`. The other entries in
+          // this block are platform constraints — `php`, `ext-mbstring`,
+          // `lib-openssl`, `composer-runtime-api` — which describe the machine
+          // rather than anything published, and looking them up would report a
+          // stranger's package under the name of a PHP extension.
+          if (name.includes('/')) found.add(name.toLowerCase());
+        }
+      }
+    } catch {
+      return [];
+    }
+    return [...found];
+  }
+
+  if (registry === 'gem') {
+    for (const raw of text.split(/\r?\n/)) {
+      // `#` starts a comment anywhere in Ruby, and no name this accepts can
+      // contain one.
+      const line = (raw.split('#')[0] ?? '').trim();
+      // `gem 'rails', '~> 7.0'`, and the `gemspec`, `group`, `source` and
+      // `ruby` directives that are not gems. Only a quoted first argument
+      // counts, so `gem name_from_a_variable` is skipped rather than guessed.
+      const match = /^gem\s+["']([A-Za-z0-9._-]+)["']/.exec(line);
+      if (match) found.add(match[1].toLowerCase());
     }
     return [...found];
   }

@@ -18,13 +18,20 @@
  * Pure. The endpoint fetches the bundles and calls in here.
  */
 
-import { foldName } from './watchlist-api.ts';
+import { registryFacts } from './registries-table.ts';
+import { foldName, REGISTRIES, type Registry } from './watchlist-api.ts';
 
-export type VerdictRegistry = 'npm' | 'pypi' | 'crates';
+/**
+ * Every registry a package may be asked about.
+ *
+ * One list, in `watchlist-api.ts`, rather than a second one here. This file
+ * used to name three registries of its own, so opening Ruby made
+ * `/api/verdict?pkg=gem:rails` refuse a package the rest of the project had
+ * already collected five readings about.
+ */
+export type VerdictRegistry = Registry;
 
-const REGISTRIES: readonly string[] = ['npm', 'pypi', 'crates'];
-
-/** Longest name any of the three registries permits, plus scope and slash. */
+/** Longest name any of these registries permits, plus scope and slash. */
 const MAX_NAME = 214;
 
 export interface PackageId {
@@ -47,7 +54,7 @@ export function parsePkg(raw: string | null): PackageId | null {
 
   const registry = raw.slice(0, separator).toLowerCase();
   const name = raw.slice(separator + 1).trim();
-  if (!REGISTRIES.includes(registry)) return null;
+  if (!(REGISTRIES as readonly string[]).includes(registry)) return null;
   if (name === '' || name.length > MAX_NAME) return null;
   if (name.includes('..') || name.startsWith('.') || name.startsWith('/')) return null;
 
@@ -80,29 +87,29 @@ export function findEntry(
   return null;
 }
 
-/** How the registries and OSV each spell the same three ecosystems. */
-const OSV_ECOSYSTEM: Record<VerdictRegistry, string> = {
-  npm: 'npm',
-  pypi: 'PyPI',
-  crates: 'crates.io',
-};
-
+/**
+ * The package's own page on the registry that publishes it.
+ *
+ * Built from `registries-table.ts`, which is also where the encoding rule
+ * lives — npm keeps a leading `@` literal in the address of every scoped
+ * package, and Maven splits `group:artifact` on the colon.
+ */
 export function registryUrl(registry: VerdictRegistry, name: string): string {
-  // Each segment encoded, except a leading `@`, which npm keeps literal in the
-  // address it publishes for every scoped package.
-  const encoded = name
-    .split('/')
-    .map((part) =>
-      part.startsWith('@') ? `@${encodeURIComponent(part.slice(1))}` : encodeURIComponent(part),
-    )
-    .join('/');
-  if (registry === 'npm') return `https://www.npmjs.com/package/${encoded}`;
-  if (registry === 'pypi') return `https://pypi.org/project/${encoded}/`;
-  return `https://crates.io/crates/${encoded}`;
+  return registryFacts(registry)?.page(name) ?? '';
 }
 
+/**
+ * Where the advisories for this package are listed.
+ *
+ * OSV covers every registry here, but spells three of them differently from
+ * the registries themselves — `PyPI`, `crates.io`, `RubyGems`. The table holds
+ * that spelling, and returns null for an ecosystem OSV does not track, in
+ * which case there is no address to offer and saying so is the honest answer.
+ */
 export function advisoryUrl(registry: VerdictRegistry, name: string): string {
-  return `https://osv.dev/list?ecosystem=${encodeURIComponent(OSV_ECOSYSTEM[registry])}&q=${encodeURIComponent(name)}`;
+  const ecosystem = registryFacts(registry)?.osv;
+  if (ecosystem === null || ecosystem === undefined) return '';
+  return `https://osv.dev/list?ecosystem=${encodeURIComponent(ecosystem)}&q=${encodeURIComponent(name)}`;
 }
 
 export function scorecardUrl(repo: string): string {
@@ -362,7 +369,7 @@ export function buildVerdict(input: VerdictInput): Verdict {
       note:
         entry.withdrawn === null
           ? `${id.registry === 'npm' ? 'npm' : 'The registry'} does not mark this package withdrawn.`
-          : 'The publisher’s own notice, republished unchanged. npm calls it deprecated, PyPI and crates.io call it yanked.',
+          : 'The publisher’s own notice, republished unchanged. npm calls it deprecated, PyPI and crates.io call it yanked, RubyGems yanked, Packagist abandoned, NuGet deprecated.',
     },
     installScripts: {
       value: entry.installScripts,

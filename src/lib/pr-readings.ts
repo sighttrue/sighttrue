@@ -40,6 +40,9 @@ const MANIFESTS: Record<string, Registry> = {
   'requirements.txt': 'pypi',
   'pyproject.toml': 'pypi',
   'Cargo.toml': 'crates',
+  Gemfile: 'gem',
+  'gems.rb': 'gem',
+  'composer.json': 'packagist',
 };
 
 /**

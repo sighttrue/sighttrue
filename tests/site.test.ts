@@ -38,7 +38,7 @@ function index(over: Partial<IndexBundle> = {}): IndexBundle {
       { category: 'devtool', repositories: 400, measured: 0, forksAdded: null, findings: 0, busiest: null },
     ],
     calibration: [],
-    adoption: { measured: 0, unread: 0, weekly: 0, weeklyPackages: 0, top: [] },
+    adoption: { measured: 0, unread: 0, weekly: 0, weeklyPackages: 0, top: [], lifetime: [] },
     models: { available: 0, providers: 0, withdrawn: 0, cheapest: [], dearest: [], moved: [], perContext: [] },
     lifecycle: { products: 0, dated: 0, ended: 0, approaching: 0, soon: [], supported: [] },
     incidents: { windowDays: 90, providers: 0, total: 0, timed: 0, medianMinutes: null, observedDays: 0, byProvider: [], recent: [] },
@@ -374,6 +374,7 @@ describe('telling a first-time visitor what this is', () => {
           weekly: 800,
           weeklyPackages: 1,
           top: [{ repo: 'a/one', registry: 'npm', name: 'one', count: 800, window: 'week' }],
+          lifetime: [],
         },
         health: {
           scored: 1,
@@ -425,6 +426,7 @@ describe('magnitude, drawn', () => {
           { repo: 'b/two', registry: 'pypi', name: 'two', count: 100, window: 'week' },
           { repo: 'c/three', registry: 'brew', name: 'three', count: 40, window: '30d' },
         ],
+        lifetime: [],
       },
     });
 

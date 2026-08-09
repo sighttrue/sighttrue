@@ -44,7 +44,15 @@ class Stop extends Error {
 }
 
 /** Looked for in this order, which is the order a project is most likely to have one. */
-const CANDIDATES = ['package.json', 'requirements.txt', 'Cargo.toml', 'pyproject.toml'];
+const CANDIDATES = [
+  'package.json',
+  'requirements.txt',
+  'Cargo.toml',
+  'pyproject.toml',
+  'composer.json',
+  'Gemfile',
+  'gems.rb',
+];
 
 const COLOUR = process.stdout.isTTY === true && process.env.NO_COLOR === undefined;
 const dim = (text) => (COLOUR ? `[2m${text}[0m` : text);

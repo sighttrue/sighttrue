@@ -67,8 +67,17 @@ export interface WatchlistEntry {
   packages: string[];
 }
 
+/**
+ * Registries a package may be recorded under.
+ *
+ * Listed in one place — see lib/registries-table.ts — because every fact that
+ * differs between them was previously written out wherever it was needed, and
+ * the fifth copy is where they start disagreeing.
+ */
+const REGISTRY_IDS_TUPLE = ['npm', 'pypi', 'crates', 'gem', 'packagist', 'nuget', 'maven', 'brew'] as const;
+
 /** Registries with a free, unauthenticated download or install count. */
-export const REGISTRIES = ['npm', 'pypi', 'crates', 'brew'] as const;
+export const REGISTRIES = REGISTRY_IDS_TUPLE;
 
 export type Registry = (typeof REGISTRIES)[number];
 

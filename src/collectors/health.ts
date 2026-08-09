@@ -17,6 +17,7 @@
  * else's security posture.
  */
 
+import { registryFacts } from '../lib/registries-table.ts';
 import { sleep, ThrottledError } from '../lib/registries.ts';
 import { parsePackageId } from './adoption.ts';
 import type { HealthRow } from '../types/health.ts';
@@ -30,12 +31,14 @@ export const SCORECARD_DELAY_MS = 150;
 /** Verified: OSV accepts a batch. Kept well under anything it might object to. */
 export const OSV_BATCH = 100;
 
-/** OSV spells ecosystems its own way. */
-const OSV_ECOSYSTEM: Record<string, string> = {
-  npm: 'npm',
-  pypi: 'PyPI',
-  crates: 'crates.io',
-};
+/**
+ * OSV spells ecosystems its own way, and the table is where that is written
+ * down. A query with the wrong spelling comes back empty rather than failing,
+ * so a copy of this that drifted would read as "no advisories" — the worst
+ * available way to be wrong about somebody's package.
+ */
+const osvEcosystem = (registry: string): string | undefined =>
+  registryFacts(registry)?.osv ?? undefined;
 
 export interface HealthClient {
   /** Overall score and its date, or null when the project was never scanned. */
@@ -172,7 +175,7 @@ export async function collectHealth(
     for (const packageId of entry.packages ?? []) {
       const parsed = parsePackageId(packageId);
       // Homebrew is a distribution channel, not an ecosystem OSV tracks.
-      const ecosystem = parsed === null ? undefined : OSV_ECOSYSTEM[parsed.registry];
+      const ecosystem = parsed === null ? undefined : osvEcosystem(parsed.registry);
       if (parsed === null || ecosystem === undefined) continue;
       wanted.push({ ecosystem, name: parsed.name, repo: entry.id });
     }

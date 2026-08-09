@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import { REGISTRY_IDS } from '../src/lib/registries-table.ts';
 import { CATEGORIES } from '../src/types/watchlist.ts';
 import type { Category, WatchlistEntry } from '../src/types/watchlist.ts';
 
@@ -17,8 +18,8 @@ const lines = raw.split('\n').filter((line) => line !== '');
 const entries = lines.map((line) => JSON.parse(line) as WatchlistEntry);
 
 describe('data/watchlist.jsonl', () => {
-  it('holds 400 entries', () => {
-    expect(entries).toHaveLength(400);
+  it('holds 429 entries', () => {
+    expect(entries).toHaveLength(429);
   });
 
   it('is stored LF-only with one trailing newline', () => {
@@ -66,9 +67,15 @@ describe('data/watchlist.jsonl', () => {
 
   it('only ever maps a package to a registry it knows', () => {
     // A bare name would silently pick an ecosystem, and picking wrong credits
-    // one project's downloads to another.
+    // one project's downloads to another. The list of registries comes from
+    // `registries-table.ts` rather than being spelled again here — this used to
+    // carry its own copy, which meant opening RubyGems failed a test about
+    // whether the watchlist was well-formed.
     const packages = entries.flatMap((e) => e.packages ?? []);
-    const bad = packages.filter((id) => !/^(npm|pypi|crates|brew):.+/.test(id));
+    const bad = packages.filter((id) => {
+      const cut = id.indexOf(':');
+      return cut < 1 || id.length === cut + 1 || !REGISTRY_IDS.includes(id.slice(0, cut));
+    });
     expect(bad).toEqual([]);
   });
 

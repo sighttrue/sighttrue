@@ -24,7 +24,7 @@
 import { readFileSync, appendFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-import { names } from '../cli/lib/manifest.mjs';
+import { names, registryFor as registryOfPath } from '../cli/lib/manifest.mjs';
 
 const endpoint = (process.env.READOUT_ENDPOINT || 'https://sighttrue.com').replace(/\/$/, '');
 const manifestPath = process.env.READOUT_MANIFEST || 'package.json';
@@ -35,15 +35,29 @@ const failOn = new Set(
     .filter(Boolean),
 );
 
-const OSV_ECOSYSTEM = { npm: 'npm', pypi: 'PyPI', crates: 'crates.io' };
+const OSV_ECOSYSTEM = {
+  npm: 'npm',
+  pypi: 'PyPI',
+  crates: 'crates.io',
+  gem: 'RubyGems',
+  packagist: 'Packagist',
+  nuget: 'NuGet',
+  maven: 'Maven',
+};
 const SOURCE_AVAILABLE = /BUSL|SSPL|Elastic|RSAL|Commons-Clause|PolyForm/i;
 
+/**
+ * Which registry the manifest names packages in.
+ *
+ * The filename rules are the shared reader's, not a second copy of them — this
+ * used to fall through to `pypi` for anything it did not recognise, so a
+ * `composer.json` would have been looked up as a list of Python packages and
+ * reported whatever PyPI happened to have under those names.
+ */
 function registryFor(path) {
   const explicit = (process.env.READOUT_REGISTRY || '').trim().toLowerCase();
   if (explicit) return explicit;
-  if (path.endsWith('Cargo.toml')) return 'crates';
-  if (path.endsWith('package.json')) return 'npm';
-  return 'pypi';
+  return registryOfPath(path) ?? 'pypi';
 }
 
 /**

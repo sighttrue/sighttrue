@@ -6,11 +6,13 @@ Dated readings on the dependencies you are about to install.
 npx sighttrue check
 ```
 
-Reads the `package.json`, `requirements.txt`, `Cargo.toml` or `pyproject.toml`
-in the current directory and reports what is on record for each dependency:
+Reads the `package.json`, `requirements.txt`, `Cargo.toml`, `pyproject.toml`,
+`composer.json` or `Gemfile` in the current directory and reports what is on
+record for each dependency:
 
 - the publisher has **withdrawn** it — npm calls this deprecated, PyPI and
-  crates.io call it yanked
+  crates.io call it yanked, RubyGems yanked, Packagist abandoned, NuGet
+  deprecated
 - it **runs a script on the installing machine**
 - its repository is **archived**
 - **advisories** filed against it

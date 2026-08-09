@@ -16,6 +16,7 @@
  * down and leave a broken image behind.
  */
 
+import type { AdoptionWindow } from '../types/adoption.ts';
 import type { HealthRow } from '../types/health.ts';
 
 /** Rough width for IBM Plex Sans Condensed 600 at 11px. */
@@ -38,8 +39,19 @@ function esc(value: string): string {
 export interface BadgeInput {
   repo: string;
   health: HealthRow | undefined;
-  /** Weekly downloads across npm and PyPI, or null when nothing is mapped. */
+  /** Downloads over `window`, or null when nothing is mapped. */
   installs: number | null;
+  /**
+   * The period `installs` covers.
+   *
+   * Absent means a week, which is what a repository badge always shows —
+   * `adoptionByRepo` is npm and PyPI only, and both report a rolling week. A
+   * package badge has to say, because RubyGems, Packagist and NuGet publish
+   * only a running total since first release. Labelling one of those
+   * `installs/wk` would put a ten-year figure on a weekly badge, which is the
+   * kind of wrong that gets embedded in a thousand READMEs.
+   */
+  window?: AdoptionWindow;
   /**
    * The package this badge is about, when it is about one.
    *
@@ -50,6 +62,13 @@ export interface BadgeInput {
    */
   packageName?: string;
 }
+
+const INSTALL_LABEL: Record<AdoptionWindow, string> = {
+  week: 'installs/wk',
+  '30d': 'installs/30d',
+  '90d': 'installs/90d',
+  total: 'installs, total',
+};
 
 /**
  * The single figure a badge shows.
@@ -62,7 +81,7 @@ function reading(input: BadgeInput): { label: string; value: string } {
   if (input.installs !== null && input.installs > 0) {
     const millions = input.installs / 1_000_000;
     return {
-      label: 'installs/wk',
+      label: INSTALL_LABEL[input.window ?? 'week'],
       value:
         millions >= 1
           ? `${millions >= 10 ? Math.round(millions) : millions.toFixed(1)}M`

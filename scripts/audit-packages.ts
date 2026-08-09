@@ -105,6 +105,38 @@ async function declaredRepo(registry: string, name: string): Promise<string | nu
     return repoFrom(body?.crate?.repository) ?? repoFrom(body?.crate?.homepage);
   }
 
+  if (registry === 'gem') {
+    const body = (await json(`https://rubygems.org/api/v1/gems/${encodeURIComponent(name)}.json`)) as {
+      source_code_uri?: unknown;
+      homepage_uri?: unknown;
+      project_uri?: unknown;
+    } | null;
+    return (
+      repoFrom(body?.source_code_uri) ??
+      repoFrom(body?.homepage_uri) ??
+      repoFrom(body?.project_uri)
+    );
+  }
+
+  if (registry === 'packagist') {
+    // `vendor/package`, and the slash between them is part of the path.
+    const body = (await json(`https://packagist.org/packages/${name}.json`)) as {
+      package?: { repository?: unknown };
+    } | null;
+    return repoFrom(body?.package?.repository);
+  }
+
+  if (registry === 'nuget') {
+    const body = (await json(
+      `https://azuresearch-usnc.nuget.org/query?q=packageid:${encodeURIComponent(name.toLowerCase())}&take=1`,
+    )) as { data?: { projectUrl?: unknown }[] } | null;
+    return repoFrom(body?.data?.[0]?.projectUrl);
+  }
+
+  // Maven Central's search index publishes no project URL, so there is nothing
+  // to check a mapping against. Reported as unstated, which is what it is —
+  // the four Maven mappings here were verified by hand against each project's
+  // own repository instead, and this says so out loud rather than passing them.
   return null;
 }
 

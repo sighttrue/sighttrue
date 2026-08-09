@@ -17,9 +17,11 @@ steps:
 ```
 
 Fails the build when a dependency's own publisher has withdrawn it — npm calls
-it deprecated, PyPI and crates.io call it yanked — or when its repository has
-been archived or moved to a source-available licence, and reports advisories
-either way. No key, no
+it deprecated, PyPI and crates.io call it yanked, RubyGems yanked, Packagist
+abandoned, NuGet deprecated — or when its repository has been archived or moved
+to a source-available licence, and reports advisories either way. Reads
+`package.json`, `requirements.txt`, `pyproject.toml`, `Cargo.toml`,
+`composer.json` and `Gemfile`. No key, no
 account, no service to sign up to — it reads published measurements and talks
 to OSV. A network problem is never a finding: if the readings cannot be fetched
 the step says so and passes, because a build that breaks when somebody else's
@@ -113,7 +115,7 @@ Despite the name there is no verdict in it: no score, no rank, no
 recommendation. Those would be this project's judgement of somebody else's work
 wearing the costume of a measurement.
 
-One agent watches 388 open-source repositories and takes eleven readings, most
+One agent watches 417 open-source repositories and takes eleven readings, most
 of which never touch GitHub: 461 provider incidents kept after their own status
 pages dropped them, 518 release lines on the end-of-life clock, 395 model prices
 across 58 providers, 247 packages by real ship date, 387 commit histories for

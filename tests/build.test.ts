@@ -74,7 +74,10 @@ beforeAll(() => {
   // that turns into a nested directory on disk and an `@` in a URL.
   ledger.writeWatchlist([
     entry('a/one', ['npm:@scope/widget', 'crates:widget']),
-    entry('b/two', ['pypi:Widget_Tools']),
+    // `vendor/package` is Packagist's only shape, and it turns into a nested
+    // directory the same way a scoped npm name does. Maven's `group:artifact`
+    // deliberately gets no page at all — a colon is not a filename on Windows.
+    entry('b/two', ['pypi:Widget_Tools', 'packagist:acme/widget', 'maven:com.acme:widget']),
   ]);
   ledger.writeLiveState([stateRow('a/one', 10), stateRow('b/two', 20)]);
   ledger.appendEvents('2026-08', [
@@ -290,7 +293,10 @@ describe('output hygiene', () => {
           // here, because that list is a hundred and fifty names long.
           !f.name.startsWith('npm/') &&
           !f.name.startsWith('pypi/') &&
-          !f.name.startsWith('crates/'),
+          !f.name.startsWith('crates/') &&
+          !f.name.startsWith('gem/') &&
+          !f.name.startsWith('packagist/') &&
+          !f.name.startsWith('nuget/'),
       )
       .map((f) => f.name);
     expect(pages.sort()).toEqual([
@@ -339,6 +345,19 @@ describe('output hygiene', () => {
     expect(pages).toContain('npm/@scope/widget.html');
     expect(pages).toContain('crates/widget.html');
     expect(pages).toContain('pypi/Widget_Tools.html');
+    expect(pages).toContain('packagist/acme/widget.html');
+  });
+
+  it('gives Maven no page rather than inventing a spelling for it', () => {
+    // Maven names are `group:artifact`. A colon is not a legal filename on
+    // Windows and not a URL segment anywhere, and rewriting the name to make
+    // one would publish a package under an address its own registry does not
+    // use. It is still collected and still answered by /api/verdict.
+    const result = runBuild({ now: NOW });
+    const pages = result.files.map((file) => file.name);
+
+    expect(pages.some((name) => name.startsWith('maven/'))).toBe(false);
+    expect(pages.some((name) => name.includes(':'))).toBe(false);
   });
 
   it('puts every package page in the sitemap', () => {
@@ -353,6 +372,7 @@ describe('output hygiene', () => {
     expect(xml).toContain('<loc>https://sighttrue.com/npm/@scope/widget</loc>');
     expect(xml).toContain('<loc>https://sighttrue.com/crates/widget</loc>');
     expect(xml).toContain('<loc>https://sighttrue.com/pypi/Widget_Tools</loc>');
+    expect(xml).toContain('<loc>https://sighttrue.com/packagist/acme/widget</loc>');
   });
 
   it('asks the question in the title, because that is what gets typed', () => {

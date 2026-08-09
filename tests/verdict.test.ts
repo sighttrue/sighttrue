@@ -77,7 +77,10 @@ describe('reading the argument', () => {
   it('refuses anything else rather than guessing a registry', () => {
     expect(parsePkg(null)).toBeNull();
     expect(parsePkg('axios')).toBeNull();
-    expect(parsePkg('maven:guava')).toBeNull();
+    // Hex is a real registry this project does not read. Refusing it is the
+    // point: a registry that is merely spelled correctly is not one there are
+    // any readings for.
+    expect(parsePkg('hex:phoenix')).toBeNull();
     expect(parsePkg('npm:')).toBeNull();
     expect(parsePkg(':axios')).toBeNull();
   });
@@ -347,7 +350,7 @@ describe('the endpoint', () => {
   });
 
   it('says what it wanted when the argument is wrong', async () => {
-    const response = await get('?pkg=maven:guava');
+    const response = await get('?pkg=hex:phoenix');
 
     expect(response.status).toBe(400);
     expect(((await response.json()) as { error: string }).error).toContain('registry:name');

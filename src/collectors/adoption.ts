@@ -77,8 +77,18 @@ export function parsePackageId(
   const name = packageId.slice(separator + 1);
   if (name === '') return null;
 
-  return registry === 'npm' || registry === 'pypi' || registry === 'crates' || registry === 'brew'
-    ? { registry, name }
+  const known: readonly AdoptionRegistry[] = [
+    'npm',
+    'pypi',
+    'crates',
+    'brew',
+    'gem',
+    'packagist',
+    'nuget',
+    'maven',
+  ];
+  return (known as readonly string[]).includes(registry)
+    ? { registry: registry as AdoptionRegistry, name }
     : null;
 }
 
@@ -134,6 +144,14 @@ export async function collectAdoption(
         continue;
       }
 
+      // Maven Central publishes no download count at all — not a rolling one,
+      // not a total. A row for it would sit in the ledger for ever with a null
+      // count and be reported as "not readable this run", which says the read
+      // failed. It did not fail; there is nothing there to read, and those are
+      // different facts. Maven packages are still read for publish dates,
+      // advisories and everything else.
+      if (parsed.registry === 'maven') continue;
+
       const byName = wanted.get(parsed.registry) ?? new Map<string, string[]>();
       // Two repositories can legitimately claim one package — a monorepo split
       // across watchlist entries — so the reading is fetched once and attributed
@@ -177,7 +195,7 @@ export async function collectAdoption(
   // No batch endpoint for these two, so one request each — paced, because the
   // first unpaced run tripped pypistats' rate limit and lost 31 of 63 readings
   // without recording that anything had gone wrong.
-  for (const registry of ['pypi', 'crates'] as const) {
+  for (const registry of ['pypi', 'crates', 'gem', 'packagist', 'nuget'] as const) {
     const names = [...(wanted.get(registry)?.keys() ?? [])];
     if (names.length === 0) continue;
 
@@ -191,7 +209,12 @@ export async function collectAdoption(
         const count =
           registry === 'pypi'
             ? await client.pypiDownloads(name)
-            : await client.cratesDownloads(name);
+            : registry === 'crates'
+              ? await client.cratesDownloads(name)
+              : // RubyGems, Packagist and NuGet publish a running total rather
+                // than a window. The window travels with the count so nothing
+                // downstream can put an all-time figure beside npm's week.
+                await client.totalDownloads(registry, name);
         if (count !== null) found.set(name, count);
       } catch (error) {
         // Being refused is a different fact from a package not existing, and

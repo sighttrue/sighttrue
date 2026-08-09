@@ -40,12 +40,23 @@ interface JsonRpcRequest {
   params?: unknown;
 }
 
+import { WATCHABLE_IDS } from '../../src/lib/registries-table.ts';
 import {
   findEntry,
   noticesFor,
   type VerdictEntry,
   type VerdictRegistry,
 } from '../../src/lib/verdict.ts';
+
+/**
+ * The registries an agent may ask about.
+ *
+ * Read from `registries-table.ts` rather than written out here. This file used
+ * to name three, so the day RubyGems opened an agent asking about `gem:rails`
+ * got "registry must be one of npm, pypi, crates" about a package the rest of
+ * the project had five readings on.
+ */
+const MCP_REGISTRIES: readonly string[] = WATCHABLE_IDS;
 
 interface StackEntry {
   repo: string;
@@ -208,7 +219,7 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        registry: { type: 'string', enum: ['npm', 'pypi', 'crates'] },
+        registry: { type: 'string', enum: MCP_REGISTRIES },
         name: { type: 'string', description: 'Package name as the registry spells it.' },
       },
       required: ['registry', 'name'],
@@ -218,11 +229,11 @@ const TOOLS = [
   {
     name: 'check_package',
     description:
-      'Read the current standing of one open-source package: weekly downloads, OpenSSF scorecard, advisory count, licence, whether the repository is archived, and when it was last pushed to. Covers a curated watchlist of around 400 projects; a package that is not covered returns covered:false and is not being judged.',
+      'Read the current standing of one open-source package: weekly downloads, OpenSSF scorecard, advisory count, licence, whether the repository is archived, and when it was last pushed to. Covers a curated watchlist of around 420 projects; a package that is not covered returns covered:false and is not being judged.',
     inputSchema: {
       type: 'object',
       properties: {
-        registry: { type: 'string', enum: ['npm', 'pypi', 'crates'] },
+        registry: { type: 'string', enum: MCP_REGISTRIES },
         name: { type: 'string', description: 'Package name as the registry spells it.' },
       },
       required: ['registry', 'name'],
@@ -232,11 +243,11 @@ const TOOLS = [
   {
     name: 'check_stack',
     description:
-      'Read a whole dependency list at once and report what is archived, what carries advisories, what has a source-available licence, and what has not been pushed to in a year. Also returns how the stack medians against the tracked corpus. Use this when reviewing a package.json, requirements.txt or Cargo.toml.',
+      'Read a whole dependency list at once and report what is archived, what carries advisories, what has a source-available licence, and what has not been pushed to in a year. Also returns how the stack medians against the tracked corpus. Use this when reviewing a package.json, requirements.txt, Cargo.toml, composer.json or Gemfile.',
     inputSchema: {
       type: 'object',
       properties: {
-        registry: { type: 'string', enum: ['npm', 'pypi', 'crates'] },
+        registry: { type: 'string', enum: MCP_REGISTRIES },
         names: {
           type: 'array',
           items: { type: 'string' },
@@ -345,7 +356,7 @@ const TOOLS = [
  * not whether the project is safe" is a claim this project does not make.
  */
 const LIMITS = [
-  'The watchlist is curated and partial, around 400 repositories chosen by hand. A package that is not covered is not being judged; it is simply not tracked.',
+  'The watchlist is curated and partial, around 420 repositories chosen by hand. A package that is not covered is not being judged; it is simply not tracked.',
   'Scorecards are the OpenSSF Scorecard published by Google Open Source Insights, not computed here. They measure declared practices such as code review and workflow permissions, and a low score is not a statement that a project is unsafe.',
   'Advisory counts are OSV totals for all time, so a mature well-patched project carries more than a young one. A high count is not a warning on its own.',
   'Readings are taken every four hours at best. Nothing here is real-time.',
@@ -448,8 +459,8 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
 
   if (toolName === 'check_before_install') {
     const registry = asString(args['registry'], 12);
-    if (registry === null || !['npm', 'pypi', 'crates'].includes(registry)) {
-      return toolResult(id, { error: 'registry must be one of npm, pypi, crates.' }, true);
+    if (registry === null || !MCP_REGISTRIES.includes(registry)) {
+      return toolResult(id, { error: `registry must be one of ${MCP_REGISTRIES.join(', ')}.` }, true);
     }
     const name = asString(args['name']);
     if (name === null) {
@@ -495,8 +506,8 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
 
   if (toolName === 'check_package' || toolName === 'check_stack') {
     const registry = asString(args['registry'], 12);
-    if (registry === null || !['npm', 'pypi', 'crates'].includes(registry)) {
-      return toolResult(id, { error: 'registry must be one of npm, pypi, crates.' }, true);
+    if (registry === null || !MCP_REGISTRIES.includes(registry)) {
+      return toolResult(id, { error: `registry must be one of ${MCP_REGISTRIES.join(', ')}.` }, true);
     }
 
     const index = await loadJson<StackIndex>(origin, '/data/stack-index.json');

@@ -69,6 +69,49 @@ describe('the weekly total', () => {
 
   it('has nothing to say about nothing', () => {
     const summary = summariseAdoption([]);
-    expect(summary).toEqual({ measured: 0, unread: 0, weekly: 0, weeklyPackages: 0, top: [] });
+    expect(summary).toEqual({
+      measured: 0,
+      unread: 0,
+      weekly: 0,
+      weeklyPackages: 0,
+      top: [],
+      lifetime: [],
+    });
+  });
+});
+
+describe('the ranked table', () => {
+  it('never ranks a lifetime total against a weekly count', () => {
+    // NuGet publishes no rolling figure — only a running total since the
+    // package first shipped, and its largest is around six billion against
+    // roughly sixty million for the biggest weekly figure here. In one ranked
+    // table that total takes first place and sets the bar scale, and every
+    // weekly count beside it renders as a sliver: each number true, the
+    // comparison between them false.
+    const summary = summariseAdoption([
+      row({ registry: 'npm', count: 60_000_000, window: 'week' }),
+      row({
+        id: 'b/two',
+        registry: 'nuget',
+        name: 'Newtonsoft.Json',
+        count: 6_000_000_000,
+        window: 'total',
+      }),
+    ]);
+
+    expect(summary.top.map((reading) => reading.name)).toEqual(['one']);
+    expect(summary.lifetime.map((reading) => reading.name)).toEqual(['Newtonsoft.Json']);
+  });
+
+  it('still counts a lifetime reading as measured', () => {
+    // Shown elsewhere is not the same as not read, and the count under the
+    // table is a claim about how many packages answered.
+    const summary = summariseAdoption([
+      row({ registry: 'gem', name: 'rails', count: 700_000_000, window: 'total' }),
+    ]);
+
+    expect(summary.measured).toBe(1);
+    expect(summary.weekly).toBe(0);
+    expect(summary.top).toEqual([]);
   });
 });

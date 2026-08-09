@@ -15,20 +15,62 @@
 const SOURCE_AVAILABLE = /BUSL|SSPL|Elastic|RSAL|Commons-Clause|PolyForm/i;
 const LONG_UNPUBLISHED_DAYS = 730;
 
-const OSV_ECOSYSTEM = { npm: 'npm', pypi: 'PyPI', crates: 'crates.io' };
+/**
+ * How OSV spells each ecosystem, which is not how the registries spell
+ * themselves. A query with the wrong one comes back empty rather than failing,
+ * so a mistake here reads as "no advisories" — the worst available way to be
+ * wrong about a package.
+ */
+const OSV_ECOSYSTEM = {
+  npm: 'npm',
+  pypi: 'PyPI',
+  crates: 'crates.io',
+  gem: 'RubyGems',
+  packagist: 'Packagist',
+  nuget: 'NuGet',
+  maven: 'Maven',
+};
 
-export function registryUrl(registry, name) {
-  const encoded = name
+/**
+ * Each registry's own page for a package.
+ *
+ * Named one by one, with no fallback. This used to end in a bare `return` for
+ * crates.io, so the day RubyGems opened, `gem:rails` would have printed a link
+ * to a crates.io page that has never existed — in somebody's build log, under
+ * this project's name.
+ */
+const PAGE = {
+  // npm keeps a leading `@` literal in the address of every scoped package.
+  npm: (n) => `https://www.npmjs.com/package/${slashes(n)}`,
+  pypi: (n) => `https://pypi.org/project/${encodeURIComponent(n)}/`,
+  crates: (n) => `https://crates.io/crates/${encodeURIComponent(n)}`,
+  gem: (n) => `https://rubygems.org/gems/${encodeURIComponent(n)}`,
+  // Always `vendor/package`, and the slash between them is part of the path.
+  packagist: (n) => `https://packagist.org/packages/${slashes(n)}`,
+  nuget: (n) => `https://www.nuget.org/packages/${encodeURIComponent(n)}`,
+  // Maven names are `group:artifact`, and its page splits them on the colon —
+  // which has to happen before encoding, or the separator arrives as `%3A` and
+  // the split finds nothing.
+  maven: (n) => `https://central.sonatype.com/artifact/${n.split(':').map(encodeURIComponent).join('/')}`,
+};
+
+/** Encode each path segment, leaving the separators as separators. */
+function slashes(name) {
+  return name
     .split('/')
     .map((part) => (part.startsWith('@') ? `@${encodeURIComponent(part.slice(1))}` : encodeURIComponent(part)))
     .join('/');
-  if (registry === 'npm') return `https://www.npmjs.com/package/${encoded}`;
-  if (registry === 'pypi') return `https://pypi.org/project/${encoded}/`;
-  return `https://crates.io/crates/${encoded}`;
+}
+
+export function registryUrl(registry, name) {
+  const page = PAGE[registry];
+  return page ? page(name) : '';
 }
 
 export function advisoryUrl(registry, name) {
-  return `https://osv.dev/list?ecosystem=${encodeURIComponent(OSV_ECOSYSTEM[registry])}&q=${encodeURIComponent(name)}`;
+  const ecosystem = OSV_ECOSYSTEM[registry];
+  if (!ecosystem) return '';
+  return `https://osv.dev/list?ecosystem=${encodeURIComponent(ecosystem)}&q=${encodeURIComponent(name)}`;
 }
 
 function daysSince(iso, today) {

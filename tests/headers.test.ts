@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -25,6 +25,10 @@ function read(name: string): string {
 }
 
 function htmlFiles(directory = DIST, found: string[] = []): string[] {
+  // A registry with nothing mapped to it publishes no directory at all, and
+  // that is a fact about the watchlist rather than a broken build.
+  if (!existsSync(directory)) return found;
+
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) htmlFiles(path, found);
@@ -169,7 +173,9 @@ describe('the sitemap lists every page that was published', () => {
   // The package pages, which live a directory down and would have been invisible
   // to a scan of the top level — the same way /readings was once published into
   // no sitemap at all.
-  const packages = ['npm', 'pypi', 'crates'].flatMap((registry) =>
+  // Maven is absent because it has no pages: its names are `group:artifact`,
+  // which is not a filename on Windows and not a URL segment anywhere.
+  const packages = ['npm', 'pypi', 'crates', 'gem', 'packagist', 'nuget'].flatMap((registry) =>
     htmlFiles(join(DIST, registry)).map(
       (path) =>
         `/${registry}/${path

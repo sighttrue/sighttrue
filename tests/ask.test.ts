@@ -23,7 +23,7 @@ function index(over: Partial<IndexBundle> = {}): IndexBundle {
       { category: 'devtool', repositories: 80, measured: 20, forksAdded: 512, findings: 9, busiest: 'b/two' },
     ],
     calibration: [],
-    adoption: { measured: 0, unread: 0, weekly: 0, weeklyPackages: 0, top: [] },
+    adoption: { measured: 0, unread: 0, weekly: 0, weeklyPackages: 0, top: [], lifetime: [] },
     models: { available: 0, providers: 0, withdrawn: 0, cheapest: [], dearest: [], moved: [], perContext: [] },
     lifecycle: { products: 0, dated: 0, ended: 0, approaching: 0, soon: [], supported: [] },
     incidents: { windowDays: 90, providers: 0, total: 0, timed: 0, medianMinutes: null, observedDays: 0, byProvider: [], recent: [] },

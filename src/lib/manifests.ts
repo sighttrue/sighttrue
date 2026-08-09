@@ -21,6 +21,8 @@ const MANIFEST_BY_LANGUAGE: Record<string, string> = {
   rust: 'Cargo.toml',
   go: 'go.mod',
   python: 'pyproject.toml',
+  ruby: 'Gemfile',
+  php: 'composer.json',
 };
 
 export function manifestPathFor(language: string | null): string | null {
@@ -151,12 +153,59 @@ function parseRequirements(text: string): Record<string, string> {
   return deps;
 }
 
+/**
+ * Composer's `require`, which is runtime by the format's own definition.
+ *
+ * Platform constraints are dropped. `php`, `ext-mbstring` and
+ * `composer-runtime-api` sit in the same block as real dependencies but
+ * describe the machine, and every one of them is spelled without a slash —
+ * which is the rule Packagist itself uses, since a published name is always
+ * `vendor/package`.
+ */
+function parseComposerJson(text: string): Record<string, string> {
+  const deps: Record<string, string> = {};
+
+  try {
+    const parsed = JSON.parse(text) as { require?: Record<string, string> };
+    for (const [name, range] of Object.entries(parsed.require ?? {})) {
+      if (name.includes('/')) deps[name.toLowerCase()] = String(range);
+    }
+  } catch {
+    return {};
+  }
+
+  return deps;
+}
+
+/**
+ * A Gemfile, which is a Ruby program rather than a data format.
+ *
+ * Read strictly for that reason: only a `gem` call with a quoted first argument
+ * counts. Anything computed — `gem name` where name is a variable, or a loop —
+ * is skipped rather than guessed at, because this feeds the pull-request bot
+ * and a guess there becomes a comment on somebody else's work.
+ */
+function parseGemfile(text: string): Record<string, string> {
+  const deps: Record<string, string> = {};
+
+  for (const raw of text.split(/\r?\n/)) {
+    const line = (raw.split('#')[0] ?? '').trim();
+    const match = /^gem\s+["']([A-Za-z0-9._-]+)["']\s*(?:,\s*["']([^"']+)["'])?/.exec(line);
+    if (match === null) continue;
+    deps[(match[1] as string).toLowerCase()] = match[2] ?? '*';
+  }
+
+  return deps;
+}
+
 export function parseManifest(path: string, text: string): Record<string, string> {
   if (path === 'package.json') return parsePackageJson(text);
   if (path === 'Cargo.toml') return parseCargoToml(text);
   if (path === 'go.mod') return parseGoMod(text);
   if (path === 'pyproject.toml') return parsePyproject(text);
   if (path === 'requirements.txt') return parseRequirements(text);
+  if (path === 'composer.json') return parseComposerJson(text);
+  if (path === 'Gemfile' || path === 'gems.rb') return parseGemfile(text);
   return {};
 }
 

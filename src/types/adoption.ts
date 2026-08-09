@@ -17,7 +17,7 @@ import type { AssertExhaustive } from './keys.ts';
  */
 
 /** Registries with a free, unauthenticated count. Mirrors `REGISTRIES`. */
-export type AdoptionRegistry = 'npm' | 'pypi' | 'crates' | 'brew';
+export type AdoptionRegistry = 'npm' | 'pypi' | 'crates' | 'brew' | 'gem' | 'packagist' | 'nuget' | 'maven';
 
 /**
  * The period a count covers, stated rather than assumed.
@@ -26,7 +26,17 @@ export type AdoptionRegistry = 'npm' | 'pypi' | 'crates' | 'brew';
  * these genuinely differ: npm and PyPI report a rolling week, crates.io reports
  * ninety days, Homebrew reports thirty.
  */
-export type AdoptionWindow = 'week' | '30d' | '90d';
+export type AdoptionWindow = 'week' | '30d' | '90d' | 'total';
+
+/**
+ * `total` is all-time, and it is not comparable with the rest.
+ *
+ * RubyGems, Packagist and NuGet publish no rolling figure at all — only a
+ * running total since the package was first released. A ten-year-old gem with
+ * 700 million downloads and an npm package with 700 million a week are not the
+ * same reading, and anything that puts them in one column is lying by layout.
+ * The window travels with every count for exactly this reason.
+ */
 
 export interface AdoptionSample {
   /** ISO 8601 UTC of the reading. */
