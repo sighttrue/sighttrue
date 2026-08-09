@@ -168,7 +168,7 @@ reads the first date.
 Also the post that retires the GitHub framing for good, because the finding is
 not visible on GitHub at all.
 
-> The xunit repository was pushed to this week.
+> The xunit repository was pushed to yesterday.
 >
 > The package has not shipped since January 2025, and its own publisher has
 > marked it deprecated with a note telling you to move to v3.
@@ -182,11 +182,17 @@ not visible on GitHub at all.
 
 *Attach `post-4-staleness.png`.*
 
-"This week" rather than a day count, and an absolute publish date, for the same
-reason as post 3. Open sighttrue.com/nuget/xunit before sending and check the
-push line still reads within the week; if the repository has gone quiet since,
-the post no longer says anything and there are fourteen other packages on
-`/ecosystem` that do.
+The publish date is absolute for the same reason as post 3. The push is not,
+because "yesterday" is the whole point — a repository pushed to yesterday and a
+package silent for nineteen months is the entire argument in one line, and
+"recently" throws it away.
+
+So this one has a shelf life of a day. Open sighttrue.com/nuget/xunit
+immediately before sending: the hero line states the push in the same words, and
+if it no longer says yesterday, change the post to match it rather than the post
+to match the plan. If the repository has gone quiet altogether the post has
+nothing left to say, and there are fourteen other packages on `/ecosystem` in
+the same shape.
 
 The link goes to the package page rather than to `/ecosystem`, because the post
 makes a claim about one package and the page that proves it is that package's.
