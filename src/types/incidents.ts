@@ -42,11 +42,14 @@ export interface IncidentRow {
    */
   updatedAt: string;
   /**
-   * How bad the provider said it was: `none`, `minor`, `major`, `critical`.
+   * How bad the provider said it was, in the provider's own words.
    *
-   * Their own grading, not a reading taken here, and it is the only thing that
-   * separates a degraded dashboard from an outage. Null where the source
-   * publishes no such field — Heroku, and every row kept from the RSS era.
+   * Statuspage says `none`, `minor`, `major` or `critical`; Google Cloud says
+   * `low`, `medium` or `high`. Deliberately not translated into one vocabulary:
+   * the field is documented as their grading, and mapping `high` onto `major`
+   * would quietly make it this project's grading instead. `isSerious` knows
+   * both. Null where the source publishes no grading at all — Heroku, and every
+   * row kept from the RSS era.
    */
   impact: string | null;
   /**
@@ -113,8 +116,12 @@ export function incidentMinutes(row: IncidentRow): number | null {
  * Their words, and the only thing separating "one API endpoint returned 500s
  * for six minutes" from "the region was gone". A row with no grading is not
  * counted as either.
+ *
+ * Two vocabularies because two providers use different ones: Statuspage grades
+ * `major` and `critical`, Google Cloud grades `high`. Listing both here is what
+ * lets each keep its own word on the record.
  */
-const SERIOUS = new Set(['major', 'critical']);
+const SERIOUS = new Set(['major', 'critical', 'high']);
 
 export function isSerious(row: IncidentRow): boolean {
   return row.impact !== null && SERIOUS.has(row.impact.toLowerCase());

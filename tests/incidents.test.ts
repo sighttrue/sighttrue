@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   apiUrl,
   collectIncidents,
+  parseGoogle,
   parseHeroku,
   parseStatuspage,
   PROVIDERS,
@@ -15,7 +16,7 @@ import {
   summariseIncidents,
   WINDOW_DAYS,
 } from '../src/lib/incidents-summary.ts';
-import { incidentAt, incidentMinutes, type IncidentRow } from '../src/types/incidents.ts';
+import { incidentAt, incidentMinutes, isSerious, type IncidentRow } from '../src/types/incidents.ts';
 
 /**
  * Incident history read from other people's status pages.
@@ -247,6 +248,68 @@ describe('parseHeroku', () => {
   it('takes the resolution when Heroku does publish one', () => {
     const closed = { ...record, resolved_at: '2026-08-06T16:30:00.000Z' };
     expect(parseHeroku([closed], heroku)[0]?.resolvedAt).toBe('2026-08-06T16:30:00.000Z');
+  });
+});
+
+describe('parseGoogle', () => {
+  const google: Provider = {
+    slug: 'google-cloud',
+    name: 'Google Cloud',
+    host: 'https://status.cloud.google.com',
+    kind: 'google',
+  };
+
+  const record = {
+    id: '41E5S3mkTGDfkZuJZH5k',
+    external_desc: 'Vertex AI Gemini API customers experienced increased errors',
+    begin: '2026-02-27T12:37:00+00:00',
+    end: '2026-02-27T14:35:00+00:00',
+    modified: '2026-02-28T09:00:00+00:00',
+    severity: 'low',
+    uri: 'incidents/41E5S3mkTGDfkZuJZH5k',
+  };
+
+  it('reads the two timestamps Google states outright', () => {
+    const rows = parseGoogle([record], google);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      provider: 'google-cloud',
+      title: 'Vertex AI Gemini API customers experienced increased errors',
+      startedAt: '2026-02-27T12:37:00.000Z',
+      resolvedAt: '2026-02-27T14:35:00.000Z',
+      resolved: true,
+    });
+    expect(incidentMinutes(rows[0] as IncidentRow)).toBe(118);
+  });
+
+  it('keeps Google’s own grading rather than translating it', () => {
+    // Mapping `high` onto `major` would quietly turn the provider's grading
+    // into this project's. `isSerious` knows both vocabularies instead.
+    expect(parseGoogle([record], google)[0]?.impact).toBe('low');
+    expect(parseGoogle([{ ...record, severity: 'high' }], google)[0]?.impact).toBe('high');
+    expect(isSerious(parseGoogle([{ ...record, severity: 'high' }], google)[0] as IncidentRow)).toBe(
+      true,
+    );
+    expect(isSerious(parseGoogle([record], google)[0] as IncidentRow)).toBe(false);
+  });
+
+  it('reads an open incident as open, since Google closes one by dating it', () => {
+    const open = parseGoogle([{ ...record, end: null }], google)[0];
+
+    expect(open?.resolved).toBe(false);
+    expect(open?.resolvedAt).toBeNull();
+  });
+
+  it('builds a URL from a path that is only a path', () => {
+    expect(parseGoogle([record], google)[0]?.url).toBe(
+      'https://status.cloud.google.com/incidents/41E5S3mkTGDfkZuJZH5k',
+    );
+  });
+
+  it('returns nothing for a payload that is not the array Google sends', () => {
+    expect(parseGoogle({ incidents: [record] }, google)).toEqual([]);
+    expect(parseGoogle('<!DOCTYPE html>', google)).toEqual([]);
   });
 });
 

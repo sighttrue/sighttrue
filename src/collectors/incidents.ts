@@ -47,7 +47,7 @@ const USER_AGENT = 'sighttrue-agent (+https://github.com/sighttrue/sighttrue)';
  * `/api/v2/incidents.json`. `heroku` is its own API and the only provider here
  * that needs a second reader.
  */
-export type ProviderKind = 'statuspage' | 'heroku';
+export type ProviderKind = 'statuspage' | 'heroku' | 'google';
 
 export interface Provider {
   slug: string;
@@ -96,6 +96,16 @@ export const PROVIDERS: readonly Provider[] = [
   { slug: 'heroku', name: 'Heroku', host: 'https://status.heroku.com', kind: 'heroku' },
   { slug: 'datadog', name: 'Datadog', host: 'https://status.datadoghq.com', kind: 'statuspage' },
   { slug: 'atlassian', name: 'Atlassian', host: 'https://status.atlassian.com', kind: 'statuspage' },
+  // Two more businesses depend on than on most of the list above. Stripe runs
+  // Statuspage like the rest, so it costs no new code; Google publishes its own
+  // shape and gets its own reader below.
+  { slug: 'stripe', name: 'Stripe', host: 'https://www.stripestatus.com', kind: 'statuspage' },
+  {
+    slug: 'google-cloud',
+    name: 'Google Cloud',
+    host: 'https://status.cloud.google.com',
+    kind: 'google',
+  },
 ];
 
 /**
@@ -112,9 +122,9 @@ export const RETAIN_DAYS = 730;
 export const DELAY_MS = 150;
 
 export function apiUrl(provider: Provider): string {
-  return provider.kind === 'heroku'
-    ? `${provider.host}/api/v4/incidents`
-    : `${provider.host}/api/v2/incidents.json`;
+  if (provider.kind === 'heroku') return `${provider.host}/api/v4/incidents`;
+  if (provider.kind === 'google') return `${provider.host}/incidents.json`;
+  return `${provider.host}/api/v2/incidents.json`;
 }
 
 /**
@@ -265,10 +275,59 @@ export function parseHeroku(payload: unknown, provider: Provider): IncidentRow[]
   return rows;
 }
 
+/**
+ * Google Cloud, which publishes a bare array and its own vocabulary.
+ *
+ * The fields line up better than Statuspage's did: `begin` and `end` are the
+ * two timestamps this project had to switch sources to obtain elsewhere, and
+ * they are exactly what they say. `severity` is low, medium or high rather than
+ * minor, major or critical — kept in Google's own words rather than translated,
+ * because the field is documented as the provider's grading and a translation
+ * would make it this project's.
+ */
+export function parseGoogle(payload: unknown, provider: Provider): IncidentRow[] {
+  if (!Array.isArray(payload)) return [];
+
+  const rows: IncidentRow[] = [];
+
+  for (const entry of payload) {
+    const record = entry as Record<string, unknown>;
+
+    const id = text(record['id']);
+    const title = text(record['external_desc']);
+    if (id === null || title === null) continue;
+
+    const startedAt = stamp(record['begin']);
+    const resolvedAt = stamp(record['end']);
+    const updatedAt = stamp(record['modified']) ?? resolvedAt ?? startedAt;
+    if (updatedAt === null) continue;
+
+    // `uri` arrives as a relative path, which is only a URL next to the host.
+    const path = text(record['uri']) ?? `incidents/${id}`;
+    const url = `${provider.host}/${path.replace(/^\//, '')}`;
+
+    rows.push({
+      provider: provider.slug,
+      id: url,
+      title,
+      startedAt,
+      resolvedAt,
+      updatedAt,
+      impact: text(record['severity'])?.toLowerCase() ?? null,
+      // Google closes an incident by giving it an end time; there is no status
+      // field to read, so the presence of that time is the statement.
+      resolved: resolvedAt !== null,
+      url,
+    });
+  }
+
+  return rows;
+}
+
 export function parseIncidents(payload: unknown, provider: Provider): IncidentRow[] {
-  return provider.kind === 'heroku'
-    ? parseHeroku(payload, provider)
-    : parseStatuspage(payload, provider);
+  if (provider.kind === 'heroku') return parseHeroku(payload, provider);
+  if (provider.kind === 'google') return parseGoogle(payload, provider);
+  return parseStatuspage(payload, provider);
 }
 
 export interface IncidentCollectionResult {
