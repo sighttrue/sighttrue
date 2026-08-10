@@ -421,3 +421,11 @@
 {"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-09T14:22:57.682Z","prompt":0.5,"completion":3.6,"context":262144}
 {"id":"deepseek/deepseek-v3.2","at":"2026-08-09T14:22:57.682Z","prompt":0.269,"completion":0.4,"context":163840}
 {"id":"gryphe/mythomax-l2-13b","at":"2026-08-09T14:22:57.682Z","prompt":0.06,"completion":0.06,"context":8192}
+{"id":"z-ai/glm-5.2","at":"2026-08-10T04:09:22.480Z","prompt":0.76,"completion":2.42,"context":1048576}
+{"id":"moonshotai/kimi-k2.6","at":"2026-08-10T04:09:22.480Z","prompt":0.95,"completion":4,"context":262144}
+{"id":"z-ai/glm-5.1","at":"2026-08-10T04:09:22.480Z","prompt":1.4,"completion":4.4,"context":204800}
+{"id":"google/gemma-4-26b-a4b-it","at":"2026-08-10T04:09:22.480Z","prompt":0.12,"completion":0.4,"context":262144}
+{"id":"nvidia/nemotron-3-super-120b-a12b","at":"2026-08-10T04:09:22.480Z","prompt":0.085,"completion":0.4,"context":1000000}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-10T04:09:22.480Z","prompt":0.39,"completion":2.34,"context":262144}
+{"id":"qwen/qwen3-14b","at":"2026-08-10T04:09:22.480Z","prompt":0.12,"completion":0.24,"context":131072}
+{"id":"meta-llama/llama-4-maverick","at":"2026-08-10T04:09:22.480Z","prompt":0.2,"completion":0.696,"context":1048576}
