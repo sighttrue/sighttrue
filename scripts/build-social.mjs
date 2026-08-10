@@ -244,10 +244,15 @@ const CARDS = [
   },
   {
     file: 'post-10-mcp',
-    eyebrow: 'MCP · point your agent at it',
+    // The command, not the protocol. "MCP server" describes what it is to
+    // somebody who already knows; one line they can paste describes what to do.
+    eyebrow: 'npx sighttrue skill · once, then never again',
     figure: n(FREE_TOOLS.length),
-    unit: 'tools an agent can call with no key',
-    say: 'Your agent answers “is this package healthy” from training data. This answers it from a reading taken four hours ago.',
+    unit: 'tools your agent can call, no key and no account',
+    // Five lines. "One command and it answers from a reading taken four hours
+    // ago" ran to six and dropped the figure onto the wordmark, the same way
+    // the held-back card did. The card has room across and none down.
+    say: 'Your agent answers “is this package healthy” from memory. One command, and it answers from a reading instead.',
   },
 ];
 

@@ -220,30 +220,47 @@ A network problem is never a finding — if the readings cannot be fetched, the
 step says so and passes. Worth saying in a reply if anybody asks, because a
 build that breaks when a third-party site is down is a build that gets deleted.
 
-## 7 — The MCP server
+## 7 — One command
 
-The last of the sequence and the one with the clearest action attached. It is
-also the only post here that asks for nothing: no signup, no key, no account.
+The last of the sequence and the only one with something to paste. Rewritten
+after `sighttrue@1.4.0` shipped, because the skill changes what this post is
+asking for: not "read about our MCP server" but one line, once, after which the
+agent does the checking without anybody remembering to.
 
-> Point your coding agent at this and it stops guessing.
+> Your coding agent recommends packages from training data. It has no idea which
+> of them were deprecated last year.
 >
-> Nine tools, no key and no account: whether a package was withdrawn, whether it
-> runs scripts when installed, how many advisories are on record, when the
-> registry last released it, and when the runtime it needs stops getting fixes.
+> ```
+> npx sighttrue skill
+> ```
 >
-> Every answer carries the address of whoever published it, so anything your
-> agent quotes into a review can be checked by whoever reads it.
+> One command. From then on it takes a reading before adding a dependency, a
+> base image, a runtime version or a model — and quotes the source, so whoever
+> reads the pull request can check it.
 >
-> sighttrue.com/api/mcp
+> Nine tools, no key and no account.
+>
+> npmjs.com/package/sighttrue
 
 *Attach `post-10-mcp.png`.*
 
-"It stops guessing" is the strongest line available and it is literally true —
-the tools return readings taken hours ago rather than remembered from a training
-cut. Nine is the free count, read from `mcp-catalogue.ts` at build time; the
-paid tools exist but are not mentioned, because a post that opens a sequence by
-naming a price nobody can pay yet is the one claim on this account that cannot
-be checked.
+The command is the post. Everything else on this account describes a
+measurement; this one asks for an action, and the action is short enough to run
+before deciding whether to trust it — which is the right order for a tool nobody
+has heard of.
+
+"It has no idea" is not an insult and should not be softened into one. The model
+is answering from before the notice existed, which is a fact about timing rather
+than capability, and post 5 already made that argument at length.
+
+Nine is the free count, read from `mcp-catalogue.ts` at build time. The
+twenty-two paid tools are not mentioned: they cannot be paid for yet, and naming
+a price nobody can pay is the one claim on this account that could not be
+checked.
+
+The npm link rather than the MCP URL, because the command is what the reader
+acts on and `npmjs.com` shows them the package is real before they run anything
+on their machine.
 
 ---
 
