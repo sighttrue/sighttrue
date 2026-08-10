@@ -468,6 +468,23 @@ ${officialHtml()}
 export const SITE_ORIGIN = process.env['SITE_ORIGIN'] ?? 'https://sighttrue.com';
 
 /**
+ * Ownership proofs, on every page.
+ *
+ * Virtuals verifies that whoever launches a token controls the domain it names,
+ * by looking for a token it issued in the page head. It is a public string by
+ * design — it proves control of this domain to one service and grants nothing
+ * to anybody who reads it, which is why it belongs in the repository rather
+ * than in a secret.
+ *
+ * On every page rather than only the front one: verification usually reads the
+ * root, but a service that follows a redirect or checks a canonical would find
+ * nothing on the page it landed on, and the cost of covering all of them is one
+ * line of HTML.
+ */
+const SITE_VERIFICATION =
+  '<meta name="virtual-protocol-site-verification" content="ab0bbffa96fcba433c1cd3aeca4fe301">';
+
+/**
  * Cloudflare Web Analytics beacon tag.
  *
  * Not a credential — it is visible in the page source of every site that uses
@@ -628,6 +645,7 @@ export function layout(options: PageOptions): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${SITE_VERIFICATION}
 <title>${esc(options.title)}</title>
 <meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${esc(url)}">
