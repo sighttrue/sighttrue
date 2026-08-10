@@ -112,9 +112,6 @@ export const META_PATH = join(DATA_DIR, 'meta.json');
  */
 export const SUMMARIES_PATH = join(DATA_DIR, 'summaries.jsonl');
 
-/** What has been announced publicly. Exists to make double-posting impossible. */
-export const ANNOUNCEMENTS_PATH = join(DATA_DIR, 'announcements.jsonl');
-
 /**
  * How close everything got to each threshold, once a day.
  *
