@@ -1,0 +1,93 @@
+name: Deploy
+
+# Publishes a change to the site without waiting for a reading.
+#
+# The scheduled workflows collect, commit and deploy in one job, which was fine
+# while every change to the site arrived with new data. It is not fine for a
+# change to the code: a stylesheet fix pushed at 07:00 sat unpublished until the
+# 08:17 pulse, and a defect the maintainer had already reported fixed was still
+# on screen when they looked. Four hours is the collection cadence; it should
+# never have been the publishing cadence too.
+#
+# Reads nothing and writes nothing. It builds from the ledger already committed
+# in this repository and hands the output to Pages, so it costs no API quota,
+# takes no reading, and cannot lose a race with a collector — there is nothing
+# for it to commit.
+on:
+  push:
+    branches: [main]
+    # Only what changes the output. A push that edits data is a collector's
+    # commit and already deployed itself; a push that edits the README or a
+    # document changes no page.
+    paths:
+      - 'src/**'
+      - 'scripts/build.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Cloudflare Pages allows 500 builds a month and the scheduled jobs already
+# spend about 215 of them. A burst of pushes must therefore collapse into one
+# deployment rather than queue five, so an in-flight run is cancelled when the
+# next push lands. Distinct from the `ledger` group the collectors serialise on:
+# this job touches no ledger and must never block one.
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # The same gate a pull request passes. A broken build must not reach the
+      # site faster than it used to.
+      - run: npm run typecheck
+
+      - run: npx vitest run
+
+      - name: Build bundles
+        id: build
+        env:
+          CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
+        run: node scripts/build.ts
+
+      # The gate compares this build's hash against the one in data/meta.json,
+      # which only a scheduled run writes — this job commits nothing, by design,
+      # so it cannot lose a race with a collector. The consequence is worth
+      # stating: between two scheduled runs, a second push to src/ deploys the
+      # same bundles again rather than recognising them. The scheduled run
+      # reconciles it within four hours. The waste is bounded by how often
+      # somebody pushes, collapsed further by the concurrency group above, and
+      # small against the 500-a-month ceiling that the collectors leave about
+      # 285 of.
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        if: steps.build.outputs.deploy == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4 pages deploy dist --project-name=readout --branch=main
+
+      - name: Say what happened
+        if: always()
+        run: |
+          if [ "${{ steps.build.outputs.deploy }}" = "true" ]; then
+            echo "Bundles changed; deployed ${{ steps.build.outputs.hash }}." >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "Bundles identical to the last deployment; nothing published." >> "${GITHUB_STEP_SUMMARY}"
+          fi
