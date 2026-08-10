@@ -58,6 +58,16 @@ interface KeyStore {
 import { bearerFrom, decide, type EntitlementRow } from '../../src/lib/entitlement.ts';
 import { MCP_TOOLS, toolByName } from '../../src/lib/mcp-catalogue.ts';
 import { PAGED_IDS, WATCHABLE_IDS } from '../../src/lib/registries-table.ts';
+import { NOT_LAUNCHED, paymentRequired, paymentStatus } from '../../src/lib/x402.ts';
+
+/**
+ * The payment rail, unset.
+ *
+ * There is no $SGHT contract and no rate, so `paymentRequired` returns null and
+ * the refusal says so in words instead of quoting terms nobody agreed. One
+ * constant changes when the token is deployed; nothing else here does.
+ */
+const PAYMENT = NOT_LAUNCHED;
 import {
   findEntry,
   noticesFor,
@@ -429,7 +439,22 @@ export async function onRequestPost(context: {
   const entitlement = await entitlementFor(context, request.headers.get('authorization'));
   const decision = decide(declared.tier, entitlement, new Date().toISOString());
   if (!decision.allowed) {
-    return toolResult(id, { error: decision.message, tool: toolName, tier: declared.tier }, true);
+    // A key is one way in. The other is paying for the single call, which is
+    // the only route a caller with no human behind it can take — an agent has
+    // no card, no billing address and no way through a 3DS challenge. When a
+    // price exists, the refusal carries what to pay and where, per x402, so the
+    // agent can settle and retry without anybody signing up for anything.
+    const required = paymentRequired(declared, origin, PAYMENT);
+    return toolResult(
+      id,
+      {
+        error: decision.message,
+        tool: toolName,
+        tier: declared.tier,
+        ...(required === null ? { payment: paymentStatus(PAYMENT) } : { paymentRequired: required }),
+      },
+      true,
+    );
   }
 
   if (toolName === 'list_readings') {
