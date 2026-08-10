@@ -86,7 +86,7 @@ data a year old.
 { "mcpServers": { "readout": { "url": "https://sighttrue.com/api/mcp" } } }
 ```
 
-Eight tools. `check_before_install` is the one to reach for while writing code:
+<!-- figures:tools -->Nine tools free, twenty-two paid.<!-- /figures:tools --> `check_before_install` is the one to reach for while writing code:
 given a package it returns only what a reviewer would be annoyed to discover
 afterwards — a publisher that withdrew it, scripts it runs on the installing
 machine, an archived repository, advisories, a source-available licence, a long
@@ -95,8 +95,7 @@ whether to install. It says what is on record so the decision is made knowing
 it, and an empty result says plainly that it means nothing was found rather
 than that the package is safe.
 
-Then `check_package`, `check_stack`, `check_eol`, `check_provider`,
-`compare_repositories`, `search_repositories`, `find_model`. Read-only, no key, no account. Every result carries the
+Then <!-- figures:free -->`check_package`, `check_stack`, `search_repositories`, `compare_repositories`, `find_model`, `check_eol`, `check_provider`, `list_readings`<!-- /figures:free -->. Read-only, no key, no account. Every result carries the
 limits of what it can support, because an agent will paste these figures into a
 code review and a scorecard quoted without "measures declared practices, not
 whether the project is safe" is a claim this project does not make.
@@ -115,12 +114,12 @@ Despite the name there is no verdict in it: no score, no rank, no
 recommendation. Those would be this project's judgement of somebody else's work
 wearing the costume of a measurement.
 
-One agent watches 417 open-source repositories and takes eleven readings, most
-of which never touch GitHub: 461 provider incidents kept after their own status
-pages dropped them, 518 release lines on the end-of-life clock, 395 model prices
-across 58 providers, 247 packages by real ship date, 387 commit histories for
-the bus factor. It runs every four hours on GitHub Actions, commits what it
-reads to this repository, and publishes a static site.
+<!-- figures:scale -->One agent watches 417 open-source repositories and takes
+eleven readings, most of which never touch GitHub: 619 provider incidents kept
+after their own status pages dropped them, 519 release lines on the end-of-life
+clock, 395 model prices, 182 packages by real ship date, 387 commit histories
+for the bus factor.<!-- /figures:scale --> It runs every four hours on GitHub
+Actions, commits what it reads to this repository, and publishes a static site.
 
 Every page and every bundle is a file. There are five dynamic routes and no page
 depends on any of them: `/api/ask`, `/api/mcp`, `/api/chain`,

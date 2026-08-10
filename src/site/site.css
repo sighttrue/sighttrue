@@ -1592,39 +1592,16 @@ a.lens-cell:hover {
 
 /* The only card in the product: a confirmed event that has written prose
    attached. Everything else is a row. */
-.finding {
-  border-top: var(--rule);
-  padding: 20px 0;
-  display: grid;
-  gap: 12px;
-}
-
-/* A detection is one observation. It gets a card, because it is a finding, but
-   not the same weight as one that survived a second daily snapshot — a reader
-   skimming should be able to see the difference without reading the badge. */
-.finding-detected {
-  padding: 13px 0;
-  opacity: 0.82;
-}
-
-.finding-detected .finding-repo {
-  font-size: var(--t-base);
-}
-
-.finding-confirmed {
-  border-top-color: var(--ink-300);
-}
+/* `.finding`, `.finding-detected`, `.finding-confirmed` and `.finding-repo`
+   were removed here. They dressed the card a finding used to get; findings are
+   rows in a table now, and the rules outlived the markup by some months. Not in
+   any of the 1,147 built pages and not assembled anywhere in the source. */
 
 .finding-head {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 18px;
   align-items: baseline;
-}
-
-.finding-repo {
-  font-size: var(--t-mid);
-  color: var(--ink-900);
 }
 
 .finding-metrics {
@@ -2086,8 +2063,11 @@ a.lens-cell:hover {
   color: var(--alert);
 }
 
-.watch-drop,
-.watch-signout {
+/* `.watch-signout` was dropped from these two selectors. Signing out is a
+   control in the header now and styled with the chrome; no page has emitted
+   this class in some time, and it was riding along on rules that belong to the
+   watchlist's own remove button. */
+.watch-drop {
   background: none;
   border: 1px solid var(--ink-100);
   color: var(--ink-500);
@@ -2099,8 +2079,7 @@ a.lens-cell:hover {
   cursor: pointer;
 }
 
-.watch-drop:hover,
-.watch-signout:hover {
+.watch-drop:hover {
   color: var(--ink-900);
   border-color: var(--ink-300);
 }

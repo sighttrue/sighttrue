@@ -90,7 +90,9 @@ const NOT = [
 ] as const;
 
 function bandsHtml(): string {
-  return `<div class="price-bands">${BANDS.map((tier) => {
+  // No wrapper class: each band rules itself off and the container styles
+  // nothing, so a name here would be a hook with no rules behind it.
+  return `<div>${BANDS.map((tier) => {
     const rows = tier.tools
       .map((name) => {
         const tool = toolByName(name);

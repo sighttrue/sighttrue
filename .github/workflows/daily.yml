@@ -68,6 +68,14 @@ jobs:
             --hash='${{ steps.build.outputs.hash }}' \
             --deployed='${{ steps.deploy.conclusion == 'success' }}'
 
+      # The counts in the README came from somebody typing them. An audit found
+      # four of them wrong, including 247 packages against 182 measured — a
+      # README claiming more than the ledger holds is how a project starts
+      # overstating itself without anybody deciding to. Written from the bundle
+      # here, in the same run that produced it.
+      - name: Refresh the README figures
+        run: node scripts/readme-figures.mjs
+
       - name: Commit ledger
         if: always()
         run: |
@@ -75,7 +83,7 @@ jobs:
           git config user.name  "readout-agent"
           git config user.email "readout-agent@users.noreply.github.com"
           message="chore(data): daily snapshot $(date -u +'%Y-%m-%d')"
-          git add data
+          git add data README.md
           git commit --allow-empty -m "${message}"
 
           # Rebase is the wrong recovery for a data-only commit: on a race it
@@ -87,6 +95,7 @@ jobs:
               || git fetch --quiet origin "${GITHUB_REF_NAME}"
             tree=$(mktemp -d)
             cp -r data "${tree}/"
+            cp README.md "${tree}/"
             git reset --hard "origin/${GITHUB_REF_NAME}"
             # Overlay onto the remote tree rather than replacing it. Deleting
             # the directory first discarded every file the winner of the race
@@ -96,7 +105,11 @@ jobs:
             # lets this run win on the files it actually generated, which hold
             # the newest readings, and leaves everything else standing.
             cp -r "${tree}/data/." data/
-            git add data
+            # The README's figures are derived from the data just copied over,
+            # so they travel with it rather than being left describing the
+            # tree this run lost the race to.
+            cp "${tree}/README.md" README.md
+            git add data README.md
             git commit --allow-empty -m "${message}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           }
