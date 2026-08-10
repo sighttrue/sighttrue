@@ -47,6 +47,21 @@ describe('before the token exists', () => {
     expect(paymentStatus(NOT_LAUNCHED)).toContain('no contract address');
     expect(paymentStatus(LIVE)).toContain('per call');
   });
+
+  it('refuses a chain it does not verify, however complete the rest is', () => {
+    // The failure this prevents is silent and unrecoverable. Verification reads
+    // a receipt from one chain; a config naming another would quote that chain
+    // in the 402, the buyer would send a real transfer to it, and the server
+    // would then look for the transaction somewhere it was never sent. Nothing
+    // errors. The buyer has paid and simply does not get an answer.
+    //
+    // Every other field being filled in is exactly when this is most likely: a
+    // launch sets the contract, the wallet and the rate, and leaves the network
+    // reading whatever it read while the chain was still being decided.
+    for (const network of ['base', 'ethereum', 'solana', 'Robinhood', '']) {
+      expect(canCharge({ ...LIVE, network }), network || '(empty)').toBe(false);
+    }
+  });
 });
 
 describe('what the server asks for', () => {
@@ -57,6 +72,12 @@ describe('what the server asks for', () => {
     expect(accept?.asset).toBe(LIVE.asset);
     expect(accept?.payTo).toBe(LIVE.payTo);
     expect(accept?.network).toBe('robinhood');
+  });
+
+  it('publishes the chain id too, so the name never has to be guessed', () => {
+    // 'robinhood' is a word. eip155:4663 is an address. A buyer that has never
+    // heard of this network can act on the second and not on the first.
+    expect(required?.accepts[0]?.extensions.chain.caip2).toBe('eip155:4663');
   });
 
   it('charges the tool’s own price rather than a flat rate', () => {

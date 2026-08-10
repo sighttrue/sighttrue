@@ -19,6 +19,7 @@
  * Pure. The endpoint calls in and does the network and database work.
  */
 
+import { CHAIN_CAIP2, CHAIN_NETWORK } from './chain.ts';
 import type { McpTool } from './mcp-catalogue.ts';
 
 /** Set once the token exists. Until then nothing here can quote a price. */
@@ -52,11 +53,19 @@ export const NOT_LAUNCHED: PaymentConfig = {
   decimals: null,
 };
 
-/** Whether this configuration can actually ask anybody for money. */
+/**
+ * Whether this configuration can actually ask anybody for money.
+ *
+ * The network is not merely required, it has to be *the* network. Verification
+ * reads a receipt from one chain and one only; a config naming any other would
+ * quote that chain in the 402, take a buyer's transfer to it, and then look for
+ * the transaction somewhere it was never sent. The buyer pays and gets nothing,
+ * and no error is raised anywhere — the transfer simply is not found.
+ */
 export function canCharge(config: PaymentConfig): boolean {
   return (
     config.asset !== null &&
-    config.network !== null &&
+    config.network === CHAIN_NETWORK &&
     config.payTo !== null &&
     config.pricePerCall !== null &&
     config.decimals !== null
@@ -82,6 +91,8 @@ export interface PaymentRequired {
           output: { type: string; example: Record<string, unknown> };
         };
       };
+      /** The network above, as a CAIP-2 id, for anything that cannot resolve the name. */
+      chain: { caip2: string };
     };
   }[];
 }
@@ -127,6 +138,16 @@ export function paymentRequired(
               output: { type: 'json', example: { covered: true, readings: {} } },
             },
           },
+          /**
+           * The same network, addressable without knowing the name.
+           *
+           * `network` above is a bare word, which is the field's shape. A buyer
+           * that has never heard of this one would have to guess which chain it
+           * means, and a transfer sent to the wrong chain does not come back —
+           * so the CAIP-2 id is published beside it. Anything that already
+           * understands the name can ignore this.
+           */
+          chain: { caip2: CHAIN_CAIP2 },
         },
       },
     ],

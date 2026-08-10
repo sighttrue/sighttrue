@@ -19,36 +19,19 @@
  * Reads only. No key, no address, no state, nothing to spend.
  */
 
-/**
- * Endpoints, in order of preference.
- *
- * More than one on purpose. A single hardcoded provider is a single point of
- * failure for the one part of this system where failing means somebody paid and
- * got nothing.
- */
-const ENDPOINTS = [
-  'https://rpc.mainnet.chain.robinhood.com',
-  'https://robinhoodchain.blockscout.com/api/eth-rpc',
-] as const;
+import { BLOCKSCOUT, CHAIN_ID, RPC_ENDPOINTS as ENDPOINTS } from '../../src/lib/chain.ts';
 
 /**
- * Blockscout's REST reader, and the reason it exists.
- *
- * Both public JSON-RPC endpoints answer 429 from here — consistently, three
- * probes apart. That is not an outage: Workers egress from addresses shared
- * with millions of other sites, and a public RPC rate-limits by address, so the
- * quota is spent by strangers before this project asks for anything. It will
- * not improve.
- *
- * A key moves the limit from the address to the key. The free tier is 5 requests
- * a second and 100,000 credits a day, against the two calls a payment needs.
+ * Blockscout's free tier is 5 requests a second and 100,000 credits a day,
+ * against the two calls a payment needs. A key moves the rate limit from the
+ * shared Worker egress address to the key, which is the only thing that makes
+ * these endpoints usable from here at all.
  *
  * Read-only, and the key is never returned in a response.
  */
-const BLOCKSCOUT = 'https://api.blockscout.com/4663/api/v2';
 
 /** Robinhood Chain. Anything else means a misconfigured endpoint. */
-const EXPECTED_CHAIN_ID = 4663;
+const EXPECTED_CHAIN_ID = CHAIN_ID;
 
 const HEADERS = {
   'content-type': 'application/json',
