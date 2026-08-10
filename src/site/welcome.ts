@@ -1,3 +1,4 @@
+import { TOKEN } from '../lib/payment.ts';
 import { band, esc, layout, repoLink } from './render.ts';
 import { findingsFrom } from './findings.ts';
 import type { IndexBundle } from '../types/bundles.ts';
@@ -139,7 +140,17 @@ a finished library is finished. <a href="/ecosystem">Everything measured</a></p>
     <a class="hero-x" href="https://x.com/Sighttruehq" rel="me">@Sighttruehq</a>
     <span class="hero-x-note"><b>Anything else on X is not us.</b> This page is served from
     sighttrue.com, which is the one address nobody else can publish from — so this is the list to
-    check against, not a profile that looks right.</span>
+    check against, not a profile that looks right.</span>${
+      TOKEN === null
+        ? ''
+        : `
+    <span class="hero-x-label hero-ca-label">The only contract</span>
+    <code class="hero-ca">${esc(TOKEN.address)}</code>
+    <span class="hero-x-note">${
+      TOKEN.preGraduation ? 'On its bonding curve, so this is replaced if it graduates. ' : ''
+    }Traded on <a href="${esc(TOKEN.launchpad.url)}">${esc(TOKEN.launchpad.name)}</a>. Check it
+    here, not in a screenshot — a screenshot is the one place it can be changed.</span>`
+    }
   </aside>
 </section>
 

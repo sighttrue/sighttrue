@@ -2643,3 +2643,24 @@ a.lens-cell:hover {
   line-height: 1.5;
   color: var(--ink-500);
 }
+
+/* The contract in the hero panel, under the account.
+ *
+ * The footer already carries it, but the hero is where a visitor looks first
+ * and where an impersonator's version would have to differ. Same rule as
+ * everywhere else: whole, wrapping, never abbreviated. */
+.hero-ca-label {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ink-100);
+}
+
+.hero-ca {
+  display: block;
+  margin: 8px 0 10px;
+  font-family: var(--face-data);
+  font-size: var(--t-base);
+  line-height: 1.45;
+  color: var(--ink-900);
+  word-break: break-all;
+}
