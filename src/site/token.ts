@@ -24,6 +24,7 @@
 
 import { CHAIN_CAIP2, CHAIN_NETWORK } from '../lib/chain.ts';
 import { FREE_TOOLS, MCP_TOOLS, PAID_TOOLS, PRICE_BANDS, groups, toolByName } from '../lib/mcp-catalogue.ts';
+import { CHARGING, TOKEN } from '../lib/payment.ts';
 import { paymentRequired } from '../lib/x402.ts';
 import type { IndexBundle } from '../types/bundles.ts';
 import type { MetaRecord } from '../types/meta.ts';
@@ -126,11 +127,14 @@ export function renderToken(index: IndexBundle, meta: MetaRecord): string {
    * written for a diagram.
    */
   const specimen = paymentRequired(toolByName('provider_incidents')!, 'https://sighttrue.com', {
-    asset: '0xPLACEHOLDER',
+    asset: TOKEN?.address ?? '0xPLACEHOLDER',
+    // The one field still invented. There is no receiving wallet yet, and a
+    // plausible-looking address on a page about a token is how somebody sends
+    // money to a string that was written for a diagram.
     payTo: '0xPLACEHOLDER',
     network: CHAIN_NETWORK,
     pricePerCall: '1000000000000000000',
-    decimals: 18,
+    decimals: TOKEN?.decimals ?? 18,
   });
 
   const medians = incidents.byProvider
@@ -157,10 +161,34 @@ export function renderToken(index: IndexBundle, meta: MetaRecord): string {
   <h1 class="hero-thesis">A machine cannot open a bank account. <em>It can hold a wallet.</em></h1>
   <p class="hero-sub">
     $SGHT is what this service charges in, so an agent that has never met its operator can still buy
-    one answer. <strong>The token does not exist yet</strong> — there is no contract address, no price
-    and no supply, and this page quotes none of them. Everything described below is built and readable
-    today, and the payment rail refuses to charge anybody until four empty fields are filled.
+    one answer. ${
+      TOKEN === null
+        ? `<strong>The token does not exist yet</strong> — there is no contract address, no price and
+           no supply, and this page quotes none of them.`
+        : `<strong>It is live.</strong> ${
+            CHARGING
+              ? 'Paid tools take payment in it.'
+              : 'The rail is not charging yet — no wallet and no rate are set, so every tool below is still free.'
+          } This page quotes no price, no supply and no return; the contract is the one fact about it worth publishing.`
+    }
   </p>
+  ${
+    TOKEN === null
+      ? ''
+      : `<div class="contract">
+    <span class="label">Contract${TOKEN.preGraduation ? ' — bonding curve' : ''}</span>
+    <code class="contract-value">${esc(TOKEN.address)}</code>
+    <p class="contract-note">
+      ${
+        TOKEN.preGraduation
+          ? `Still on its bonding curve, so this address is replaced if it graduates. Check here before
+             sending anything — this page and <a href="${esc(TOKEN.launchpad.url)}">${esc(TOKEN.launchpad.name)}</a>
+             are the only places it is published.`
+          : `Published here and on <a href="${esc(TOKEN.launchpad.url)}">${esc(TOKEN.launchpad.name)}</a>, and nowhere else.`
+      }
+    </p>
+  </div>`
+  }
 </section>
 
 ${band(

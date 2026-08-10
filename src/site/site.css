@@ -2587,3 +2587,37 @@ a.lens-cell:hover {
     gap: 2px;
   }
 }
+
+/* The contract address on /token.
+ *
+ * Set at the largest size a monospace address fits in the column, because it is
+ * read character by character rather than glanced at, and broken across lines
+ * rather than truncated — the four characters in the middle are exactly the
+ * ones an impersonator changes, so an ellipsis there is a hole in the only
+ * defence a reader has. */
+.contract {
+  margin-top: 26px;
+  border: var(--rule);
+  border-left: 2px solid var(--alert);
+  background: var(--ink-025);
+  padding: 16px 18px 18px;
+  max-width: 64ch;
+}
+
+.contract-value {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--face-data);
+  font-size: var(--t-mid);
+  line-height: 1.4;
+  color: var(--ink-900);
+  word-break: break-all;
+}
+
+.contract-note {
+  margin-top: 10px;
+  font-family: var(--face-prose);
+  font-size: var(--t-base);
+  line-height: 1.55;
+  color: var(--ink-500);
+}

@@ -58,16 +58,8 @@ interface KeyStore {
 import { bearerFrom, decide, type EntitlementRow } from '../../src/lib/entitlement.ts';
 import { MCP_TOOLS, toolByName } from '../../src/lib/mcp-catalogue.ts';
 import { PAGED_IDS, WATCHABLE_IDS } from '../../src/lib/registries-table.ts';
-import { NOT_LAUNCHED, paymentRequired, paymentStatus } from '../../src/lib/x402.ts';
-
-/**
- * The payment rail, unset.
- *
- * There is no $SGHT contract and no rate, so `paymentRequired` returns null and
- * the refusal says so in words instead of quoting terms nobody agreed. One
- * constant changes when the token is deployed; nothing else here does.
- */
-const PAYMENT = NOT_LAUNCHED;
+import { PAYMENT } from '../../src/lib/payment.ts';
+import { paymentRequired, paymentStatus } from '../../src/lib/x402.ts';
 import {
   findEntry,
   noticesFor,

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import { CHARGING, TOKEN } from '../src/lib/payment.ts';
 import { renderEventPage } from '../src/site/event.ts';
 import { renderIndex, renderLens, renderMethod, stripSvg } from '../src/site/render.ts';
 import type { IndexBundle, LensBundle, StripMark } from '../src/types/bundles.ts';
@@ -381,9 +382,13 @@ describe('telling a first-time visitor what this is', () => {
     expect(html).toContain('Compared against its own history');
   });
 
-  it('says what each of the five readings answers', () => {
+  it('says what each reading answers, in the reader’s words', () => {
+    // It asserted the phrase "five readings" until the token paragraph that
+    // happened to carry it was rewritten. The phrase was wrong anyway — there
+    // are eleven — and the test had been holding the mistake in place rather
+    // than catching it. The questions are the real check: a reader learns what
+    // this does from them, not from a count.
     const html = renderIndex(index(), meta());
-    expect(html).toContain('five readings');
     expect(html).toContain('What released a new version?');
     expect(html).toContain('Which models say they were built on which?');
   });
@@ -453,12 +458,38 @@ describe('telling a first-time visitor what this is', () => {
     expect(html).toContain('The token');
     expect(html).toContain('funded by a token on Robinhood Chain');
     expect(html).toContain('Holding it does not unlock anything here');
-    expect(html).toContain('It has not launched');
 
-    // Never price, never appreciation, never a wallet to connect.
+    // Never price, never appreciation, never a wallet to connect. These are the
+    // assertions that matter and they outlive any particular launch state.
     expect(html).not.toMatch(/\bprice\b/i);
     expect(html).not.toMatch(/\bappreciat/i);
     expect(html).not.toMatch(/connect (your )?wallet/i);
+  });
+
+  it('states the launch from the token record rather than from prose', () => {
+    // It asserted the literal string "It has not launched", typed into two
+    // pages. On the day the contract was deployed both would have gone on
+    // saying it, and a test would have defended them. The sentence is derived
+    // from src/lib/payment.ts now, and this checks that the page agrees with
+    // whatever that file holds — before launch and after.
+    const html = renderIndex(index(), meta());
+
+    if (TOKEN === null) {
+      expect(html).toContain('It has not launched');
+      expect(html).not.toMatch(/0x[0-9a-fA-F]{40}/);
+      return;
+    }
+
+    expect(html).toContain(TOKEN.address);
+    expect(html).toContain('It launched');
+
+    // A truncated address is worse than none: the middle characters are the
+    // ones an impersonator changes.
+    expect(html).not.toContain(`${TOKEN.address.slice(0, 6)}…`);
+
+    // Whether the rail charges is a separate fact from whether the token
+    // exists, and the page must not collapse them.
+    if (!CHARGING) expect(html).toContain('not charging yet');
   });
 });
 

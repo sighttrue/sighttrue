@@ -2,6 +2,7 @@ import { COMPARISON, isCapped, readingsOf, SIGNAL_LABEL } from './vocabulary.ts'
 import { REACHABLE_SHARE } from '../lib/calibration.ts';
 import { MIN_INSTALLS } from '../lib/divergence.ts';
 import { allowedMinutes } from '../lib/incidents-summary.ts';
+import { launchSentence } from '../lib/payment.ts';
 import { COMPARE_SCRIPT } from './compare.ts';
 import { SBOM_SCRIPT } from './sbom-script.ts';
 import { STACK_EXTRAS_SCRIPT } from './stack-extras.ts';
@@ -1377,9 +1378,8 @@ function tokenHtml(): string {
     is public and always will be.
   </p>
   <p>
-    It has not launched. The plan is to run this in the open first, see which of the five readings
-    people actually find worth sharing, and name it after the answer rather than after a guess. When
-    it does launch, the contract address will appear here and nowhere else.
+    ${launchSentence()} The plan was to run this in the open first and name it after the answer
+    rather than after a guess, which is what happened.
   </p>
 </div>`;
 }
@@ -1577,7 +1577,7 @@ ${band(
   <p>
     This is funded by a token on Robinhood Chain. Trading it pays a fee, most of which goes to
     whoever launched the pool. Holding it grants nothing here, there is nothing to connect a wallet
-    to, and no reading is behind it. It has not launched.
+    to, and no reading is behind it. ${launchSentence()}
     <a href="/token">What the token is for</a> sets out what it pays for, what a call costs, and the
     longer list of what it is not.
   </p>
