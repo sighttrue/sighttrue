@@ -1560,6 +1560,8 @@ ${band(
     This is funded by a token on Robinhood Chain. Trading it pays a fee, most of which goes to
     whoever launched the pool. Holding it grants nothing here, there is nothing to connect a wallet
     to, and no reading is behind it. It has not launched.
+    <a href="/token">What the token is for</a> sets out what it pays for, what a call costs, and the
+    longer list of what it is not.
   </p>
   <p>
     <strong>The conflict worth stating.</strong>${

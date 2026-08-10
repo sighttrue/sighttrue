@@ -2345,3 +2345,178 @@ a.lens-cell:hover {
   color: var(--ink-900);
   border-color: var(--ink-300);
 }
+
+/* ---------------------------------------------------------------- /token
+
+   The page explaining what the token pays for. Every colour here comes from
+   the ink scale, so it follows the light and dark schemes the rest of the site
+   already answers to — a page about money is the last one that should render
+   as one theme's text on the other theme's ground. */
+
+/* The three price bands. A figure and its unit on the left, the reason on the
+   right: the same shape as a reading elsewhere on the site, because that is
+   what it is. The credit count is the measured value, so it is set in the
+   numeral face and takes the nominal colour. */
+.price-band {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 24px;
+  padding: 22px 0;
+  border-bottom: var(--rule);
+}
+
+.price-band:last-child {
+  border-bottom: 0;
+}
+
+.price-band-figure {
+  text-align: right;
+}
+
+.price-band-figure .num {
+  display: block;
+  font-family: var(--face-label);
+  font-size: 44px;
+  line-height: 1;
+  color: var(--nominal);
+  font-variant-numeric: tabular-nums;
+}
+
+.price-band-figure .label {
+  color: var(--ink-300);
+}
+
+.price-band-body h3 {
+  font-family: var(--face-label);
+  font-size: var(--t-large);
+  margin-bottom: 6px;
+}
+
+.price-band-body p {
+  font-family: var(--face-prose);
+  font-size: var(--t-mid);
+  line-height: 1.6;
+  color: var(--ink-700);
+  max-width: 64ch;
+}
+
+/* Tool name against what it answers. The name is data and stays monospaced;
+   the sentence beside it is interpretation and is set in the prose face, which
+   is the same separation every other page on this site makes. */
+.tool-notes {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tool-notes li {
+  display: grid;
+  grid-template-columns: minmax(170px, 210px) 1fr;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.tool-notes code {
+  font-family: var(--face-data);
+  font-size: var(--t-base);
+  color: var(--nominal);
+}
+
+.tool-notes span {
+  font-family: var(--face-prose);
+  font-size: var(--t-mid);
+  line-height: 1.55;
+  color: var(--ink-500);
+}
+
+.free-tools {
+  margin-top: 4px;
+}
+
+/* The 402 exchange. Wrapped rather than scrolled would stop it being a
+   protocol line, so this one scrolls inside itself and the page does not. */
+.wire-readout {
+  margin-top: 4px;
+}
+
+.wire-readout .wire-dir {
+  color: var(--ink-300);
+  width: 24px;
+}
+
+.wire-readout .wire-say {
+  font-family: var(--face-prose);
+  font-size: var(--t-mid);
+  color: var(--ink-500);
+}
+
+/* A response body, shown as one. Wraps rather than scrolls: one field in it is
+   a whole sentence, and the value that ran off the edge was the description of
+   what the reader would be paying for. */
+.specimen {
+  margin-top: 16px;
+  background: var(--ink-025);
+  border: var(--rule);
+  padding: 16px 18px;
+  font-family: var(--face-data);
+  font-size: var(--t-base);
+  line-height: 1.6;
+  color: var(--ink-500);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* What the token is not. A claim and its reason, ruled off individually — the
+   list reads as a set of commitments rather than as a paragraph of hedging. */
+.not-list {
+  list-style: none;
+  display: grid;
+  gap: 18px;
+  max-width: 68ch;
+}
+
+.not-list li {
+  border-left: var(--rule);
+  padding-left: 16px;
+}
+
+.not-list strong {
+  display: block;
+  font-family: var(--face-label);
+  font-size: var(--t-large);
+  color: var(--ink-900);
+  margin-bottom: 4px;
+}
+
+.not-list span {
+  font-family: var(--face-prose);
+  font-size: var(--t-mid);
+  line-height: 1.6;
+  color: var(--ink-500);
+}
+
+@media (max-width: 640px) {
+  .price-band {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .price-band-figure {
+    text-align: left;
+  }
+
+  .price-band-figure .num {
+    display: inline;
+    font-size: 34px;
+  }
+
+  .price-band-figure .label {
+    margin-left: 8px;
+  }
+
+  .tool-notes li {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

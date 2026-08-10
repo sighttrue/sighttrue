@@ -169,70 +169,54 @@ names from `x402.ts`, the repository count from the bundle. It states no price,
 no supply, no return, and does not call the token an investment. The build fails
 if a tool it names has moved to the free tier.
 
+**Where the long explanation lives.** `/token`, built by `src/site/token.ts` —
+on this project's own domain, not a hosted page somewhere else. A launch that
+asks people to read about a token on a domain the project does not control has
+already given away the thing it was selling, which is that every claim here can
+be checked against files this project publishes. It was drafted as a standalone
+page first and that copy was deleted rather than kept: two articles that have to
+agree is the failure this repository spends most of its rules preventing.
+
 ### The caption
 
-Posted with the film. The token is explained by what it is *for*, because the
-utility is the only part of a launch that can be checked on the day.
+```sh
+node scripts/caption.mjs           # long form
+node scripts/caption.mjs --short   # under 280 characters
+```
 
-> Every status page forgets. They carry a few months, then the incident is gone
-> and the provider's record goes with it.
->
-> This kept 731 days. 618 outages across 22 providers, each with how long they
-> said it took — Anthropic 64 minutes median, Cloudflare 96, OpenAI 162, Twilio
-> 364.
->
-> Also 463 release lines already past the date they stop getting security fixes,
-> and 395 models with every price change dated.
->
-> None of that comes from GitHub. Your agent can buy any of it one call at a
-> time — no signup, no key, no human.
->
-> `npx sighttrue check`
->
-> $SGHT — launching on Virtuals, Robinhood Chain.
->
-> sighttrue.com
+Printed rather than written down, and that is not convenience. This section
+carried the caption as text, reading *"618 outages … 731 days"*. Three hours
+later the daily run committed and the site said 619 and 720, because
+`observedDays` is measured from the oldest row still held rather than from a
+fixed start. The caption was wrong before anybody posted it, and nothing would
+ever have said so: a post is the one artefact with no build step between writing
+it and publishing it. So the figures are read at the moment the caption is
+produced, and the wording lives with them.
 
-Two drafts were thrown away before this one and the second failed worse than the
-first. It opened *"Sighttrue watches 417 open-source repositories"* — which walks
-straight into the objection this whole product was built to answer. README says
-it plainly: the six readings that never touch GitHub are the reply to "a GitHub
-summariser is worth only what GitHub already shows you". A caption that leads
-with a repository count concedes the argument in its first line.
-
-So the caption leads with the archive instead, and names no repository count at
-all. Outages, end-of-life dates and model prices are things a reader cannot get
-anywhere else and can use the same afternoon; a count of watched repositories is
-a fact about this project rather than about them.
+Both forms open with the incident archive and name **no repository count at
+all**. Two drafts were thrown away before that rule was found; the second opened
+*"Sighttrue watches 417 open-source repositories"*, which walks straight into the
+objection this whole product exists to answer. README says it plainly: the
+readings that never touch GitHub are the reply to "a GitHub summariser is worth
+only what GitHub already shows you". Leading with a watchlist size concedes the
+argument in the first line, and a count of what this project watches is a fact
+about this project rather than about the reader.
 
 `npx sighttrue check` is the line that earns the rest. A launch caption is the
-one artefact a reader cannot check against a file, and this hands them a command
-that answers in ten seconds and costs nothing.
+one artefact a reader cannot check against a file, and that command answers in
+ten seconds, needs no account and costs nothing.
 
 **What the numbers may not say.** `windowDays` in the bundle is this project's
 own reporting window, not how long a status page keeps an incident — a draft
 read it as the second and nearly published "status pages only keep 90 days",
-which no file here supports. The honest form is the one above: their feeds carry
-a few months, and `observedDays` says how far back this archive goes.
+which no file here supports. The honest form is the one the script prints: their
+feeds carry a few months, and `observedDays` says how far back this archive goes.
 
 The chain is named because the site names it and the payment rail verifies it —
 three surfaces saying the same thing, which is the only version of this a reader
 can check.
 
-Short form, for anywhere with a 280-character limit:
-
-> Status pages forget. This kept 731 days — 618 outages across 22 providers,
-> with how long each actually took.
->
-> Plus 463 release lines past end-of-life, and 395 model prices, dated.
->
-> None of it from GitHub.
->
-> `npx sighttrue check`
->
-> $SGHT — Virtuals, Robinhood Chain.
-
-Neither version says the token will rise, names a price, or promises a supply.
+Neither form says the token will rise, names a price, or promises a supply.
 The rule in *What never goes in the copy* does not get relaxed because the post
 is about a token — a launch caption is the single most-quoted thing this project
 will ever emit and the one nobody can check against a file.

@@ -364,6 +364,10 @@ describe('output hygiene', () => {
       'readings.html',
       'ships.html',
       'stack.html',
+      // What the token pays for, what a call costs, and what it is not. Not a
+      // door — reached from Method, and on this domain rather than a hosted
+      // page somewhere else, because every claim on it points at a file here.
+      'token.html',
       // Everything the ledger already holds, arranged for somebody who was away.
       'week.html',
     ]);

@@ -87,6 +87,7 @@ import {
 import { archiveNav, archivePath, renderArchive } from './site/archive.ts';
 import { renderEcosystem } from './site/ecosystem.ts';
 import { renderFindings } from './site/findings.ts';
+import { renderToken } from './site/token.ts';
 import { renderWelcome } from './site/welcome.ts';
 import { renderHeaders } from './site/headers.ts';
 import { renderCalendar } from './site/calendar.ts';
@@ -1040,6 +1041,7 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
   }
 
   pages.set('method.html', renderMethod(index, previous));
+  pages.set('token.html', renderToken(index, previous));
   pages.set('compare.html', renderCompare(index, previous));
   pages.set('stack.html', renderStack(index, previous));
   pages.set('models.html', renderModels(index, previous));
@@ -1141,6 +1143,10 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
     // The largest indexable surface here after the repository pages, and the
     // one that answers a question people type rather than one they browse to.
     '/dataset',
+    // Not a door — reached from Method, where a reader asking who funds this is
+    // already standing. Listed here because a page nobody can navigate to is
+    // exactly the page that has to be findable.
+    '/token',
     ...packagePaths,
     ...addressable.map((event) => eventPath(event)),
     ...LENSES.flatMap((lens) =>
