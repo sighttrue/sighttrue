@@ -192,14 +192,14 @@ ${band(
     ${n(incidents.observedDays)} days</strong>, each with the duration the provider itself announced.
   </p>
 </div>
-<table class="readout">
+<div class="wrap"><table class="readout">
   <caption>
     Announced durations, median across incidents that published both a start and an end. A median is
     not a promise about the next one, and an incident never given an end time is not counted here.
   </caption>
   <thead><tr><th>Provider</th><th class="num">Incidents</th><th class="num">Median minutes</th></tr></thead>
   <tbody>${medians}</tbody>
-</table>
+</table></div>
 <div class="prose method-prose">
   <p>
     Beside it: <strong>${n(lifecycle.ended)}</strong> release lines already past the date they stop
@@ -220,7 +220,7 @@ ${band(
     There is no signup step because there is nowhere to sign up to.
   </p>
 </div>
-<table class="readout wire-readout">
+<div class="wrap"><table class="readout wire-readout">
   <caption>Four messages. No account is created at any point, and none is needed.</caption>
   <tbody>
     <tr><td class="wire-dir">&rarr;</td><td class="num">POST</td><td>/api/mcp</td><td class="wire-say">An agent asks for one reading.</td></tr>
@@ -228,7 +228,7 @@ ${band(
     <tr><td class="wire-dir">&rarr;</td><td class="num">POST</td><td>PAYMENT-PAYLOAD</td><td class="wire-say">The same request again, carrying the receipt.</td></tr>
     <tr><td class="wire-dir">&larr;</td><td class="num">200</td><td>the reading</td><td class="wire-say">Verified on chain first, twelve confirmations.</td></tr>
   </tbody>
-</table>
+</table></div>
 <div class="prose method-prose">
   <p>
     The refusal is not a wall, it is an invoice. This is what the server sends, rendered here by the
@@ -279,11 +279,11 @@ ${band(
   </p>
 </div>
 <ul class="tool-notes free-tools">${freeRows}</ul>
-<table class="readout">
+<div class="wrap"><table class="readout">
   <caption>The full catalogue, by what the tools are about. ${n(PAID_TOOLS.length)} are paid.</caption>
   <thead><tr><th>Group</th><th class="num">Tools</th><th class="num">Free</th><th class="num">Paid</th></tr></thead>
   <tbody>${catalogue}</tbody>
-</table>`,
+</table></div>`,
 )}
 
 ${band(

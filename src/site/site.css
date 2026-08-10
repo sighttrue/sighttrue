@@ -754,12 +754,26 @@ a:hover {
   padding: 22px 0 0;
   border-top: 1px solid var(--ink-200);
   max-width: 62ch;
+  /* This sits in the hero's narrow right-hand column, about 350px wide, and the
+     figure inside it was sized from the viewport — `5.4vw`, which on a 1280px
+     screen asks for 54px and knows nothing about the column it lands in. Ten
+     digits at that size measured 407px and spilled past the shell entirely,
+     which is the page gutter, for the largest number on the site.
+     Letting the box grow instead only moved the spill up one level.
+     So the figure is measured against this box rather than the window. */
+  container-type: inline-size;
 }
 
 .hero-headline-value {
   font-family: var(--face-data);
   font-variant-numeric: tabular-nums;
-  font-size: clamp(30px, 5.4vw, 54px);
+  /* `cqw`, not `vw`: this is measured against the box it sits in. A grouped
+     number has no break opportunity — not even at its commas, per UAX #14 — so
+     it either fits on one line or leaves the page. Plex Mono advances 0.6em a
+     character and the tracking pulls that to about 0.58, so 12cqw holds
+     seventeen characters before it would reach the edge. Today's figure is
+     thirteen, and the headroom is the point: this number grows. */
+  font-size: clamp(26px, 12cqw, 54px);
   line-height: 1;
   letter-spacing: -0.02em;
   /* The top of the magnitude ramp, because that is what this figure is: the
@@ -2112,13 +2126,18 @@ a.lens-cell:hover {
   padding-bottom: 2px;
 }
 
+/* --ink-300 here measured 3.4:1 on the dark ground and 3.3:1 on the light one,
+   against the 4.5:1 small text needs — on the row of links that is the only way
+   to reach eight of the eleven readings. The step down from the doors above is
+   carried by size, weight and case, which it already was; the colour was doing
+   the same job a third time and failing a floor to do it. */
 .nav-channels a {
   padding: 7px 12px 6px;
   font-weight: 500;
   letter-spacing: 0.10em;
   text-transform: none;
   font-size: var(--t-small);
-  color: var(--ink-300);
+  color: var(--ink-500);
 }
 
 .nav-channels a:hover {
@@ -2382,8 +2401,11 @@ a.lens-cell:hover {
   font-variant-numeric: tabular-nums;
 }
 
+/* --ink-300 at 11px measured 3.5:1 on the dark ground and 3.3:1 on the light
+   one, against the 4.5:1 that small text needs. It is the unit on a price, so
+   it is the last label on this page that can be allowed to disappear. */
 .price-band-figure .label {
-  color: var(--ink-300);
+  color: var(--ink-500);
 }
 
 .price-band-body h3 {
