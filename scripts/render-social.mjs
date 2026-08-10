@@ -47,8 +47,16 @@ const fps = Number(/var FPS = (\d+)/.exec(source)?.[1] ?? /const FPS = (\d+)/.ex
 const seconds = Number(/var SECONDS = (\d+)/.exec(source)?.[1] ?? 8);
 const frames = fps * seconds;
 
-const WIDTH = 1200;
-const HEIGHT = 675;
+/**
+ * A still, for the pages that are one. Its size is read out of the page's own
+ * body rule rather than passed on the command line, so a cover that declares
+ * itself 2000x800 cannot be photographed at some other shape.
+ */
+const still = process.argv.includes('--still');
+const declared = /body\s*\{[^}]*?width:\s*(\d+)px[^}]*?height:\s*(\d+)px/s.exec(source);
+
+const WIDTH = still && declared ? Number(declared[1]) : 1200;
+const HEIGHT = still && declared ? Number(declared[2]) : 675;
 
 /**
  * Chrome, wherever this machine keeps it.
@@ -80,10 +88,14 @@ const run = (cmd, args, opts = {}) =>
     child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} exited ${code}`))));
   });
 
-await run('ffmpeg', ['-version']).catch(() => {
-  console.error('ffmpeg not found on PATH.');
-  process.exit(1);
-});
+// A still needs no encoder. Checking for one anyway would refuse to draw a
+// cover on a machine that only ever wanted to draw a cover.
+if (!still) {
+  await run('ffmpeg', ['-version']).catch(() => {
+    console.error('ffmpeg not found on PATH.');
+    process.exit(1);
+  });
+}
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -113,6 +125,23 @@ const server = createServer((req, res) => {
 
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const port = server.address().port;
+
+if (still) {
+  const png = join(ROOT, `assets/brand/${name}.png`);
+  await run(chrome, [
+    '--headless=new',
+    '--disable-gpu',
+    '--hide-scrollbars',
+    '--force-device-scale-factor=1',
+    `--window-size=${WIDTH},${HEIGHT}`,
+    `--screenshot=${png}`,
+    '--virtual-time-budget=4000',
+    `http://127.0.0.1:${port}/${page}`,
+  ]);
+  server.close();
+  console.log(`${name}.png — ${WIDTH}x${HEIGHT}, ${(statSync(png).size / 1024).toFixed(0)}KB`);
+  process.exit(0);
+}
 
 const out = join(ROOT, 'assets/brand/frames');
 rmSync(out, { recursive: true, force: true });

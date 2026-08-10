@@ -26,6 +26,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { WORDMARK_CSS, wordmark } from './lib/wordmark.mjs';
+
 // The free tool count comes from the catalogue, never from a number typed here.
 // The pricing page carried "seven MCP tools" for weeks against a server that
 // answered eight, because two files each held their own count. A card is the
@@ -66,46 +68,13 @@ const n = (value) => value.toLocaleString('en');
 const HANDLE = '@Sighttruehq';
 
 /**
- * The wordmark, and why there is no symbol any more.
+ * The mark and the type it needs both come from scripts/lib/wordmark.mjs.
  *
- * Four abstract marks were drawn and rejected — crosshairs, a dial, an aperture,
- * a geometric S. The pattern in all four was the same: a symbol was being made
- * to carry the meaning, and the meaning of this product is carried by its data.
- * Every one of them needed a paragraph to explain, and a mark that needs
- * explaining has already lost.
- *
- * So the identity is the name, set properly. The one typographic move is the
- * crossbar: the double `t` sits exactly where "sight" meets "true", and its two
- * crossbars are run together into a single rule that overshoots both letters.
- * That is the datum — the reference line the whole product measures against —
- * and it is drawn from the spelling of the name rather than bolted on beside it.
- *
- * It is a detail somebody notices second, not first, which is the correct order
- * for a detail.
+ * They were written out here in full, and identically in three other builders.
+ * When the crossbar turned out to be sitting above the letters rather than
+ * through them, it was sitting above them in four places.
  */
-function wordmark({ size = 64, colour = '#e8e8e8', rule = '#f2857c' } = {}) {
-  const u = size / 64;
-  return `<span class="wm" style="font-size:${round(size)}px;color:${colour}">
-    <span class="wm-a">sigh</span><span class="wm-tt">tt<i style="background:${rule};height:${round(Math.max(1.5, 3.4 * u))}px"></i></span><span class="wm-a">rue</span>
-  </span>`;
-}
-
 const round = (n) => Number(n.toFixed(2));
-
-/** Shared type for the wordmark. Kept with it so the two cannot drift. */
-const WORDMARK_CSS = `
-  /* text-transform is reset explicitly. The footer uppercases everything in it
-     and swallowed the wordmark whole — a lowercase mark set in capitals is a
-     different mark, and the crossbar rule then lands nowhere near a crossbar. */
-  .wm { font-family: 'Plex Condensed', sans-serif; font-weight: 600;
-        letter-spacing: -0.022em; line-height: 1; white-space: nowrap;
-        display: inline-block; text-transform: none; }
-  .wm-tt { position: relative; }
-  /* The rule sits at the crossbar height of the two t's and overshoots both,
-     so it reads as a line the letters are measured against rather than as part
-     of them. Absolute, because it must not add width to the word. */
-  .wm-tt i { position: absolute; left: -0.10em; right: -0.16em; top: 0.325em; display: block; }
-`;
 
 /** Shared head: the site's own fonts and tokens, so the account cannot drift from the product. */
 const HEAD = `<meta charset="utf-8">

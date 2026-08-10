@@ -15,10 +15,10 @@
         letter-spacing: -0.022em; line-height: 1; white-space: nowrap;
         display: inline-block; text-transform: none; }
   .wm-tt { position: relative; }
-  /* The rule sits at the crossbar height of the two t's and overshoots both,
-     so it reads as a line the letters are measured against rather than as part
-     of them. Absolute, because it must not add width to the word. */
-  .wm-tt i { position: absolute; left: -0.10em; right: -0.16em; top: 0.325em; display: block; }
+  /* Absolute, because it must not add width to the word. See the note above on
+     why this is 0.56em and not the 0.325em it was. */
+  .wm-tt i { position: absolute; left: -0.10em; right: -0.16em;
+             top: 0.56em; display: block; }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #121212; color: #e8e8e8; font-family: 'Plex Mono', monospace; overflow: hidden; }
@@ -94,7 +94,7 @@
 
 </svg>
  <span class="wm" style="font-size:28px;color:#e8e8e8">
-    <span class="wm-a">sigh</span><span class="wm-tt">tt<i style="background:#f2857c;height:1.5px"></i></span><span class="wm-a">rue</span>
+    <span>sigh</span><span class="wm-tt">tt<i style="background:#f2857c;height:1.5px"></i></span><span>rue</span>
   </span> <span style="margin-left:6px">@Sighttruehq</span></span>
     <span>sighttrue.com</span>
   </div>

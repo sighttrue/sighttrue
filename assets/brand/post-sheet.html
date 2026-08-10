@@ -43,11 +43,16 @@
   }
 
   header.top { padding: 60px 0 30px; border-bottom: 1px solid var(--rule); }
-  .wm { font-family: 'Plex Cond', sans-serif; font-weight: 600; font-size: 24px;
-        letter-spacing: -0.022em; line-height: 1; display: inline-block; }
-  .wm i { position: relative; font-style: normal; }
-  .wm i b { position: absolute; left: -0.10em; right: -0.16em; top: 0.325em;
-            height: 2px; background: var(--datum); display: block; }
+  /* The mark's own type, with 'Plex Cond' as this page names the face. Its
+     crossbar height comes from lib/wordmark.mjs rather than being written out
+     again — it was written out again in four builders and was wrong in all of
+     them. */
+  .wm { font-family: 'Plex Cond', sans-serif; font-weight: 600;
+        letter-spacing: -0.022em; line-height: 1; white-space: nowrap;
+        display: inline-block; text-transform: none; }
+  .wm-tt { position: relative; }
+  .wm-tt i { position: absolute; left: -0.10em; right: -0.16em;
+             top: 0.56em; display: block; }
   h1 {
     font-family: 'Plex Cond', sans-serif; font-weight: 600;
     font-size: clamp(32px, 5vw, 52px); line-height: 1.02; letter-spacing: -0.022em;
@@ -156,7 +161,7 @@
 <div class="sheet">
 
 <header class="top">
-  <span class="wm">sigh<i>tt<b></b></i>rue</span>
+  <span class="wm" style="font-size:24px"><span>sigh</span><span class="wm-tt">tt<i style="background:var(--datum);height:2px"></i></span><span>rue</span></span>
   <h1>Launch post sheet</h1>
   <p class="standfirst">
     Every block below is exactly what <code>node scripts/caption.mjs</code> prints, from the same

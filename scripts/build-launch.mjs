@@ -36,6 +36,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { WORDMARK_CSS, wordmark } from './lib/wordmark.mjs';
+
 const { MCP_TOOLS, FREE_TOOLS, PAID_TOOLS } = await import('../src/lib/mcp-catalogue.ts');
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -49,14 +51,6 @@ const PLATFORM = 'Virtuals';
 const virtuals = readFileSync(`${ROOT}assets/brand/virtuals.jpg`).toString('base64');
 
 const round = (n) => Number(n.toFixed(2));
-
-/** Same wordmark helper as the cards. Duplicated deliberately — see build-social.mjs. */
-function wordmark({ size = 64, colour = '#e8e8e8', rule = '#f2857c' } = {}) {
-  const u = size / 64;
-  return `<span class="wm" style="font-size:${round(size)}px;color:${colour}">
-    <span>sigh</span><span class="wm-tt">tt<i style="background:${rule};height:${round(Math.max(1.5, 3.4 * u))}px"></i></span><span>rue</span>
-  </span>`;
-}
 
 /**
  * Six paid tools, looked up by name rather than transcribed with their prices.
@@ -91,12 +85,7 @@ const launch = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   @font-face { font-family: 'Plex Serif'; font-weight: 400;
     src: url('../../dist/fonts/ibm-plex-serif-latin-400-normal.woff2') format('woff2'); }
 
-  .wm { font-family: 'Plex Condensed', sans-serif; font-weight: 600;
-        letter-spacing: -0.022em; line-height: 1; white-space: nowrap;
-        display: inline-block; text-transform: none; }
-  .wm-tt { position: relative; }
-  .wm-tt i { position: absolute; left: -0.10em; right: -0.16em; top: 0.325em; display: block; }
-
+${WORDMARK_CSS}
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 1200px; height: 675px; background: #121212; color: #e8e8e8;
          font-family: 'Plex Mono', monospace; overflow: hidden; position: relative; }

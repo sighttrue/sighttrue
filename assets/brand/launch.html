@@ -7,11 +7,18 @@
   @font-face { font-family: 'Plex Serif'; font-weight: 400;
     src: url('../../dist/fonts/ibm-plex-serif-latin-400-normal.woff2') format('woff2'); }
 
+
+  /* text-transform is reset explicitly. The footer uppercases everything in it
+     and swallowed the wordmark whole — a lowercase mark set in capitals is a
+     different mark, and the crossbar rule then lands nowhere near a crossbar. */
   .wm { font-family: 'Plex Condensed', sans-serif; font-weight: 600;
         letter-spacing: -0.022em; line-height: 1; white-space: nowrap;
         display: inline-block; text-transform: none; }
   .wm-tt { position: relative; }
-  .wm-tt i { position: absolute; left: -0.10em; right: -0.16em; top: 0.325em; display: block; }
+  /* Absolute, because it must not add width to the word. See the note above on
+     why this is 0.56em and not the 0.325em it was. */
+  .wm-tt i { position: absolute; left: -0.10em; right: -0.16em;
+             top: 0.56em; display: block; }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 1200px; height: 675px; background: #121212; color: #e8e8e8;
