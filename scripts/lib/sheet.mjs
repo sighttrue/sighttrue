@@ -282,6 +282,72 @@ ${block(
 <hr>
 
 <section class="block">
+  <span class="label">The launchpad</span>
+  <h2 style="font-family:'Plex Cond',sans-serif;font-weight:600;font-size:26px">Virtuals, field by field</h2>
+  <p class="note" style="margin-top:8px">
+    Held to the same rules as the posts: no price, no supply, no return, no revenue, and nothing
+    called safe or recommended. The roadmap carries no dates &mdash; a date is a claim about a future
+    nobody has measured.
+  </p>
+</section>
+
+${block(
+  'v-bio',
+  'Account settings',
+  'Bio',
+  'About who is building, not about the token.',
+  copy.virtuals.bio,
+  `${n(copy.virtuals.bio.length)} characters`,
+)}
+
+${block(
+  'v-about',
+  'Launch form',
+  "What's this token about?",
+  'The field is capped at 500 characters by the form.',
+  copy.virtuals.about,
+  `${n(copy.virtuals.about.length)} of 500`,
+)}
+
+${block(
+  'v-how',
+  'Advanced details',
+  'How It Works',
+  'The collection, the ledger, and the payment path end to end.',
+  copy.virtuals.howItWorks,
+  `${n(copy.virtuals.howItWorks.length)} characters`,
+)}
+
+${block(
+  'v-road',
+  'Advanced details',
+  'Roadmap',
+  'What is built, and what is next. No dates.',
+  copy.virtuals.roadmap,
+  `${n(copy.virtuals.roadmap.length)} characters`,
+)}
+
+${block(
+  'v-util',
+  'Advanced details',
+  'Token Utility',
+  'The one field where a launchpad expects a promise. It gets a mechanism.',
+  copy.virtuals.tokenUtility,
+  `${n(copy.virtuals.tokenUtility.length)} characters`,
+)}
+
+${block(
+  'v-extra',
+  'Advanced details',
+  'Additional Details',
+  'What the token is not. The list most launches leave out, which is why it is worth putting in.',
+  copy.virtuals.additionalDetails,
+  `${n(copy.virtuals.additionalDetails.length)} characters`,
+)}
+
+<hr>
+
+<section class="block">
   <span class="label">The figures in it</span>
   <h2 style="font-family:'Plex Cond',sans-serif;font-weight:600;font-size:26px">Every number above, and where it came from</h2>
   <table class="readout">

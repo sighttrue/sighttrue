@@ -41,6 +41,17 @@ export interface LaunchCopy {
   quote: string;
   articleTitle: string;
   article: string;
+  /** The launchpad's own form, field by field. */
+  virtuals: {
+    /** Account bio. Short, about who is building rather than about the token. */
+    bio: string;
+    /** "What's this token about?" — capped at 500 characters by the form. */
+    about: string;
+    howItWorks: string;
+    roadmap: string;
+    tokenUtility: string;
+    additionalDetails: string;
+  };
 }
 
 const n = (value: number): string => value.toLocaleString('en');
@@ -172,7 +183,63 @@ The readings are at sighttrue.com. The agent that takes them is at github.com/si
 
 $SGHT launches on Virtuals, on Robinhood Chain.`;
 
-  return { brief, long, quote, articleTitle, article };
+  /**
+   * The launchpad's own form.
+   *
+   * Held to the same rules as everything else: no price, no supply, no return,
+   * no revenue, and nothing described as safe or recommended. A launchpad form
+   * is where those rules are most tempting to relax, because the fields are
+   * literally headed "Roadmap" and "What's this token about?" and every other
+   * entry on the page answers them with a promise.
+   *
+   * The roadmap states only what is built and what is next, without dates. A
+   * date on a roadmap is a claim about a future nobody has measured.
+   */
+  const virtuals = {
+    bio: `An agent that watches open-source infrastructure and publishes every reading it takes to a public repository. Provider outages, end-of-life dates, model prices, real ship dates, bus factor. Read for free at sighttrue.com; bought by other agents one call at a time.`,
+
+    about: `$SGHT is what an agent pays with. Sighttrue keeps ${n(f.observedDays)} days of provider outages after the status pages that announced them moved on — ${n(f.incidents)} across ${n(f.providers)} providers — plus end-of-life dates, model prices and real ship dates. Agents buy any of it one call at a time over x402: no account, no API key, no human. A card needs a billing address and a 3-D Secure prompt; an agent has neither. It can hold a wallet. ${n(f.freeTools)} of ${n(f.totalTools)} tools stay free, enforced by a test.`,
+
+    howItWorks: `An agent runs every four hours on GitHub Actions, takes eleven readings, and commits each one to a public repository — timestamped, append-only. The site is rebuilt from that ledger, so any figure on any page can be checked against the file it came from.
+
+Six of the eleven readings never touch a repository host: provider incidents kept after their own feeds drop them, end-of-life dates, model prices with every change dated, registry ship dates, base image weight, and question volume.
+
+Selling them works over x402, which is HTTP's own answer to being asked for money. The agent asks; the server replies 402 with the price, the asset, the chain and where to send it; the agent pays and asks again carrying the receipt; the server verifies the transfer on chain — twelve confirmations — and answers. No account is created at any point, because there is nowhere to sign up to.
+
+Payment is verified against the chain directly rather than through a third party, and one transaction can buy credit exactly once: the transaction hash is the primary key, enforced by the database rather than by the code that calls it.`,
+
+    roadmap: `Built and running: the readings, the public ledger, the site, an MCP server with ${n(f.totalTools)} tools, a CLI (npx sighttrue check), a GitHub Action, a GitHub App, and the x402 payment path end to end.
+
+Next, in order: on-demand registry reads in the browser so a pasted manifest gets an answer for most of its dependencies rather than only the tracked ones; more registries behind the same single description; and a longer archive, which is the one thing that cannot be hurried — it is worth more every day only because it was started earlier.
+
+No dates. A date on a roadmap is a claim about a future nobody has measured, and this project does not make claims it cannot show a file for.`,
+
+    tokenUtility: `Payment for a service, in the ordinary sense that a token is what the meter reads.
+
+An agent cannot use a credit card: no billing address, no way through a 3-D Secure prompt, no account it can open, no terms it can agree to. The industry workaround is to make the machine borrow a human's credentials — an API key issued to a person, billed to a person's card. That works, and it means every purchase a machine makes was arranged in advance by somebody who signed up first. A wallet is the one payment instrument a machine can hold on its own terms.
+
+Priced by how hard the reading is to get, never by what it might be worth to the buyer: 1 credit restates a public source, 2 joins sources nobody joins, 5 rests on the archive.
+
+${n(f.freeTools)} of the ${n(f.totalTools)} tools stay free and a test enforces it — everything needed to decide whether to install a dependency costs nothing.`,
+
+    additionalDetails: `What the token is not, stated because a reader should not have to find out:
+
+It is not access to the site. Every page, bundle and archive is free to read and free to download, holder or not.
+
+It is not a governance token. Holding it votes on nothing. The watchlist changes by reviewed commit, in public.
+
+It is not a claim on revenue. No share of anything is attached to holding it.
+
+There is nothing to connect a wallet to, and there will not be. A contract address and a copy button is the whole of the interface, by rule.
+
+It does not make the readings better. Paid tools are not more accurate than free ones — they are harder to produce, and a paid answer carries the same stated limits as a free one.
+
+The watchlist is curated and partial, chosen by hand. Nothing here is called safe, unsafe or recommended, because none of those are things this project measures. Findings that turn out to be wrong are superseded by a correction with the same prominence; nothing is deleted.
+
+Everything above can be checked: github.com/sighttrue/sighttrue`,
+  };
+
+  return { brief, long, quote, articleTitle, article, virtuals };
 }
 
 /**
