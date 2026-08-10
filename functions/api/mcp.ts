@@ -280,6 +280,35 @@ async function entitlementFor(
   }
 }
 
+/**
+ * One tally, per tool, per day.
+ *
+ * Best-effort and awaited nowhere that matters: the count is a nice-to-have and
+ * the answer is the product, so a database that is slow or missing must not
+ * make a reading slow or missing with it. Every failure is swallowed on
+ * purpose.
+ *
+ * Nothing about the caller is written. Not the key, not the address, not the
+ * time beyond the date — the server promises no account and no quota, and a row
+ * per request would quietly be both.
+ */
+async function countCall(db: KeyStore | undefined, tool: string): Promise<void> {
+  if (db === undefined) return;
+
+  try {
+    await db
+      .prepare(
+        `INSERT INTO tool_calls (tool, day, calls) VALUES (?, ?, 1)
+         ON CONFLICT (tool, day) DO UPDATE SET calls = calls + 1`,
+      )
+      .bind(tool, new Date().toISOString().slice(0, 10))
+      .first<unknown>();
+  } catch {
+    // A tally nobody can write is a tally nobody gets. It is not a reason to
+    // refuse the reading that was asked for.
+  }
+}
+
 function asString(value: unknown, max = MAX_NAME): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
@@ -456,6 +485,10 @@ export async function onRequestPost(context: {
       true,
     );
   }
+
+  // Counted after the gate, so a refusal is not a call. Deliberately not
+  // awaited: the tally must never stand between a caller and their answer.
+  void countCall(context.env?.DB, toolName);
 
   if (toolName === 'list_readings') {
     return toolResult(id, {

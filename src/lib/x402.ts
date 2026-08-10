@@ -29,7 +29,7 @@ export interface PaymentConfig {
   payTo: string | null;
   /** Chain the asset lives on, as x402 names it. */
   network: string;
-  /** Token units per call, as a decimal string. Null until a rate is set. */
+  /** Token units for one credit, as a decimal string. Null until a rate is set. */
   pricePerCall: string | null;
   /** Decimals of the asset, so a client can size the transfer. */
   decimals: number | null;
@@ -99,7 +99,11 @@ export function paymentRequired(
         network: config.network,
         asset: config.asset as string,
         payTo: config.payTo as string,
-        maxAmountRequired: config.pricePerCall as string,
+        // The tool's own price, not a flat rate. Multiplied here rather than
+        // stored in the catalogue, because the catalogue holds credits and the
+        // token rate belongs to the rail — one changes when a tool is repriced,
+        // the other when the token moves, and they must not be the same field.
+        maxAmountRequired: (BigInt(config.pricePerCall as string) * BigInt(tool.credits)).toString(),
         resource: `${origin}/api/mcp#${tool.name}`,
         // The tool's own sentence. An agent choosing what to pay for reads this
         // and nothing else, so it must say what is returned rather than sell it.

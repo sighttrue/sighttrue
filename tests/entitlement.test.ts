@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { bearerFrom, decide, type EntitlementRow } from '../src/lib/entitlement.ts';
-import { FREE_TOOLS, MCP_TOOLS, PAID_TOOLS, toolByName } from '../src/lib/mcp-catalogue.ts';
+import { FREE_TOOLS, MCP_TOOLS, PAID_TOOLS, PRICE_BANDS, toolByName } from '../src/lib/mcp-catalogue.ts';
 import { PLANS } from '../src/lib/plans.ts';
 
 /**
@@ -126,6 +126,22 @@ describe('the catalogue', () => {
 
     expect(claim, 'the free plan says something about MCP tools').toBeDefined();
     expect(claim).toContain(String(FREE_TOOLS.length));
+  });
+
+  it('prices every tool, and only the paid ones above zero', () => {
+    // The price and the sentence justifying it live together, so a tool cannot
+    // quietly get expensive without `because` having to change too.
+    for (const tool of MCP_TOOLS) {
+      if (tool.tier === 'free') expect(tool.credits, `${tool.name}`).toBe(0);
+      else expect(tool.credits, `${tool.name}`).toBeGreaterThan(0);
+    }
+  });
+
+  it('uses the named bands rather than a number picked per tool', () => {
+    const allowed = new Set<number>([0, ...Object.values(PRICE_BANDS)]);
+    for (const tool of MCP_TOOLS) {
+      expect(allowed.has(tool.credits), `${tool.name} costs ${tool.credits}`).toBe(true);
+    }
   });
 
   it('can say why every paid tool is worth paying for', () => {

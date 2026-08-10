@@ -40,7 +40,39 @@ export interface McpTool {
    * it, and a tool that cannot fill this in honestly should not be paid.
    */
   because: string;
+  /**
+   * What one call costs, in credits. Zero for the free tier.
+   *
+   * Priced by how hard the answer is to get anywhere else, which is the same
+   * thing `because` argues — so the number and its justification sit together
+   * and a tool cannot quietly get expensive without the sentence changing too.
+   *
+   * One flat rate across everything left money on the table in one direction
+   * and overcharged in the other: `check_eol` restates what endoflife.date
+   * publishes, and `time_to_fix` joins two sources nobody has joined. Charging
+   * the same for both says the second is worth as little as the first.
+   *
+   * Credits rather than token units, because the token has no price yet and a
+   * catalogue that quoted one would be inventing terms. `x402.ts` multiplies.
+   */
+  credits: number;
 }
+
+/**
+ * The three bands, and what puts a tool in one.
+ *
+ * Named rather than left to judgement per tool, so adding the thirty-second
+ * tool is a decision about which band it belongs in rather than a number picked
+ * to feel right.
+ */
+export const PRICE_BANDS = {
+  /** Restates a public source in a more convenient shape. */
+  convenience: 1,
+  /** Joins sources this project already reads, which nobody else joins. */
+  joined: 2,
+  /** Rests on the archive — readings that cannot be reconstructed later. */
+  archival: 5,
+} as const;
 
 const PACKAGE_ARGS = {
   registry: { type: 'string' },
@@ -58,6 +90,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: PACKAGE_ARGS,
     required: ['registry', 'name'],
     because: 'The first tool this server had, and free permanently.',
+    credits: 0,
   },
   {
     name: 'check_package',
@@ -68,6 +101,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: PACKAGE_ARGS,
     required: ['registry', 'name'],
     because: 'Free permanently.',
+    credits: 0,
   },
   {
     name: 'check_stack',
@@ -81,6 +115,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     },
     required: ['registry', 'names'],
     because: 'Free permanently.',
+    credits: 0,
   },
   {
     name: 'search_repositories',
@@ -91,6 +126,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: { query: { type: 'string' }, limit: { type: 'integer', minimum: 1 } },
     required: ['query'],
     because: 'Free permanently.',
+    credits: 0,
   },
   {
     name: 'compare_repositories',
@@ -104,6 +140,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     },
     required: ['a', 'b'],
     because: 'Free permanently.',
+    credits: 0,
   },
   {
     name: 'find_model',
@@ -118,6 +155,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     },
     required: [],
     because: 'Free permanently.',
+    credits: 0,
   },
   {
     name: 'check_eol',
@@ -131,6 +169,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     },
     required: ['product'],
     because: 'Free permanently.',
+    credits: 0,
   },
   {
     name: 'check_provider',
@@ -144,6 +183,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     },
     required: [],
     because: 'Free permanently.',
+    credits: 0,
   },
   {
     name: 'list_readings',
@@ -154,6 +194,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: {},
     required: [],
     because: 'A catalogue nobody can read is a catalogue nobody uses.',
+    credits: 0,
   },
 
   // ---------------------------------------------------------- supply chain
@@ -167,6 +208,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['registry', 'name'],
     because:
       'Bus factor counts who writes a project. Nothing counts who can ship it, and a package with one publisher is a supply-chain risk whatever its contributor count.',
+    credits: PRICE_BANDS.joined,
   },
   {
     name: 'package_weight_history',
@@ -178,6 +220,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['registry', 'name'],
     because:
       'A package that tripled in size is dragging something new into your bundle, and a sudden jump is a classic compromise signature. Registries publish today’s size and no history.',
+    credits: PRICE_BANDS.archival,
   },
   {
     name: 'withdrawn_but_installed',
@@ -189,6 +232,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: [],
     because:
       'The gap between a publisher saying stop and the world stopping is a number nobody publishes, and it is a direct measure of how many projects have not noticed.',
+    credits: PRICE_BANDS.joined,
   },
   {
     name: 'typosquat_check',
@@ -199,6 +243,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: PACKAGE_ARGS,
     required: ['registry', 'name'],
     because: 'Checked across every registry read here, not npm alone.',
+    credits: PRICE_BANDS.convenience,
   },
   {
     name: 'funding_gap',
@@ -210,6 +255,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: [],
     because:
       'Install counts and funding links are both public and never joined. The join is the sentence: installed forty million times a month, written by one person, asking for money.',
+    credits: PRICE_BANDS.joined,
   },
 
   // ---------------------------------------------------------- vulnerability
@@ -223,6 +269,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['registry', 'name'],
     because:
       'OSV publishes advisory dates and registries publish release dates. The interval between them is how long users were exposed, and nobody joins the two.',
+    credits: PRICE_BANDS.archival,
   },
   {
     name: 'advisory_severity',
@@ -234,6 +281,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['registry', 'name'],
     because:
       'Twelve low advisories and one critical are not the same reading, and a single count renders them identically.',
+    credits: PRICE_BANDS.joined,
   },
 
   // -------------------------------------------------------- runtime and infra
@@ -247,6 +295,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['names'],
     because:
       'Packages declare the runtime they need and endoflife.date knows when that runtime stopped getting fixes. The pair finds dependencies pinning you to an unsupported runtime.',
+    credits: PRICE_BANDS.joined,
   },
   {
     name: 'base_image_check',
@@ -258,6 +307,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['image'],
     because:
       'An image whose Alpine went end-of-life stopped receiving OS patches, and that shows up in no vulnerability scanner because there is no advisory to match.',
+    credits: PRICE_BANDS.joined,
   },
   {
     name: 'registry_health',
@@ -267,6 +317,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: { registry: { type: 'string' } },
     required: [],
     because: 'A registry outage stops every deploy that depends on it, and no one keeps the record.',
+    credits: PRICE_BANDS.convenience,
   },
 
   // ------------------------------------------------------------- providers
@@ -280,6 +331,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['provider'],
     because:
       'Status pages delete their own history. The same component failing seven times in a year is a fact only an archive can state.',
+    credits: PRICE_BANDS.archival,
   },
   {
     name: 'provider_transparency',
@@ -291,6 +343,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: [],
     because:
       'This measures disclosure rather than reliability, and it is not published anywhere. Forty minutes to admit something is a different vendor from three.',
+    credits: PRICE_BANDS.archival,
   },
   {
     name: 'provider_terms_changed',
@@ -300,6 +353,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: { provider: { type: 'string' } },
     required: [],
     because: 'Terms changes carry commercial consequences and are archived by nobody.',
+    credits: PRICE_BANDS.joined,
   },
 
   // ---------------------------------------------------------------- models
@@ -311,6 +365,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: { model: { type: 'string' } },
     required: ['model'],
     because: 'Price tables carry no history. A rise is announced in a blog post and then invisible.',
+    credits: PRICE_BANDS.archival,
   },
   {
     name: 'model_withdrawn',
@@ -320,6 +375,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: {},
     required: [],
     because: 'A retired model breaks somebody’s product with no notice, and the catalogue simply stops listing it.',
+    credits: PRICE_BANDS.convenience,
   },
 
   // ------------------------------------------------------------- community
@@ -333,6 +389,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['tag'],
     because:
       'Question volume measures attention. The answered share measures whether help still exists, which is the earlier signal that a community is dispersing.',
+    credits: PRICE_BANDS.joined,
   },
 
   // ------------------------------------------------------------ for agents
@@ -345,6 +402,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: { manifest: { type: 'string' }, filename: { type: 'string' } },
     required: ['manifest'],
     because: 'An agent auditing forty dependencies should not make forty calls.',
+    credits: PRICE_BANDS.joined,
   },
   {
     name: 'diff_since',
@@ -359,6 +417,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['names', 'since'],
     because:
       'The archive is the one dataset here that cannot be rebuilt, and this is the question it exists to answer.',
+    credits: PRICE_BANDS.archival,
   },
   {
     name: 'watch_add',
@@ -370,6 +429,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['registry', 'name'],
     because:
       'The public watchlist is curated and partial. A caller’s dependencies are neither, and an agent auditing them should be reading the right list.',
+    credits: PRICE_BANDS.joined,
   },
   {
     name: 'watch_changes',
@@ -381,6 +441,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: [],
     because:
       'Every other tool here answers a question at the moment it is asked. This is the only one that answers what happened while nobody was looking, which is the reason to keep a list at all.',
+    credits: PRICE_BANDS.archival,
   },
   {
     name: 'explain_finding',
@@ -391,6 +452,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     properties: { id: { type: 'string' } },
     required: ['id'],
     because: 'A figure an agent pastes into a code review has to be checkable by whoever reads it.',
+    credits: PRICE_BANDS.convenience,
   },
   {
     name: 'domain_risk',
@@ -402,6 +464,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
     required: ['registry', 'name'],
     because:
       'A lapsed domain picked up by somebody else turns an old README link into a live hijack route.',
+    credits: PRICE_BANDS.convenience,
   },
 ];
 

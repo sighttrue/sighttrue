@@ -56,8 +56,31 @@ describe('what the server asks for', () => {
     const accept = required?.accepts[0];
     expect(accept?.asset).toBe(LIVE.asset);
     expect(accept?.payTo).toBe(LIVE.payTo);
-    expect(accept?.maxAmountRequired).toBe(LIVE.pricePerCall);
     expect(accept?.network).toBe('robinhood');
+  });
+
+  it('charges the tool’s own price rather than a flat rate', () => {
+    // time_to_fix rests on the archive: advisory dates against release dates,
+    // which cannot be reconstructed after the fact. check_eol restates what
+    // endoflife.date publishes. Charging both the same says the first is worth
+    // as little as the second.
+    const archival = toolByName('time_to_fix')!;
+    const convenience = toolByName('typosquat_check')!;
+
+    expect(archival.credits).toBeGreaterThan(convenience.credits);
+
+    const dear = paymentRequired(archival, 'https://sighttrue.com', LIVE);
+    expect(dear?.accepts[0]?.maxAmountRequired).toBe(
+      (BigInt(LIVE.pricePerCall as string) * BigInt(archival.credits)).toString(),
+    );
+  });
+
+  it('never asks a free tool for money', () => {
+    // Nine tools shipped keyless. A price on one of them would be the promise
+    // being withdrawn, whatever the amount.
+    for (const name of ['check_before_install', 'check_eol', 'find_model']) {
+      expect(toolByName(name)?.credits, `${name} must cost nothing`).toBe(0);
+    }
   });
 
   it('points at the tool it is charging for, not at the server', () => {
