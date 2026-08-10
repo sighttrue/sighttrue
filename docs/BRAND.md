@@ -174,29 +174,34 @@ if a tool it names has moved to the free tier.
 Posted with the film. The token is explained by what it is *for*, because the
 utility is the only part of a launch that can be checked on the day.
 
-> **$SGHT — what the token is for.**
+> An agent can't use a credit card. No billing address, no way through a 3-D
+> Secure prompt, no account it can open.
 >
-> An AI agent cannot use a credit card. It has no billing address, cannot answer
-> a 3-D Secure prompt, and cannot open an account. Card rails assume a human at
-> the other end, and increasingly there is not one.
+> It can hold a wallet.
 >
-> Sighttrue is an agent that watches 417 open-source repositories and takes
-> eleven readings — provider outages, end-of-life dates, model prices, real ship
-> dates, install scripts, bus factor — and commits every one of them to a public
-> repository. The commit log is the audit trail.
+> Sighttrue watches 417 open-source repositories and takes eleven readings —
+> outages, end-of-life dates, model prices, real ship dates, bus factor. Agents
+> buy them one call at a time. No signup, no API key, no human.
 >
-> Other agents buy those readings one call at a time over x402. The server
-> answers 402 with a price, the agent pays, the call goes through. No account, no
-> API key, no human in the loop. $SGHT is what it pays in.
+> Try it without any of that:
 >
-> 9 of the 31 tools stay free — enforced by a test, not by a promise. The other
-> 22 are priced by how hard the reading is to get: 1 credit to restate a public
-> source, 2 to join sources nobody joins, 5 to answer from an archive kept after
-> the original feeds dropped it.
+> `npx sighttrue check`
 >
-> Launching on Virtuals, on Robinhood Chain.
+> 9 of the 31 tools stay free.
+>
+> $SGHT — launching on Virtuals, Robinhood Chain.
 >
 > sighttrue.com
+
+The first draft of this ran to five paragraphs and was documentation wearing a
+post's clothes: it explained one idea in three clauses, restated the film in
+prose, and put the launch second from the bottom. Length was the smaller half of
+the problem. The larger half was that it argued instead of showing.
+
+`npx sighttrue check` is the line that earns the rest. A launch caption is the
+one artefact a reader cannot check against a file, and this hands them a command
+that answers in ten seconds and costs nothing — which is a stronger claim about
+the product than any sentence in the paragraph above it.
 
 The chain is named because the site names it and the payment rail verifies it —
 three surfaces saying the same thing, which is the only version of this a reader
@@ -204,14 +209,14 @@ can check.
 
 Short form, for anywhere with a 280-character limit:
 
-> An AI agent cannot use a credit card. It can hold a wallet.
+> An agent can't use a credit card. It can hold a wallet.
 >
-> $SGHT pays for readings on 417 open-source repositories — outages, EOL dates,
-> model prices, bus factor — one call at a time over x402. No account, no key.
+> $SGHT buys readings on 417 open-source repositories — outages, EOL dates,
+> model prices, bus factor — one call at a time. No signup, no key.
 >
-> 9 of 31 tools free.
+> `npx sighttrue check`
 >
-> Launching on Virtuals, on Robinhood Chain. sighttrue.com
+> Launching on Virtuals, Robinhood Chain.
 
 Neither version says the token will rise, names a price, or promises a supply.
 The rule in *What never goes in the copy* does not get relaxed because the post
