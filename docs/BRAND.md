@@ -135,6 +135,7 @@ about a product without anybody deciding to.
 | `banner.png` | 3000x1000 | X header |
 | `post-1-incidents.png` … `post-5-yourstack.png` | 2400x1350 | one post each |
 | `film.mp4` | 1200x675, 8s | the first post |
+| `launch.mp4` | 1200x675, 13s | the launch post — see below |
 
 One template across all five cards, so the account reads as one voice. Each is a
 single measured claim: which reading it came from, the figure, one sentence, the
@@ -144,6 +145,74 @@ card that opens with "powerful" contradicts it on the first line.
 The first three lead with readings that never touch GitHub. "A GitHub
 summariser" is the fair objection to this product, and the fastest answer is
 three things GitHub does not know.
+
+## The launch film
+
+`scripts/build-launch.mjs` writes `launch.html`; `scripts/render-social.mjs
+launch` turns it into `launch.mp4`. Thirteen seconds, four scenes: the thesis,
+the 402 exchange as it actually happens, six paid readings with their prices,
+and where it launches.
+
+Kept apart from `film.mp4` on purpose. That one is evergreen and has to stay
+true on any day it is posted; this one names a token that does not exist yet and
+a platform that was chosen rather than measured, so it is dated by nature.
+
+**The other logo.** `virtuals.jpg` is their own avatar, embedded unmodified and
+placed *under* the words "launching on" — never beside the wordmark. Two logos
+side by side is the grammar of a joint announcement and no such announcement
+exists. Redrawing their mark to fit this palette would be worse: an approximated
+trademark is both a wrong logo and still a trademark.
+
+**What the film may claim.** Only what a reader can check by opening the
+repository: the tool counts and prices come from `mcp-catalogue.ts`, the header
+names from `x402.ts`, the repository count from the bundle. It states no price,
+no supply, no return, and does not call the token an investment. The build fails
+if a tool it names has moved to the free tier.
+
+### The caption
+
+Posted with the film. The token is explained by what it is *for*, because the
+utility is the only part of a launch that can be checked on the day.
+
+> **$SGHT — what the token is for.**
+>
+> An AI agent cannot use a credit card. It has no billing address, cannot answer
+> a 3-D Secure prompt, and cannot open an account. Card rails assume a human at
+> the other end, and increasingly there is not one.
+>
+> Sighttrue is an agent that watches 417 open-source repositories and takes
+> eleven readings — provider outages, end-of-life dates, model prices, real ship
+> dates, install scripts, bus factor — and commits every one of them to a public
+> repository. The commit log is the audit trail.
+>
+> Other agents buy those readings one call at a time over x402. The server
+> answers 402 with a price, the agent pays, the call goes through. No account, no
+> API key, no human in the loop. $SGHT is what it pays in.
+>
+> 9 of the 31 tools stay free — enforced by a test, not by a promise. The other
+> 22 are priced by how hard the reading is to get: 1 credit to restate a public
+> source, 2 to join sources nobody joins, 5 to answer from an archive kept after
+> the original feeds dropped it.
+>
+> Launching on Virtuals.
+>
+> sighttrue.com
+
+Short form, for anywhere with a 280-character limit:
+
+> An AI agent cannot use a credit card. It can hold a wallet.
+>
+> $SGHT pays for readings on 417 open-source repositories — outages, EOL dates,
+> model prices, bus factor — one call at a time over x402. No account, no key.
+>
+> 9 of 31 tools free.
+>
+> Launching on Virtuals. sighttrue.com
+
+Neither version says the token will rise, names a price, or promises a supply.
+The rule in *What never goes in the copy* does not get relaxed because the post
+is about a token — a launch caption is the single most-quoted thing this project
+will ever emit and the one nobody can check against a file.
 
 
 ## Banner
