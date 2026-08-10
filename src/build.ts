@@ -29,6 +29,8 @@ import {
   readWindow,
   writeMeta,
 } from './lib/ledger.ts';
+import { CHAIN_NETWORK } from './lib/chain.ts';
+import { TOKEN } from './lib/payment.ts';
 import { lastDetectionByRepo } from './lib/confidence.ts';
 import { buildCoverage } from './lib/coverage.ts';
 import { summariseAdoption } from './lib/adoption-summary.ts';
@@ -1191,9 +1193,31 @@ export function runBuild(options: BuildOptions = {}): BuildResult {
   // deploy gate like everything else served. Written directly first, and it
   // never appeared in dist — a file the build thinks it emitted and does not is
   // exactly the failure this project keeps finding.
+  // The token travels with the channels. A reader checking whether an address
+  // is ours should not have to parse a page for it, and an agent should not
+  // have to either — this is the machine-readable half of the same defence.
   pages.set(
     'data/official.json',
-    `${JSON.stringify({ ...OFFICIAL, note: 'Anything not listed here is not us.' }, null, 2)}
+    `${JSON.stringify(
+      {
+        ...OFFICIAL,
+        ...(TOKEN === null
+          ? {}
+          : {
+              token: {
+                symbol: TOKEN.symbol,
+                contract: TOKEN.address,
+                chain: CHAIN_NETWORK,
+                decimals: TOKEN.decimals,
+                preGraduation: TOKEN.preGraduation,
+                launchpad: TOKEN.launchpad.url,
+              },
+            }),
+        note: 'Anything not listed here is not us.',
+      },
+      null,
+      2,
+    )}
 `,
   );
 

@@ -2,7 +2,7 @@ import { COMPARISON, isCapped, readingsOf, SIGNAL_LABEL } from './vocabulary.ts'
 import { REACHABLE_SHARE } from '../lib/calibration.ts';
 import { MIN_INSTALLS } from '../lib/divergence.ts';
 import { allowedMinutes } from '../lib/incidents-summary.ts';
-import { launchSentence } from '../lib/payment.ts';
+import { launchSentence, TOKEN } from '../lib/payment.ts';
 import { COMPARE_SCRIPT } from './compare.ts';
 import { SBOM_SCRIPT } from './sbom-script.ts';
 import { STACK_EXTRAS_SCRIPT } from './stack-extras.ts';
@@ -422,16 +422,38 @@ export const OFFICIAL = {
 } as const;
 
 function officialHtml(): string {
+  /**
+   * The token belongs on this list more than anything else on it.
+   *
+   * A launch attracts clones within days, and the address is the one thing a
+   * clone must change. Publishing it here — in the footer of every page, from
+   * the domain nobody else can publish from — is what lets a reader check the
+   * bio, the pair page and a screenshot against something.
+   *
+   * Whole, never abbreviated: the middle characters are exactly the ones an
+   * impersonator alters, so an ellipsis there removes the only defence.
+   */
+  const token =
+    TOKEN === null
+      ? ''
+      : `
+    <li><span class="label">Token</span> <b><code class="official-ca">${esc(TOKEN.address)}</code></b>
+      <span class="official-aside">${TOKEN.preGraduation ? 'Bonding curve — replaced if it graduates. ' : ''}Traded on <a href="${esc(TOKEN.launchpad.url)}">${esc(TOKEN.launchpad.name)}</a>.</span></li>`;
+
   return `<section class="official shell">
   <h2 class="official-head">The only official channels</h2>
   <ul class="official-list">
     <li><span class="label">Site</span> <b>sighttrue.com</b></li>
     <li><span class="label">X</span> <b><a href="https://x.com/${esc(OFFICIAL.x)}" rel="me">@${esc(OFFICIAL.x)}</a></b></li>
-    <li><span class="label">Code</span> <b><a href="https://github.com/${esc(OFFICIAL.github)}">github.com/${esc(OFFICIAL.github)}</a></b></li>
+    <li><span class="label">Code</span> <b><a href="https://github.com/${esc(OFFICIAL.github)}">github.com/${esc(OFFICIAL.github)}</a></b></li>${token}
   </ul>
   <p class="official-note">Anything not on this list is not us. This list is served from
   sighttrue.com, which is the one address nobody else can publish from, and it is also a file:
-  <a href="/data/official.json">/data/official.json</a>.</p>
+  <a href="/data/official.json">/data/official.json</a>.${
+    TOKEN === null
+      ? ''
+      : ' Check the address here rather than in a screenshot — a screenshot is the one place it can be changed.'
+  }</p>
 </section>`;
 }
 

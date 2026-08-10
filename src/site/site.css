@@ -2621,3 +2621,25 @@ a.lens-cell:hover {
   line-height: 1.55;
   color: var(--ink-500);
 }
+
+/* The contract in the official-channels footer.
+ *
+ * Whole and wrapping, never truncated: the middle characters are the ones an
+ * impersonator alters, so an ellipsis there removes the only thing a reader can
+ * check a screenshot against. */
+.official-ca {
+  font-family: var(--face-data);
+  font-size: var(--t-base);
+  color: var(--ink-900);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.official-aside {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--face-prose);
+  font-size: var(--t-base);
+  line-height: 1.5;
+  color: var(--ink-500);
+}
