@@ -38,7 +38,7 @@ describe('before the token exists', () => {
     // A contract address with no rate, or a rate with nowhere to send it, is
     // the shape a launch is in for an afternoon. Charging during that window
     // would take money against terms nobody set.
-    for (const missing of ['asset', 'payTo', 'pricePerCall', 'decimals'] as const) {
+    for (const missing of ['asset', 'network', 'payTo', 'pricePerCall', 'decimals'] as const) {
       expect(canCharge({ ...LIVE, [missing]: null }), `missing ${missing}`).toBe(false);
     }
   });

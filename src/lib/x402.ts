@@ -27,8 +27,17 @@ export interface PaymentConfig {
   asset: string | null;
   /** Where payment is sent. Null until the receiving wallet is chosen. */
   payTo: string | null;
-  /** Chain the asset lives on, as x402 names it. */
-  network: string;
+  /**
+   * Chain the asset lives on, as x402 names it. Null until it is chosen.
+   *
+   * Nullable rather than defaulted, and that is not tidiness. This held
+   * `'robinhood'` while the chain was still an open question between Bankr and
+   * Virtuals, which sit on different ones — so a launch that filled in the
+   * contract, the wallet and the rate but left this alone would have quoted the
+   * wrong chain to an agent, and a transfer sent to the wrong chain does not
+   * come back.
+   */
+  network: string | null;
   /** Token units for one credit, as a decimal string. Null until a rate is set. */
   pricePerCall: string | null;
   /** Decimals of the asset, so a client can size the transfer. */
@@ -38,7 +47,7 @@ export interface PaymentConfig {
 export const NOT_LAUNCHED: PaymentConfig = {
   asset: null,
   payTo: null,
-  network: 'robinhood',
+  network: null,
   pricePerCall: null,
   decimals: null,
 };
@@ -47,6 +56,7 @@ export const NOT_LAUNCHED: PaymentConfig = {
 export function canCharge(config: PaymentConfig): boolean {
   return (
     config.asset !== null &&
+    config.network !== null &&
     config.payTo !== null &&
     config.pricePerCall !== null &&
     config.decimals !== null
@@ -96,7 +106,7 @@ export function paymentRequired(
     accepts: [
       {
         scheme: 'exact',
-        network: config.network,
+        network: config.network as string,
         asset: config.asset as string,
         payTo: config.payTo as string,
         // The tool's own price, not a flat rate. Multiplied here rather than
