@@ -107,9 +107,9 @@ a finished library is finished. <a href="/ecosystem">Everything measured</a></p>
 
   const cards = answers
     .map(
-      (entry) => `<div class="door">
-      <h3 class="door-q">${esc(entry.question)}</h3>
-      <p class="door-a">${esc(entry.answer)}</p>
+      (entry) => `<div class="answer">
+      <h3 class="answer-q">${esc(entry.question)}</h3>
+      <p class="answer-a">${esc(entry.answer)}</p>
       <a class="label label-link" href="${esc(entry.href)}">See the readings</a>
     </div>`,
     )
@@ -163,7 +163,7 @@ ${
 
 ${band(
   'What it answers',
-  `<div class="doors">${cards}</div>`,
+  `<div class="answers">${cards}</div>`,
   'Four questions a repository page cannot answer, because the answers are not on GitHub.',
 )}
 

@@ -638,11 +638,16 @@ a:hover {
   color: var(--mag-5);
 }
 
+/* Wrapped, so the whole configuration is on screen. It scrolled instead, which
+   meant the panel showed `"url": "https` and stopped — a line cut mid-token
+   with no ellipsis and no visible scrollbar reads as a broken panel rather than
+   a shortened one, and this is the first thing an agent-shaped reader looks at.
+   Copy still takes the exact string. */
 .install-code {
   display: block;
   width: 100%;
-  overflow-x: auto;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   font-family: var(--face-data);
   font-size: var(--t-micro);
   line-height: 1.6;
@@ -717,16 +722,24 @@ a:hover {
 /* The opening readout: the five standing facts about the instrument itself,
    set as a panel rather than as a sentence, because they are constants and a
    reader should be able to find them in the same place every time. */
+/* Wrapping flex, not auto-fit grid. The strip holds six figures on the front
+   page, five on the instrument and three on the archive pages, and auto-fit
+   divides the row by a minimum width without knowing any of that: at 1024px it
+   put five across and left the sixth alone against four columns of empty
+   background. Flex items grow, so a row that cannot hold them all leaves the
+   remainder filling the width instead of stranded in it. */
 .hero-figures {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1px;
   background: var(--ink-100);
   border: 1px solid var(--ink-100);
 }
 
 .figure {
-  display: grid;
+  flex: 1 1 132px;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
   background: var(--ink-025);
   padding: 14px 16px 15px;
@@ -846,8 +859,8 @@ a:hover {
    above the fold — a visitor met six tables of readings and left. A tool
    nobody can find is a tool nobody has. */
 .hero-doors {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1px;
   background: var(--ink-100);
   border: 1px solid var(--ink-100);
@@ -855,12 +868,20 @@ a:hover {
 }
 
 .door {
-  display: grid;
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
   gap: 5px;
-  align-content: start;
   background: var(--ink-025);
   padding: 16px 16px 18px;
   border: 0;
+}
+
+/* The note sits on the floor. One of the three names wraps to two lines at
+   narrow widths and its note then hung eighteen pixels below the others. */
+.door-note {
+  margin-top: auto;
+  padding-top: 3px;
 }
 
 .door:hover {
@@ -1252,21 +1273,32 @@ a:hover {
    Five signals with no explanation anywhere. The navigation named them and
    nothing said what any of them answers. */
 
+/* Five readings, and auto-fit put four across with one stranded. Same fix and
+   same reason as the figure strip: the row is filled rather than left holed. */
 .lens-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1px;
   background: var(--ink-100);
   border: 1px solid var(--ink-100);
 }
 
 .lens-cell {
+  flex: 1 1 178px;
   background: var(--ink-025);
   padding: 16px 16px 18px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  align-content: start;
   border: 0;
+}
+
+/* The count sits on the floor of every cell. Questions run to one line or two,
+   and the figure followed the question, so one number in a row of five sat
+   eighteen pixels below the other four. */
+.lens-cell > :last-child {
+  margin-top: auto;
+  padding-top: 4px;
 }
 
 a.lens-cell:hover {
@@ -1891,38 +1923,63 @@ a.lens-cell:hover {
    report. Square corners and a rule rather than a box, so they read as entries
    in an index and not as feature tiles. */
 
-.doors {
+/* The four questions on the front page.
+ *
+ * These were `.doors`/`.door`, which is also the name of the three panels in
+ * the hero — two different components sharing one class in one stylesheet. The
+ * later block won, so the hero panels lost the padding they declared and every
+ * second one took a 30px indent meant for a right-hand column, which is why
+ * "Compare two projects" sat further in than the panel above it. Renamed rather
+ * than made more specific: two components with one name is a bug waiting to be
+ * reintroduced by whoever edits either one next.
+ *
+ * Two columns, stated. It was `auto-fit, minmax(268px, 1fr)`, which at this
+ * band's width resolves to three, while every rule below assumed two. Four
+ * questions want a two-by-two anyway; auto-fit was deciding the shape of the
+ * content by arithmetic on a minimum width nobody chose for this. */
+.answers {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  grid-template-columns: 1fr;
   gap: 0;
   border-top: var(--rule);
 }
 
-.door {
+.answer {
+  /* A column, so the link can be pushed to the floor. Cards in a row hold
+     different amounts of prose and the link followed the last line of each,
+     which put three underlines at three heights across one row. */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   border-bottom: var(--rule);
-  border-right: var(--rule);
-  padding: 20px 22px 18px 0;
+  padding: 20px 0 18px;
 }
 
-/* No rule hanging off the right edge of the last column in each row. */
-.door:last-child {
-  border-right: 0;
+.answer .label-link {
+  margin-top: auto;
+  padding-top: 10px;
 }
 
 @media (min-width: 900px) {
-  .door:nth-child(2n) {
-    border-right: 0;
+  .answers {
+    grid-template-columns: 1fr 1fr;
   }
-  .door {
+
+  .answer {
+    border-right: var(--rule);
     padding-right: 30px;
   }
-  .door:nth-child(2n) {
+
+  /* The right-hand column: no rule off the edge of the band, and the gutter
+     moves to its inside. */
+  .answer:nth-child(2n) {
+    border-right: 0;
     padding-left: 30px;
     padding-right: 0;
   }
 }
 
-.door-q {
+.answer-q {
   font-family: var(--face-label);
   font-weight: 600;
   font-size: var(--t-mid);
@@ -1931,7 +1988,7 @@ a.lens-cell:hover {
   margin: 0 0 8px;
 }
 
-.door-a {
+.answer-a {
   font-family: var(--face-prose);
   font-size: var(--t-base);
   line-height: 1.6;
@@ -2303,20 +2360,29 @@ a.lens-cell:hover {
    tries it. Each card carries the address in full because somebody copying it
    needs to see the whole thing, not a link that hides it. */
 .ways {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1px;
   background: var(--ink-100);
   border: 1px solid var(--ink-100);
 }
 
 .way {
-  display: grid;
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
   gap: 9px;
-  align-content: start;
   padding: 20px 22px 22px;
   background: var(--ink-000);
   text-decoration: none;
+}
+
+/* The address is the point of each of these, so it sits on the floor of every
+   card and reads as one column down the row. The descriptions run to one line
+   or two and the addresses followed them, eighteen pixels apart. */
+.way-addr {
+  margin-top: auto;
+  padding-top: 2px;
 }
 
 .way:hover {
