@@ -17,8 +17,8 @@
  * of them a rule.
  */
 
-import { readFileSync, existsSync } from 'node:fs';
-import { basename, resolve } from 'node:path';
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { basename, join, resolve } from 'node:path';
 
 import { fromLines, readingFor } from './lib/docker.mjs';
 import { foldName, names, registryFor } from './lib/manifest.mjs';
@@ -68,6 +68,7 @@ function usage() {
   npx sighttrue check [manifest]     read a manifest and report what is on record
   npx sighttrue docker [Dockerfile]  read the FROM lines: support window and rebuild date
   npx sighttrue <registry>:<name>    read one package, e.g. npm:axios
+  npx sighttrue skill                teach your coding agent to check before it installs
 
 Options
   --fail-on=a,b     exit 1 on any of: withdrawn, archived, advisories, source-available,
@@ -136,6 +137,27 @@ async function main() {
 
   const positional = args.filter((a) => !a.startsWith('-'));
   const today = new Date().toISOString().slice(0, 10);
+
+  // ---- skill ------------------------------------------------------------------
+
+  // Installs the agent instruction rather than describing it.
+  //
+  // The order today is: hear about this, decide to add the MCP server, then
+  // remember to call it while choosing a dependency. Three steps, each losing
+  // people. A skill collapses them to one — installed once, the agent calls it
+  // without anybody deciding to again.
+  if (positional[0] === 'skill') {
+    const target = join(process.cwd(), '.claude', 'skills', 'sighttrue');
+    mkdirSync(target, { recursive: true });
+
+    const source = new URL('./SKILL.md', import.meta.url);
+    writeFileSync(join(target, 'SKILL.md'), readFileSync(source, 'utf8'));
+
+    out(`Installed to ${join('.claude', 'skills', 'sighttrue', 'SKILL.md')}`);
+    out(dim('Your agent will now take a reading before adding a dependency,'));
+    out(dim('rather than answering from training data. Nothing was sent anywhere.'));
+    return;
+  }
 
   // ---- docker -----------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 {
   "name": "sighttrue",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Dated readings on what you are about to install: dependencies and base images. No account, no key, and nothing you read leaves the machine.",
   "keywords": [
     "dependencies",
@@ -31,7 +31,8 @@
   "files": [
     "sighttrue.mjs",
     "lib/",
-    "README.md"
+    "README.md",
+    "SKILL.md"
   ],
   "engines": {
     "node": ">=18"
