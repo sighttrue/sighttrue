@@ -8,7 +8,9 @@ npx sighttrue check
 
 Reads the `package.json`, `requirements.txt`, `Cargo.toml`, `pyproject.toml`,
 `composer.json` or `Gemfile` in the current directory and reports what is on
-record for each dependency:
+record for each dependency. Packages outside the tracked watchlist are read
+straight from their own registry, from your machine — so most of a real manifest
+gets an answer rather than a shrug:
 
 - the publisher has **withdrawn** it — npm calls this deprecated, PyPI and
   crates.io call it yanked, RubyGems yanked, Packagist abandoned, NuGet

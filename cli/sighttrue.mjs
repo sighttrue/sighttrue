@@ -24,6 +24,7 @@ import { fromLines, readingFor } from './lib/docker.mjs';
 import { foldName, names, registryFor } from './lib/manifest.mjs';
 import { noticesFor } from './lib/notices.mjs';
 import { positionOf } from './lib/positions.mjs';
+import { MAX_LOOKUPS, READABLE, readMissing } from './lib/registry.mjs';
 
 const ENDPOINT = (process.env.SIGHTTRUE_ENDPOINT || 'https://sighttrue.com').replace(/\/$/, '');
 
@@ -259,9 +260,29 @@ async function main() {
     nearMiss.set(row.name.toLowerCase(), row);
   }
 
+  /**
+   * Everything the published index does not hold, read from its own registry.
+   *
+   * The index carries 186 packages and a real manifest draws from millions.
+   * Measured against the projects this watches, 3% of their dependencies had a
+   * reading and more than half the projects got nothing at all — a checker that
+   * answers "nothing on record" to most of what it is shown is not a checker.
+   *
+   * It costs this project nothing: the request goes from the reader's machine
+   * to the registry that published the package, which is where the name came
+   * from. No server here is involved and the manifest still never moves.
+   */
+  const missing = wanted.filter(
+    ({ registry, name }) =>
+      READABLE.includes(registry) && !index.packages?.[`${registry}:${foldName(registry, name)}`],
+  );
+  const { readings: live, skipped } = await readMissing(missing);
+
   const rows = [];
   for (const { registry, name, at } of wanted) {
-    const entry = index.packages?.[`${registry}:${foldName(registry, name)}`];
+    const entry =
+      index.packages?.[`${registry}:${foldName(registry, name)}`] ??
+      live.get(`${registry}:${name}`);
 
     if (!entry) {
       const near = nearMiss.get(name.toLowerCase());
@@ -290,7 +311,13 @@ async function main() {
   // A near-miss row is a name this project does *not* track — it is here
   // because it resembles one. Counting it as tracked would overstate coverage
   // by exactly the packages the reader most needs to know are unknown.
-  const tracked = rows.filter((row) => row.entry.repo !== null).length;
+  // Two different things, counted apart. A ledger reading is archived and can
+  // be checked tomorrow; a live one was taken from the registry a moment ago,
+  // passed through no carry-forward rule, and is in no file. Reporting them as
+  // one number would claim an audit trail for half of them that does not exist.
+  const fromLedger = rows.filter((row) => row.entry.repo !== null).length;
+  const fromRegistry = rows.filter((row) => row.entry.live === true).length;
+  const tracked = fromLedger + fromRegistry;
 
   if (asJson) {
     out(
@@ -299,15 +326,21 @@ async function main() {
           read,
           dependencies: wanted.length,
           tracked,
+          fromLedger,
+          fromRegistry,
           packages: flagged.map((row) => ({
             package: `${row.registry}:${row.name}`,
             repository: row.entry.repo,
+            // Which kind of reading this is, on every row rather than once in a
+            // footnote a caller can drop.
+            source: row.entry.live === true ? 'registry, read just now' : 'published ledger',
             notices: row.notices,
           })),
           limits: [
             'The watchlist is curated and partial. A package that is not covered is not being judged; it is not tracked.',
+            'A reading marked "registry, read just now" was taken live and is in no published file. It cannot be checked again later, and it carries no scorecard, advisory count or bus factor — those need the ledger.',
             'No field here states whether a package is safe to install.',
-            'Readings are taken every four hours at best.',
+            'Readings from the ledger are taken every four hours at best.',
           ],
         },
         null,
@@ -316,9 +349,22 @@ async function main() {
     );
   } else {
     out();
+    // The two sources named apart. One is archived and checkable tomorrow; the
+    // other was taken from the registry a moment ago and is in no file. Rolling
+    // them into a single count would claim an audit trail for half of them.
+    const where =
+      fromRegistry === 0
+        ? ''
+        : fromLedger === 0
+          ? ` — ${fromRegistry} read from the registry just now`
+          : ` — ${fromLedger} from the published readings, ${fromRegistry} read from the registry just now`;
+
     out(
-      `${bold(String(wanted.length))} ${wanted.length === 1 ? 'dependency' : 'dependencies'} in ${read}, ${bold(String(tracked))} tracked by Sighttrue.`,
+      `${bold(String(wanted.length))} ${wanted.length === 1 ? 'dependency' : 'dependencies'} in ${read}, ${bold(String(tracked))} with a reading${where}.`,
     );
+    if (skipped > 0) {
+      out(dim(`${skipped} more were not looked up; this stops at ${MAX_LOOKUPS} registry reads.`));
+    }
     out();
 
     if (flagged.length === 0) {
