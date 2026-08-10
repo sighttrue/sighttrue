@@ -174,34 +174,46 @@ if a tool it names has moved to the free tier.
 Posted with the film. The token is explained by what it is *for*, because the
 utility is the only part of a launch that can be checked on the day.
 
-> An agent can't use a credit card. No billing address, no way through a 3-D
-> Secure prompt, no account it can open.
+> Every status page forgets. They carry a few months, then the incident is gone
+> and the provider's record goes with it.
 >
-> It can hold a wallet.
+> This kept 731 days. 618 outages across 22 providers, each with how long they
+> said it took — Anthropic 64 minutes median, Cloudflare 96, OpenAI 162, Twilio
+> 364.
 >
-> Sighttrue watches 417 open-source repositories and takes eleven readings —
-> outages, end-of-life dates, model prices, real ship dates, bus factor. Agents
-> buy them one call at a time. No signup, no API key, no human.
+> Also 463 release lines already past the date they stop getting security fixes,
+> and 395 models with every price change dated.
 >
-> Try it without any of that:
+> None of that comes from GitHub. Your agent can buy any of it one call at a
+> time — no signup, no key, no human.
 >
 > `npx sighttrue check`
->
-> 9 of the 31 tools stay free.
 >
 > $SGHT — launching on Virtuals, Robinhood Chain.
 >
 > sighttrue.com
 
-The first draft of this ran to five paragraphs and was documentation wearing a
-post's clothes: it explained one idea in three clauses, restated the film in
-prose, and put the launch second from the bottom. Length was the smaller half of
-the problem. The larger half was that it argued instead of showing.
+Two drafts were thrown away before this one and the second failed worse than the
+first. It opened *"Sighttrue watches 417 open-source repositories"* — which walks
+straight into the objection this whole product was built to answer. README says
+it plainly: the six readings that never touch GitHub are the reply to "a GitHub
+summariser is worth only what GitHub already shows you". A caption that leads
+with a repository count concedes the argument in its first line.
+
+So the caption leads with the archive instead, and names no repository count at
+all. Outages, end-of-life dates and model prices are things a reader cannot get
+anywhere else and can use the same afternoon; a count of watched repositories is
+a fact about this project rather than about them.
 
 `npx sighttrue check` is the line that earns the rest. A launch caption is the
 one artefact a reader cannot check against a file, and this hands them a command
-that answers in ten seconds and costs nothing — which is a stronger claim about
-the product than any sentence in the paragraph above it.
+that answers in ten seconds and costs nothing.
+
+**What the numbers may not say.** `windowDays` in the bundle is this project's
+own reporting window, not how long a status page keeps an incident — a draft
+read it as the second and nearly published "status pages only keep 90 days",
+which no file here supports. The honest form is the one above: their feeds carry
+a few months, and `observedDays` says how far back this archive goes.
 
 The chain is named because the site names it and the payment rail verifies it —
 three surfaces saying the same thing, which is the only version of this a reader
@@ -209,14 +221,16 @@ can check.
 
 Short form, for anywhere with a 280-character limit:
 
-> An agent can't use a credit card. It can hold a wallet.
+> Status pages forget. This kept 731 days — 618 outages across 22 providers,
+> with how long each actually took.
 >
-> $SGHT buys readings on 417 open-source repositories — outages, EOL dates,
-> model prices, bus factor — one call at a time. No signup, no key.
+> Plus 463 release lines past end-of-life, and 395 model prices, dated.
+>
+> None of it from GitHub.
 >
 > `npx sighttrue check`
 >
-> Launching on Virtuals, Robinhood Chain.
+> $SGHT — Virtuals, Robinhood Chain.
 
 Neither version says the token will rise, names a price, or promises a supply.
 The rule in *What never goes in the copy* does not get relaxed because the post
