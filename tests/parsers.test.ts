@@ -332,3 +332,59 @@ describe('the notices say the same thing in both languages', () => {
     expect(esmNotices('npm', 'axios', plain, TODAY)).toEqual([]);
   });
 });
+
+/**
+ * The registry readers exist twice — once in `cli/lib/registry.mjs` for the
+ * command line and once inside the `/stack` page's script, which cannot import
+ * it because it is a string served to a browser. Neither can see the other, so
+ * this is what holds them together.
+ *
+ * Two of these endpoints are traps that only spring in one of the two places.
+ * crates.io refuses a request with no user agent, which a browser always sends
+ * and a bare fetch does not; and Packagist serves CORS on `packagist.org` but
+ * not on the `repo.packagist.org` mirror its own tooling uses. Picking the
+ * mirror works everywhere except the browser, which is the half nobody tests.
+ */
+describe('the two registry readers call the same endpoints', () => {
+  const cli = readFileSync(new URL('../cli/lib/registry.mjs', import.meta.url), 'utf8');
+  const page = readFileSync(new URL('../src/site/stack.ts', import.meta.url), 'utf8');
+
+  const hosts = (source: string) =>
+    [...source.matchAll(/https:\/\/([a-z0-9.-]+)\//g)]
+      .map((m) => m[1])
+      .filter((host) => host !== 'sighttrue.com' && host !== 'api.osv.dev');
+
+  it('reads the same six registries from the same hosts', () => {
+    const wanted = [
+      'registry.npmjs.org',
+      'pypi.org',
+      'crates.io',
+      'rubygems.org',
+      'packagist.org',
+      'api.nuget.org',
+    ];
+
+    for (const host of wanted) {
+      expect(hosts(cli), `cli is missing ${host}`).toContain(host);
+      expect(hosts(page), `the stack page is missing ${host}`).toContain(host);
+    }
+  });
+
+  it('never reaches for the Packagist mirror, which serves no CORS', () => {
+    // 200 to curl, blocked in a browser. The failure is invisible in every test
+    // that does not run one.
+    //
+    // Matched as a URL rather than as a string: the comment above the reader
+    // names the mirror in order to explain why it is not used, and a bare
+    // `toContain` failed on the explanation.
+    expect(hosts(page)).not.toContain('repo.packagist.org');
+    expect(hosts(cli)).not.toContain('repo.packagist.org');
+  });
+
+  it('caps how many it will look up, and by the same number', () => {
+    const cap = (source: string) => /MAX_(?:LOOKUPS|LIVE)\s*=\s*(\d+)/.exec(source)?.[1];
+
+    expect(cap(cli)).toBe('60');
+    expect(cap(page)).toBe('60');
+  });
+});

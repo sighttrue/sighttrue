@@ -195,10 +195,29 @@ if (stackForm) {
     let osv = new Map();
     try { osv = await advisories(wanted); } catch { /* leave it unknown, never zero */ }
 
+    // Anything the ledger has never heard of, read from its own registry now.
+    // Measured before this existed: 3% of a real manifest had a reading and
+    // more than half of them got nothing at all, so the page answered "not
+    // tracked" to almost everything it was shown.
+    let live = new Map();
+    let skipped = 0;
+    try {
+      const missing = [];
+      for (const [key] of wanted) {
+        if (data.packages[key]) continue;
+        const cut = key.indexOf(':');
+        const registry = key.slice(0, cut);
+        if (LIVE_READERS[registry]) missing.push({ key, registry, name: key.slice(cut + 1) });
+      }
+      const read = await readMissing(missing);
+      live = read.readings;
+      skipped = read.skipped;
+    } catch { /* a registry being down is not a finding — leave the rows bare */ }
+
     const rows = [];
     for (const [key, declared] of wanted) {
       const shown = declared.shown;
-      const tracked = data.packages[key];
+      const tracked = data.packages[key] || live.get(key);
       // How many watched projects depend on this. Case-folded to match the
       // index: PyPI treats PyYAML and pyyaml as one package.
       const also = data.dependents?.[shown.toLowerCase().replace(/_/g, '-')] ?? null;
@@ -209,15 +228,152 @@ if (stackForm) {
         // pasted spelling is not: PyYAML and pyyaml are the same package and
         // only one of the two has a page.
         key,
-        tracked: Boolean(tracked),
+        // Tracked means the ledger holds it and it has a page here. A reading
+        // taken from the registry a second ago is not in a file, did not pass
+        // the carry-forward rules, and cannot be checked again tomorrow — so it
+        // arrives labelled rather than quietly counted as the same thing.
+        tracked: Boolean(data.packages[key]),
+        live: live.has(key),
         also,
         advisories: osv.has(key) ? osv.get(key) : (tracked ? tracked.advisories : null),
         ...(tracked || {}),
       });
     }
 
-    render(rows, data.benchmark, osv.size > 0);
+    render(rows, data.benchmark, osv.size > 0, skipped);
   });
+
+  /**
+   * Reading a package straight from its own registry, in the browser.
+   *
+   * The same six readers as cli/lib/registry.mjs and the same endpoints, held
+   * to agreement by tests/parsers.test.ts. Two of these have a trap: crates.io
+   * refuses a request without a user agent, which a browser always sends and
+   * curl does not, and Packagist serves CORS on packagist.org but not on the
+   * repo.packagist.org mirror that its own tooling uses. Picking the mirror
+   * would fail in the browser and nowhere else.
+   *
+   * Nothing leaves the machine that is not a package name the visitor pasted,
+   * and every one of these is a public endpoint anybody can open in a tab.
+   */
+  const LIVE_READERS = {
+    npm: {
+      url: (n) => 'https://registry.npmjs.org/' + encodeURIComponent(n),
+      read: (d) => {
+        const latest = d['dist-tags'] && d['dist-tags'].latest;
+        const v = (d.versions && d.versions[latest]) || {};
+        const scripts = ['preinstall', 'install', 'postinstall']
+          .filter((s) => v.scripts && v.scripts[s]);
+        return {
+          lastPublish: ((d.time && d.time[latest]) || '').slice(0, 10) || null,
+          withdrawn: notice(v.deprecated),
+          installScripts: scripts.length ? scripts.join(', ') : null,
+        };
+      },
+    },
+    pypi: {
+      url: (n) => 'https://pypi.org/pypi/' + encodeURIComponent(n) + '/json',
+      read: (d) => {
+        const files = (d.urls || []);
+        return {
+          lastPublish: ((files[0] || {}).upload_time || '').slice(0, 10) || null,
+          withdrawn: d.info && d.info.yanked
+            ? (notice(d.info.yanked_reason) || 'yanked by the publisher') : null,
+          installScripts: null,
+        };
+      },
+    },
+    crates: {
+      url: (n) => 'https://crates.io/api/v1/crates/' + encodeURIComponent(n),
+      read: (d) => {
+        const published = (d.versions || [])[0];
+        return {
+          lastPublish: ((d.crate && d.crate.updated_at) || '').slice(0, 10) || null,
+          withdrawn: published && published.yanked
+            ? (notice(published.yank_message) || 'yanked by the publisher') : null,
+          installScripts: null,
+        };
+      },
+    },
+    gem: {
+      url: (n) => 'https://rubygems.org/api/v1/gems/' + encodeURIComponent(n) + '.json',
+      read: (d) => ({
+        lastPublish: (d.version_created_at || '').slice(0, 10) || null,
+        withdrawn: d.yanked === true ? 'yanked by the publisher' : null,
+        installScripts: null,
+      }),
+    },
+    packagist: {
+      url: (n) => 'https://packagist.org/packages/' + n + '.json',
+      read: (d) => {
+        const p = d.package || {};
+        const versions = Object.values(p.versions || {});
+        return {
+          lastPublish: ((versions[0] || {}).time || '').slice(0, 10) || null,
+          withdrawn: p.abandoned
+            ? (typeof p.abandoned === 'string'
+                ? 'abandoned by the publisher, which suggests ' + p.abandoned
+                : 'abandoned by the publisher')
+            : null,
+          installScripts: null,
+        };
+      },
+    },
+    nuget: {
+      url: (n) => 'https://api.nuget.org/v3/registration5-gz-semver2/' +
+        encodeURIComponent(n.toLowerCase()) + '/index.json',
+      read: (d) => {
+        const page = (d.items || [])[(d.items || []).length - 1] || {};
+        const leaf = (page.items || [])[(page.items || []).length - 1] || {};
+        const entry = leaf.catalogEntry || {};
+        return {
+          lastPublish: (entry.published || '').slice(0, 10) || null,
+          withdrawn: entry.deprecation
+            ? (notice(entry.deprecation.message) || 'deprecated by the publisher') : null,
+          installScripts: null,
+        };
+      },
+    },
+  };
+
+  /** A publisher's own words, when they left any. */
+  const notice = (value) => {
+    if (value === true) return 'withdrawn by the publisher';
+    if (typeof value !== 'string' || !value.trim()) return null;
+    return 'withdrawn by the publisher: ' + value.trim();
+  };
+
+  /** Beyond this a manifest is a directory, and these services owe us nothing. */
+  const MAX_LIVE = 60;
+  const LIVE_AT_ONCE = 6;
+
+  async function readMissing(missing) {
+    const queue = missing.slice(0, MAX_LIVE);
+    const readings = new Map();
+
+    for (let i = 0; i < queue.length; i += LIVE_AT_ONCE) {
+      const batch = queue.slice(i, i + LIVE_AT_ONCE);
+      const done = await Promise.all(batch.map(async (entry) => {
+        const reader = LIVE_READERS[entry.registry];
+        try {
+          const res = await fetch(reader.url(entry.name));
+          if (!res.ok) return null;
+          const shape = reader.read(await res.json());
+          // Every GitHub-derived field stays null rather than being invented:
+          // bus factor, scorecard and advisory counts need a token, and asking
+          // a stranger for theirs would be a worse trade than the gap it closes.
+          return {
+            repo: null, scorecard: null, advisories: null, busFactor: null,
+            installs: null, pushedAt: null, archived: false, license: null,
+            ...shape,
+          };
+        } catch { return null; }
+      }));
+      batch.forEach((entry, at) => { if (done[at]) readings.set(entry.key, done[at]); });
+    }
+
+    return { readings, skipped: Math.max(0, missing.length - queue.length) };
+  }
 
   // OSV spells several of these differently from the registries themselves, and
   // a query with the wrong ecosystem comes back empty rather than failing — so
@@ -266,7 +422,7 @@ if (stackForm) {
   const AGE_DAYS = (iso) =>
     iso ? Math.round((Date.now() - Date.parse(iso)) / 86400000) : null;
 
-  function render(rows, benchmark, osvWorked) {
+  function render(rows, benchmark, osvWorked, skipped) {
     if (!rows.length) {
       out.innerHTML = '<p class="notice"><strong>Nothing read</strong> No dependency names were ' +
         'found in that. Paste a package.json, requirements.txt or Cargo.toml.</p>';
@@ -274,6 +430,8 @@ if (stackForm) {
     }
 
     const tracked = rows.filter((r) => r.tracked);
+    const fresh = rows.filter((r) => r.live);
+    const bare = rows.filter((r) => !r.tracked && !r.live);
     const scored = rows.filter((r) => typeof r.scorecard === 'number');
     const median = scored.length
       ? scored.map((r) => r.scorecard).sort((a, b) => a - b)[Math.floor(scored.length / 2)]
@@ -302,6 +460,17 @@ if (stackForm) {
         fig(benchmark.medianScorecard === null ? '—' : benchmark.medianScorecard.toFixed(1),
             'Median across ' + benchmark.scored + ' tracked') +
       '</div>' +
+      // Where each answer came from. A reading taken a second ago and one that
+      // has been carried in a file for months are not the same evidence, and a
+      // page that presents them identically is overstating the second half.
+      '<p class="basis label">' +
+        rows.length + ' read — ' + tracked.length + ' from the published readings, ' +
+        fresh.length + ' from the registries just now' +
+        (bare.length ? ', ' + bare.length + ' with nothing on record either way' : '') +
+        (skipped ? '. ' + skipped + ' more were not looked up: sixty is the ceiling per paste.' : '.') +
+        ' A live reading has no scorecard, advisory count or bus factor — those need a token, ' +
+        'and asking for yours would be a worse trade than the gap it closes.' +
+      '</p>' +
       (flags ? '<ul class="stack-flags">' + flags + '</ul>' : '') +
       '<div class="wrap"><table class="readout"><thead><tr>' +
         '<th scope="col">Dependency</th><th scope="col" class="n">Also used by</th>' +
@@ -314,7 +483,9 @@ if (stackForm) {
         return '<tr>' +
           '<td>' + (r.tracked ? link('/' + r.key.replace(':', '/'), r.name) : r.name) + '</td>' +
           '<td class="n num">' + (r.also ? r.also : '<span class="dim">—</span>') + '</td>' +
-          '<td>' + (r.tracked ? link('/repo/' + r.repo, r.repo) : '<span class="dim">not tracked</span>') + '</td>' +
+          '<td>' + (r.tracked
+            ? link('/repo/' + r.repo, r.repo)
+            : '<span class="dim">' + (r.live ? 'read live' : 'nothing on record') + '</span>') + '</td>' +
           '<td class="n num">' + (typeof r.scorecard === 'number' ? r.scorecard.toFixed(1) : '<span class="dim">—</span>') + '</td>' +
           '<td class="n num">' + (r.advisories === null ? '<span class="dim">—</span>' : r.advisories) + '</td>' +
           '<td class="dim">' + (r.license || '<span class="dim">—</span>') + '</td>' +
