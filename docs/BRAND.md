@@ -194,9 +194,13 @@ utility is the only part of a launch that can be checked on the day.
 > source, 2 to join sources nobody joins, 5 to answer from an archive kept after
 > the original feeds dropped it.
 >
-> Launching on Virtuals.
+> Launching on Virtuals, on Robinhood Chain.
 >
 > sighttrue.com
+
+The chain is named because the site names it and the payment rail verifies it —
+three surfaces saying the same thing, which is the only version of this a reader
+can check.
 
 Short form, for anywhere with a 280-character limit:
 
@@ -207,7 +211,7 @@ Short form, for anywhere with a 280-character limit:
 >
 > 9 of 31 tools free.
 >
-> Launching on Virtuals. sighttrue.com
+> Launching on Virtuals, on Robinhood Chain. sighttrue.com
 
 Neither version says the token will rise, names a price, or promises a supply.
 The rule in *What never goes in the copy* does not get relaxed because the post
