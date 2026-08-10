@@ -32,7 +32,7 @@
     "sighttrue.mjs",
     "lib/",
     "README.md",
-    "SKILL.md"
+    "skill/"
   ],
   "engines": {
     "node": ">=18"

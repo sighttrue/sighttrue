@@ -148,14 +148,27 @@ async function main() {
   // without anybody deciding to again.
   if (positional[0] === 'skill') {
     const target = join(process.cwd(), '.claude', 'skills', 'sighttrue');
-    mkdirSync(target, { recursive: true });
+    mkdirSync(join(target, 'references'), { recursive: true });
 
-    const source = new URL('./SKILL.md', import.meta.url);
-    writeFileSync(join(target, 'SKILL.md'), readFileSync(source, 'utf8'));
+    // A lean body and five references loaded on demand, rather than one long
+    // document. A skill that tries to cover every workflow in its own text
+    // either never fires or fires constantly, because the description is what
+    // routes it — and a body carrying five subjects has to describe all five.
+    const from = (name) => new URL(`./skill/${name}`, import.meta.url);
+    writeFileSync(join(target, 'SKILL.md'), readFileSync(from('SKILL.md'), 'utf8'));
 
-    out(`Installed to ${join('.claude', 'skills', 'sighttrue', 'SKILL.md')}`);
-    out(dim('Your agent will now take a reading before adding a dependency,'));
-    out(dim('rather than answering from training data. Nothing was sent anywhere.'));
+    const references = ['dependencies', 'images', 'runtimes', 'models', 'providers'];
+    for (const name of references) {
+      writeFileSync(
+        join(target, 'references', `${name}.md`),
+        readFileSync(from(`references/${name}.md`), 'utf8'),
+      );
+    }
+
+    out(`Installed to ${join('.claude', 'skills', 'sighttrue')}`);
+    out(dim(`One instruction and ${references.length} references, read only when they apply.`));
+    out(dim('Your agent will take a reading before adopting a dependency, base image,'));
+    out(dim('runtime, model or provider. Nothing was sent anywhere.'));
     return;
   }
 
