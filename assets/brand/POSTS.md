@@ -5,10 +5,12 @@ carries both the handle and the domain, and the site publishes the same pair at
 /data/official.json — a cloner can forge one surface, not all of them at once.
 
 
-Six posts, one or two a day. The video first; the cards in the order below.
+Seven posts, one or two a day. The video first; the cards in the order below.
 
-A seventh is drafted and held. It does not go out until the thing it describes
-is real — see the note on it at the bottom.
+Posts 1 to 4 are sent. From 5 the account turns to the reader who is now making
+the dependency decisions — a coding agent, and whoever installed it. That is
+where the product actually is: an MCP server, a CLI, and a check that runs in
+somebody's pipeline without them visiting the site at all.
 
 ## The X profile
 
@@ -160,69 +162,98 @@ deservedly gets answered that way.
 
 ---
 
-## 5 — Shipped
+## 5 — What your agent is answering from
 
-The sharpest thing this project has found, and it needs no adjectives at all.
-xunit's repository was pushed to two days before this was written; the package
-it publishes has not shipped in nineteen months and carries the maintainers' own
-notice pointing at a successor. Every "is it maintained" badge in existence
-reads the first date.
+Posts 1 to 4 named the problem for a person reading a dependency list. From here
+the account addresses the reader who is actually making that decision now — a
+coding agent, and whoever installed it.
 
-Also the post that retires the GitHub framing for good, because the finding is
-not visible on GitHub at all.
+`xunit` is the example for the same reason it was before: the repository is busy,
+the package has not shipped since January 2025, and its publisher has marked it
+deprecated and named the successor. An agent answering from training data does
+not know any of that, and will say the package is fine.
 
-> The xunit repository was pushed to two days ago.
+> Ask a coding agent whether xunit is maintained. It will say yes.
 >
-> The package has not shipped since January 2025, and its own publisher has
-> marked it deprecated with a note telling you to move to v3.
+> Its repository is busy. The package has not shipped since January 2025, and
+> NuGet carries the publisher's own note marking it deprecated and naming v3 as
+> the replacement.
 >
-> Every "is it maintained" badge reads the first date. This reads the second —
-> npm, PyPI, crates.io, RubyGems, Packagist and NuGet.
->
-> 182 packages, by the date the registry actually released them.
+> The agent is not wrong on purpose. It is answering from training data, and this
+> happened after the data was cut.
 >
 > sighttrue.com/nuget/xunit
 
-*Attach `post-4-staleness.png`.*
+*Attach `post-8-agentmemory.png`.*
 
-The publish date is absolute for the same reason as post 3. The push is not,
-because the recency is the whole point — a repository pushed to this week beside
-a package silent for nineteen months is the entire argument in one line, and
-"recently" throws it away.
+No blame in it. "The agent is not wrong on purpose" is doing real work: a post
+that reads as an attack on somebody's model gets answered by people defending the
+model instead of checking the package. The claim is about *when* the data was
+taken, which nobody disputes.
 
-So this one has a shelf life of a day or two. Open sighttrue.com/nuget/xunit
-immediately before sending and copy the words in its first paragraph. If they no
-longer match the draft, change the draft; if the repository has gone quiet
-altogether the post has nothing left to say, and there are fourteen other
-packages on `/ecosystem` in the same shape.
+## 6 — One line in the pipeline
 
-This draft said "yesterday" for a day, on the strength of the page saying it,
-and the page was wrong: the count ran from midnight today back to the exact
-minute of the push, so 20:03 on the 7th came out as 1.16 days on the 9th and
-rounded down to one. GitHub, one click away, said 7 August. Fixed in
-`daysBetween`, which now counts calendar days like the person checking it does.
+The CLI and the Action, which are the only distribution here that runs without
+anybody visiting the site. A team installs it once and it checks every build for
+years.
 
-The link goes to the package page rather than to `/ecosystem`, because the post
-makes a claim about one package and the page that proves it is that package's.
-Every figure in the post is on it, each with the address of whoever published
-it.
+> Your dependency was deprecated by its publisher three months ago. Nothing in
+> your build says so.
+>
+> `npx sighttrue check` reads your package.json, requirements.txt, pyproject.toml,
+> Cargo.toml, composer.json or Gemfile and tells you which of them the publisher
+> has withdrawn, which run scripts on the installing machine, and which have not
+> shipped in years.
+>
+> No key, no account, no service to sign up to. As a GitHub Action it fails the
+> build instead.
+>
+> npmjs.com/package/sighttrue
+
+*Attach `post-9-ci.png`.*
+
+The manifest list is spelled out rather than summarised, because a reader scans
+it for their own filename and stops reading if it is not there. "Six registries"
+is a fact about us; `Gemfile` is a fact about them.
+
+A network problem is never a finding — if the readings cannot be fetched, the
+step says so and passes. Worth saying in a reply if anybody asks, because a
+build that breaks when a third-party site is down is a build that gets deleted.
+
+## 7 — The MCP server
+
+The last of the sequence and the one with the clearest action attached. It is
+also the only post here that asks for nothing: no signup, no key, no account.
+
+> Point your coding agent at this and it stops guessing.
+>
+> Nine tools, no key and no account: whether a package was withdrawn, whether it
+> runs scripts when installed, how many advisories are on record, when the
+> registry last released it, and when the runtime it needs stops getting fixes.
+>
+> Every answer carries the address of whoever published it, so anything your
+> agent quotes into a review can be checked by whoever reads it.
+>
+> sighttrue.com/api/mcp
+
+*Attach `post-10-mcp.png`.*
+
+"It stops guessing" is the strongest line available and it is literally true —
+the tools return readings taken hours ago rather than remembered from a training
+cut. Nine is the free count, read from `mcp-catalogue.ts` at build time; the
+paid tools exist but are not mentioned, because a post that opens a sequence by
+naming a price nobody can pay yet is the one claim on this account that cannot
+be checked.
 
 ---
 
-## 6 — Your stack
+## Already sent
 
-> Paste your package.json.
->
-> Every dependency checked for advisories, licence changes, archived
-> repositories and how long since anything actually shipped.
->
-> No account, nothing installed, and the manifest never leaves your browser.
->
-> sighttrue.com/stack
+1 the film · 2 outages · 3 end of life · 4 bus factor.
 
-*Attach `post-5-yourstack.png`.*
-
----
+Kept as a record rather than deleted. What went out is the only reliable guide to
+what should not be repeated, and the cards for 1 to 3 are still in
+`assets/brand/`.
 
 ## If somebody asks how it works
 
@@ -252,38 +283,4 @@ Nothing yet, and say so plainly. The paid tier is not live and promising a price
 before it exists is the one claim on this account that could not be checked.
 
 ---
-
-## 7 — Held back until the token exists
-
-**Do not post this yet.** It goes out on the day the paid tier is real, and not
-before. Two things have to be true first, and neither is today:
-
-1. The paid tools return data. Twenty-two are declared, listed and correctly
-   refused without a key; none is implemented.
-2. The token exists, with a contract address and a rate. `TOKENS_PER_CENT` is 0.
-
-*Attach `post-7-freestaysfree.png`.*
-
-> Everything published free stays free. Taking one back would lose the argument
-> this instrument exists to make.
->
-> 9 tools an agent can call with no key and no account. That number goes up, not
-> down.
->
-> The paid tools are the ones that did not exist before today.
->
-> sighttrue.com/pricing
-
-The card carries no price, no contract address and no claim about a token,
-because none of those can be checked on the day it is drafted, and this account
-has nothing to sell except being checkable. The figure comes from
-`mcp-catalogue.ts` at build time, so it cannot drift from the server the way
-"seven MCP tools" did for weeks against a server that answered eight.
-
-The angle is the promise rather than the product, and that is the whole reason
-it is worth posting. Anybody can announce a paid tier. Almost nobody writes down
-what stays free, publishes the count, and lets themselves be held to it — and
-that sentence is the only reason to believe anything else on the page.
-
-Say nothing about price in the replies until there is one. "Not live yet" is a
-complete answer and the only one that stays true.
+

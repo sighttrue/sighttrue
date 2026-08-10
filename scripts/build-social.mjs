@@ -222,38 +222,32 @@ const CARDS = [
     unit: 'packages across six registries, by real release date',
     say: 'A green commit graph is what a maintainer does for themselves. A release is what reaches you. They are not the same date.',
   },
+  // ------------------------------------------------- agents, CLI, MCP
+  //
+  // The three below replace the calendar, the stack checker and the held-back
+  // pricing card. Same instrument, aimed at the reader who is now making the
+  // dependency decisions: an agent, and the person who installed it.
   {
-    file: 'post-6-calendar',
-    eyebrow: 'Calendar · subscribe once, forget about it',
-    figure: n(upcomingEol),
-    unit: 'support deadlines already scheduled',
-    say: 'Announced years ahead. Looked up by almost nobody, and remembered by nobody on the day.',
+    file: 'post-8-agentmemory',
+    eyebrow: 'Agents · answering from last year',
+    // Read from the ledger rather than typed, like every other figure here.
+    figure: n(bundle.staleness.quietest.find((row) => row.name === 'xunit')?.days ?? 0),
+    unit: 'days since xunit shipped, while its repository stayed busy',
+    say: 'A coding agent will tell you this package is maintained. Its publisher marked it deprecated and named the replacement.',
   },
   {
-    // Held back. Not to be posted until the paid tools return data and the
-    // token exists — see POSTS.md. It carries no price, no contract address and
-    // no claim about a paid tier, because none of those can be checked today
-    // and this account has nothing else to sell.
-    //
-    // The angle is the promise rather than the product. Anyone can announce a
-    // paid tier; almost nobody writes down what stays free and lets themselves
-    // be held to it. That sentence is the only reason to believe the rest.
-    file: 'post-7-freestaysfree',
-    eyebrow: 'Paid tools · the line that will not move',
+    file: 'post-9-ci',
+    eyebrow: 'One line in your pipeline',
+    figure: n(bundle.staleness.byRegistry.length),
+    unit: 'registries checked, on every build',
+    say: 'It fails the build when a dependency’s own publisher withdraws it. No key, no account, no service to sign up to.',
+  },
+  {
+    file: 'post-10-mcp',
+    eyebrow: 'MCP · point your agent at it',
     figure: n(FREE_TOOLS.length),
-    unit: 'tools that will never need a key',
-    // Four lines. The card is a fixed 1200x675 with no overflow handling, so a
-    // sentence written to the length of prose pushes the eyebrow off the top
-    // and drops the figure onto the wordmark. The working cards run 106 to 133
-    // characters; the first draft of this one ran 160 and broke the layout.
-    say: 'Everything published free stays free. Taking one back would lose the argument this instrument exists to make.',
-  },
-  {
-    file: 'post-5-yourstack',
-    eyebrow: 'Your stack · no account, nothing installed',
-    figure: n(bundle.adoption.measured),
-    unit: 'packages already measured',
-    say: 'Paste a package.json, Gemfile, composer.json, Cargo.toml or requirements.txt. Every dependency is checked for advisories, and it never leaves your browser.',
+    unit: 'tools an agent can call with no key',
+    say: 'Your agent answers “is this package healthy” from training data. This answers it from a reading taken four hours ago.',
   },
 ];
 
