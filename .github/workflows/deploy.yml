@@ -54,17 +54,21 @@ jobs:
 
       - run: npm ci
 
-      # The same gate a pull request passes. A broken build must not reach the
-      # site faster than it used to.
+      # The same gate a pull request passes, in the same order it passes it. A
+      # broken build must not reach the site faster than it used to.
       - run: npm run typecheck
-
-      - run: npx vitest run
 
       - name: Build bundles
         id: build
         env:
           CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
         run: node scripts/build.ts
+
+      # After the build, not before: two of these read dist/ — the headers file
+      # and the emitted scripts — and a fresh runner has no dist until something
+      # writes one. Run first, they failed on a missing directory rather than on
+      # anything about the change.
+      - run: npx vitest run
 
       # The gate compares this build's hash against the one in data/meta.json,
       # which only a scheduled run writes — this job commits nothing, by design,
