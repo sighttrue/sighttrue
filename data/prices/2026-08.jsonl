@@ -429,3 +429,10 @@
 {"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-10T04:09:22.480Z","prompt":0.39,"completion":2.34,"context":262144}
 {"id":"qwen/qwen3-14b","at":"2026-08-10T04:09:22.480Z","prompt":0.12,"completion":0.24,"context":131072}
 {"id":"meta-llama/llama-4-maverick","at":"2026-08-10T04:09:22.480Z","prompt":0.2,"completion":0.696,"context":1048576}
+{"id":"sakana/sakana-namazu","at":"2026-08-11T03:56:39.252Z","prompt":0.95,"completion":4,"context":262144}
+{"id":"upstage/solar-pro4","at":"2026-08-11T03:56:39.252Z","prompt":0.03,"completion":0.12,"context":524288}
+{"id":"meta/muse-glimmer-30b","at":"2026-08-11T03:56:39.252Z","prompt":0.35,"completion":1.5,"context":131072}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-08-11T03:56:39.252Z","prompt":0.08,"completion":0.18,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-08-11T03:56:39.252Z","prompt":0.64432,"completion":1.28864,"context":1048576}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-11T03:56:39.252Z","prompt":0.5,"completion":3.6,"context":262144}
+{"id":"qwen/qwen3-coder-30b-a3b-instruct","at":"2026-08-11T03:56:39.252Z","prompt":0.07,"completion":0.28,"context":262144}

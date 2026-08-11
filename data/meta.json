@@ -1,16 +1,24 @@
 {
-  "lastRunAt": "2026-08-11T02:27:01.868Z",
+  "lastRunAt": "2026-08-11T03:56:39.252Z",
   "lastSuccessfulRunAt": "2026-08-11T02:27:01.868Z",
-  "job": "pulse",
-  "partial": false,
-  "requestsConsumed": 487,
+  "job": "daily",
+  "partial": true,
+  "requestsConsumed": 147,
   "rateLimitRemaining": 4806,
   "reposChecked": 417,
   "requestsUnchanged": 347,
-  "eventsDetected": 6,
-  "collectorsErrored": [],
-  "summariesGenerated": 25,
+  "eventsDetected": 19,
+  "collectorsErrored": [
+    "adoption pypi: refused 11 of 64 reads, last known counts carried forward",
+    "staleness nuget AutoMapper: fetch failed",
+    "typosquat @babelcore: 406 reading @babelcore",
+    "typosquat b@abel/core: 406 reading b@abel/core",
+    "typosquat babel/core: 406 reading babel/core",
+    "images openjdk:25: no longer published",
+    "images openjdk:25-slim: no longer published"
+  ],
+  "summariesGenerated": 40,
   "insufficientRate": 0,
-  "bundleHash": "42cefd97c299c848119b33c7216ab4f863dc83b3f87e94855cdd4f49d48235d3",
+  "bundleHash": "f6f47df110f8cefea2bf10c70b7c3379becfbc1e1c1776a1948a8bb10591c973",
   "deploySkipped": false
 }
