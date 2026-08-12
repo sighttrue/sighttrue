@@ -1,16 +1,25 @@
 {
-  "lastRunAt": "2026-08-12T02:43:44.146Z",
+  "lastRunAt": "2026-08-12T04:18:54.601Z",
   "lastSuccessfulRunAt": "2026-08-12T02:43:44.146Z",
-  "job": "pulse",
-  "partial": false,
-  "requestsConsumed": 509,
+  "job": "daily",
+  "partial": true,
+  "requestsConsumed": 154,
   "rateLimitRemaining": 4801,
   "reposChecked": 417,
   "requestsUnchanged": 325,
-  "eventsDetected": 10,
-  "collectorsErrored": [],
-  "summariesGenerated": 40,
+  "eventsDetected": 20,
+  "collectorsErrored": [
+    "adoption pypi: refused 49 of 64 reads, last known counts carried forward",
+    "lifecycle nginx: fetch failed",
+    "staleness npm @coral-xyz/anchor: fetch failed",
+    "typosquat @babelcore: 406 reading @babelcore",
+    "typosquat b@abel/core: 406 reading b@abel/core",
+    "typosquat babel/core: 406 reading babel/core",
+    "images openjdk:25: no longer published",
+    "images openjdk:25-slim: no longer published"
+  ],
+  "summariesGenerated": 55,
   "insufficientRate": 0,
-  "bundleHash": "5c437bf3c589ca89b84e68a65d31b4403b352b9da86e3e7c2c3d975197e7d8b9",
+  "bundleHash": "90078f7ffc523ef152817ecf4e74cc1d6ede25a4375c06a1412f0ae82a81aa7f",
   "deploySkipped": false
 }
