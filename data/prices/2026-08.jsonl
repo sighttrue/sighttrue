@@ -447,3 +447,15 @@
 {"id":"qwen/qwen3-vl-235b-a22b-instruct","at":"2026-08-12T04:18:54.601Z","prompt":0.26,"completion":1.04,"context":262144}
 {"id":"deepseek/deepseek-v3.1-terminus","at":"2026-08-12T04:18:54.601Z","prompt":0.27,"completion":0.95,"context":163840}
 {"id":"openai/gpt-oss-120b","at":"2026-08-12T04:18:54.601Z","prompt":0.03,"completion":0.17,"context":131072}
+{"id":"bytedance-seed/seed-2-1-turbo","at":"2026-08-13T04:22:04.344Z","prompt":0.5,"completion":2.5,"context":262144}
+{"id":"qwen/qwen3.8-2.4t-a95b","at":"2026-08-13T04:22:04.344Z","prompt":2,"completion":6,"context":1000000}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-08-13T04:22:04.344Z","prompt":0.435,"completion":0.87,"context":1048576}
+{"id":"x-ai/grok-4.6","at":"2026-08-13T04:22:04.344Z","prompt":2,"completion":6,"context":500000}
+{"id":"nvidia/nemotron-3.5-lightning","at":"2026-08-13T04:22:04.344Z","prompt":0.1,"completion":0.25,"context":1000000}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-08-13T04:22:04.344Z","prompt":0.079996,"completion":0.252,"context":1048576}
+{"id":"z-ai/glm-5.2","at":"2026-08-13T04:22:04.344Z","prompt":0.5,"completion":3.15,"context":1048576}
+{"id":"moonshotai/kimi-k2.7-code","at":"2026-08-13T04:22:04.344Z","prompt":0.67,"completion":3.4,"context":262144}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-08-13T04:22:04.344Z","prompt":1.168,"completion":2.336,"context":1048576}
+{"id":"qwen/qwen3.5-35b-a3b","at":"2026-08-13T04:22:04.344Z","prompt":0.25,"completion":1.25,"context":262144}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-13T04:22:04.344Z","prompt":0.45,"completion":3,"context":262144}
+{"id":"z-ai/glm-4.6","at":"2026-08-13T04:22:04.344Z","prompt":0.5,"completion":2,"context":204800}
