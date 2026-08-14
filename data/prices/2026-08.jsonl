@@ -459,3 +459,17 @@
 {"id":"qwen/qwen3.5-35b-a3b","at":"2026-08-13T04:22:04.344Z","prompt":0.25,"completion":1.25,"context":262144}
 {"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-13T04:22:04.344Z","prompt":0.45,"completion":3,"context":262144}
 {"id":"z-ai/glm-4.6","at":"2026-08-13T04:22:04.344Z","prompt":0.5,"completion":2,"context":204800}
+{"id":"dots-studio/dots-3-note-preview:free","at":"2026-08-14T04:19:23.399Z","prompt":0,"completion":0,"context":512000}
+{"id":"google/gemini-3.7-flash","at":"2026-08-14T04:19:23.399Z","prompt":0.375,"completion":1.875,"context":1048576}
+{"id":"google/gemini-3.7-flash:batch","at":"2026-08-14T04:19:23.399Z","prompt":0.1875,"completion":0.9375,"context":1048576}
+{"id":"qwen/qwen3.8-2.4t-a95b","at":"2026-08-14T04:19:23.399Z","prompt":2,"completion":6,"context":1010000}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-08-14T04:19:23.399Z","prompt":0.14,"completion":0.28,"context":1048576}
+{"id":"google/gemini-3.6-flash","at":"2026-08-14T04:19:23.399Z","prompt":0.75,"completion":3.75,"context":1048576}
+{"id":"google/gemini-3.6-flash:batch","at":"2026-08-14T04:19:23.399Z","prompt":0.375,"completion":1.875,"context":1048576}
+{"id":"z-ai/glm-5.2","at":"2026-08-14T04:19:23.399Z","prompt":0.63,"completion":1.98,"context":1048576}
+{"id":"~google/gemini-flash-latest","at":"2026-08-14T04:19:23.399Z","prompt":0.375,"completion":1.875,"context":1048576}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-14T04:19:23.399Z","prompt":0.5,"completion":3.6,"context":262144}
+{"id":"qwen/qwen3-vl-30b-a3b-instruct","at":"2026-08-14T04:19:23.399Z","prompt":0.13,"completion":0.52,"context":262144}
+{"id":"qwen/qwen3-next-80b-a3b-instruct","at":"2026-08-14T04:19:23.399Z","prompt":0.1,"completion":1.1,"context":262144}
+{"id":"deepseek/deepseek-r1","at":"2026-08-14T04:19:23.399Z","prompt":0.7,"completion":2.5,"context":64000}
+{"id":"anthracite-org/magnum-v4-72b","at":"2026-08-14T04:19:23.399Z","prompt":3,"completion":5,"context":32768}
