@@ -473,3 +473,16 @@
 {"id":"qwen/qwen3-next-80b-a3b-instruct","at":"2026-08-14T04:19:23.399Z","prompt":0.1,"completion":1.1,"context":262144}
 {"id":"deepseek/deepseek-r1","at":"2026-08-14T04:19:23.399Z","prompt":0.7,"completion":2.5,"context":64000}
 {"id":"anthracite-org/magnum-v4-72b","at":"2026-08-14T04:19:23.399Z","prompt":3,"completion":5,"context":32768}
+{"id":"qwen/qwen3.8-27b","at":"2026-08-15T03:07:30.262Z","prompt":0.45,"completion":3.2,"context":262144}
+{"id":"qwen/qwen3.8-2.4t-a95b","at":"2026-08-15T03:07:30.262Z","prompt":2,"completion":6,"context":1048576}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-08-15T03:07:30.262Z","prompt":0.07966,"completion":0.15932,"context":1048576}
+{"id":"z-ai/glm-5.2","at":"2026-08-15T03:07:30.262Z","prompt":0.49,"completion":1.54,"context":1048576}
+{"id":"moonshotai/kimi-k2.7-code","at":"2026-08-15T03:07:30.262Z","prompt":0.71,"completion":3.5,"context":262144}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-08-15T03:07:30.262Z","prompt":0.07966,"completion":0.15932,"context":1048576}
+{"id":"moonshotai/kimi-k2.6","at":"2026-08-15T03:07:30.262Z","prompt":0.65,"completion":3.41,"context":262144}
+{"id":"z-ai/glm-5.1","at":"2026-08-15T03:07:30.262Z","prompt":0.966,"completion":3.036,"context":204800}
+{"id":"qwen/qwen3.5-35b-a3b","at":"2026-08-15T03:07:30.262Z","prompt":0.225,"completion":1.8,"context":262144}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-15T03:07:30.262Z","prompt":0.39,"completion":2.34,"context":262144}
+{"id":"z-ai/glm-5","at":"2026-08-15T03:07:30.262Z","prompt":0.6,"completion":1.92,"context":204800}
+{"id":"z-ai/glm-4.6","at":"2026-08-15T03:07:30.262Z","prompt":0.55,"completion":2.2,"context":204800}
+{"id":"meta-llama/llama-4-maverick","at":"2026-08-15T03:07:30.262Z","prompt":0.2,"completion":0.8,"context":1048576}
