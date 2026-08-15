@@ -1,23 +1,16 @@
 {
-  "lastRunAt": "2026-08-15T03:07:30.262Z",
-  "lastSuccessfulRunAt": "2026-08-15T01:49:23.209Z",
-  "job": "daily",
-  "partial": true,
-  "requestsConsumed": 151,
-  "rateLimitRemaining": 4810,
+  "lastRunAt": "2026-08-15T04:46:39.728Z",
+  "lastSuccessfulRunAt": "2026-08-15T04:46:39.728Z",
+  "job": "pulse",
+  "partial": false,
+  "requestsConsumed": 410,
+  "rateLimitRemaining": 4812,
   "reposChecked": 417,
-  "requestsUnchanged": 345,
-  "eventsDetected": 28,
-  "collectorsErrored": [
-    "adoption pypi: refused 30 of 64 reads, last known counts carried forward",
-    "typosquat @babelcore: 406 reading @babelcore",
-    "typosquat b@abel/core: 406 reading b@abel/core",
-    "typosquat babel/core: 406 reading babel/core",
-    "images openjdk:25: no longer published",
-    "images openjdk:25-slim: no longer published"
-  ],
+  "requestsUnchanged": 424,
+  "eventsDetected": 1,
+  "collectorsErrored": [],
   "summariesGenerated": 95,
   "insufficientRate": 0,
-  "bundleHash": "b6d981cb5ed12f57c5dc5a80fe49e940b2cbc76fc0cab1da80e7f3f78f2a8245",
+  "bundleHash": "25d5b261430771874fa385ade126ed6306bd502c106552787fcf80cf2a0eac4a",
   "deploySkipped": false
 }
