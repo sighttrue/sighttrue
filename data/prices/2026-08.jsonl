@@ -486,3 +486,10 @@
 {"id":"z-ai/glm-5","at":"2026-08-15T03:07:30.262Z","prompt":0.6,"completion":1.92,"context":204800}
 {"id":"z-ai/glm-4.6","at":"2026-08-15T03:07:30.262Z","prompt":0.55,"completion":2.2,"context":204800}
 {"id":"meta-llama/llama-4-maverick","at":"2026-08-15T03:07:30.262Z","prompt":0.2,"completion":0.8,"context":1048576}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-08-16T03:15:01.218Z","prompt":0.0675,"completion":0.135,"context":1048576}
+{"id":"z-ai/glm-5.2","at":"2026-08-16T03:15:01.218Z","prompt":0.462,"completion":1.452,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-08-16T03:15:01.218Z","prompt":0.06426,"completion":0.12852,"context":1048576}
+{"id":"tencent/hy3-preview","at":"2026-08-16T03:15:01.218Z","prompt":0.18,"completion":0.6,"context":262144}
+{"id":"qwen/qwen-plus-2025-07-28:thinking","at":"2026-08-16T03:15:01.218Z","prompt":0.26,"completion":0.78,"context":1000000}
+{"id":"minimax/minimax-m1","at":"2026-08-16T03:15:01.218Z","prompt":0.4,"completion":2.2,"context":1000000}
+{"id":"qwen/qwen3-30b-a3b","at":"2026-08-16T03:15:01.218Z","prompt":0.13,"completion":0.52,"context":131072}
