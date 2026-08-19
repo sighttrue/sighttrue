@@ -46,7 +46,7 @@
 {"month":"2026-07","term":"TypeScript","posts":67,"sample":429,"conservative":false}
 {"month":"2026-07","term":"Vue","posts":2,"sample":429,"conservative":false}
 {"month":"2026-07","term":"gRPC","posts":1,"sample":429,"conservative":false}
-{"month":"2026-08","term":"AWS","posts":42,"sample":383,"conservative":false}
+{"month":"2026-08","term":"AWS","posts":41,"sample":383,"conservative":false}
 {"month":"2026-08","term":"Angular","posts":4,"sample":383,"conservative":false}
 {"month":"2026-08","term":"Azure","posts":8,"sample":383,"conservative":false}
 {"month":"2026-08","term":"C#","posts":6,"sample":383,"conservative":false}
@@ -75,7 +75,7 @@
 {"month":"2026-08","term":"PHP","posts":2,"sample":383,"conservative":false}
 {"month":"2026-08","term":"PostgreSQL","posts":56,"sample":383,"conservative":false}
 {"month":"2026-08","term":"PyTorch","posts":8,"sample":383,"conservative":false}
-{"month":"2026-08","term":"Python","posts":72,"sample":383,"conservative":false}
+{"month":"2026-08","term":"Python","posts":73,"sample":383,"conservative":false}
 {"month":"2026-08","term":"RAG","posts":5,"sample":383,"conservative":true}
 {"month":"2026-08","term":"Rails","posts":11,"sample":383,"conservative":false}
 {"month":"2026-08","term":"React","posts":57,"sample":383,"conservative":false}
@@ -89,6 +89,6 @@
 {"month":"2026-08","term":"Swift","posts":2,"sample":383,"conservative":false}
 {"month":"2026-08","term":"Tailwind","posts":6,"sample":383,"conservative":false}
 {"month":"2026-08","term":"TensorFlow","posts":3,"sample":383,"conservative":false}
-{"month":"2026-08","term":"Terraform","posts":18,"sample":383,"conservative":false}
+{"month":"2026-08","term":"Terraform","posts":17,"sample":383,"conservative":false}
 {"month":"2026-08","term":"TypeScript","posts":58,"sample":383,"conservative":false}
 {"month":"2026-08","term":"Vue","posts":3,"sample":383,"conservative":false}
