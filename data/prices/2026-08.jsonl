@@ -548,3 +548,15 @@
 {"id":"qwen/qwen3.5-35b-a3b","at":"2026-08-20T03:12:45.395Z","prompt":0.25,"completion":1.25,"context":262144}
 {"id":"minimax/minimax-m2.5","at":"2026-08-20T03:12:45.395Z","prompt":0.225,"completion":0.9,"context":204800}
 {"id":"deepseek/deepseek-chat-v3-0324","at":"2026-08-20T03:12:45.395Z","prompt":0.25,"completion":1,"context":163840}
+{"id":"stealth/ox-alpha","at":"2026-08-21T03:18:35.361Z","prompt":0,"completion":0,"context":1048576}
+{"id":"tencent/hy-mt2-1.8b","at":"2026-08-21T03:18:35.361Z","prompt":0.044,"completion":0.177,"context":8192}
+{"id":"tencent/hy-mt2-30b-a3b","at":"2026-08-21T03:18:35.361Z","prompt":0.074,"completion":0.295,"context":8192}
+{"id":"nvidia/nemotron-3.5-lightning","at":"2026-08-21T03:18:35.361Z","prompt":0.08,"completion":0.2,"context":262144}
+{"id":"meta/muse-glimmer-30b","at":"2026-08-21T03:18:35.361Z","prompt":0.3,"completion":1.1,"context":131072}
+{"id":"thinkingmachines/inkling-small","at":"2026-08-21T03:18:35.361Z","prompt":0.45,"completion":1.2,"context":1048576}
+{"id":"z-ai/glm-5.2:batch","at":"2026-08-21T03:18:35.361Z","prompt":1.4,"completion":4.4,"context":1048575}
+{"id":"moonshotai/kimi-k2.7-code","at":"2026-08-21T03:18:35.361Z","prompt":0.67,"completion":3.4,"context":262144}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-08-21T03:18:35.361Z","prompt":1.6,"completion":3.2,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-08-21T03:18:35.361Z","prompt":0.0826,"completion":0.1652,"context":1048576}
+{"id":"google/gemma-4-31b-it","at":"2026-08-21T03:18:35.361Z","prompt":0.1,"completion":0.34,"context":262144}
+{"id":"mistralai/ministral-8b","at":"2026-08-21T03:18:35.361Z","prompt":0.11,"completion":0.11,"context":128000}

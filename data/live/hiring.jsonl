@@ -62,7 +62,7 @@
 {"month":"2026-08","term":"Go","posts":12,"sample":384,"conservative":true}
 {"month":"2026-08","term":"GraphQL","posts":11,"sample":384,"conservative":false}
 {"month":"2026-08","term":"Java","posts":11,"sample":384,"conservative":false}
-{"month":"2026-08","term":"JavaScript","posts":6,"sample":384,"conservative":false}
+{"month":"2026-08","term":"JavaScript","posts":5,"sample":384,"conservative":false}
 {"month":"2026-08","term":"Kafka","posts":4,"sample":384,"conservative":false}
 {"month":"2026-08","term":"Kotlin","posts":2,"sample":384,"conservative":false}
 {"month":"2026-08","term":"Kubernetes","posts":29,"sample":384,"conservative":false}
