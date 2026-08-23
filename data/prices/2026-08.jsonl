@@ -580,3 +580,15 @@
 {"id":"qwen/qwen3-next-80b-a3b-instruct","at":"2026-08-22T03:10:17.167Z","prompt":0.1,"completion":1.1,"context":262144}
 {"id":"deepseek/deepseek-chat-v3.1","at":"2026-08-22T03:10:17.167Z","prompt":0.55,"completion":1.65,"context":163840}
 {"id":"mistralai/mistral-small-3.2-24b-instruct","at":"2026-08-22T03:10:17.167Z","prompt":0.075,"completion":0.2,"context":131072}
+{"id":"deepseek/deepseek-v4-flash-vision-exp","at":"2026-08-23T03:17:49.222Z","prompt":0.22,"completion":0.66,"context":1048576}
+{"id":"tencent/hy-mt2-7b","at":"2026-08-23T03:17:49.222Z","prompt":0.074,"completion":0.295,"context":8192}
+{"id":"qwen/qwen3.8-27b","at":"2026-08-23T03:17:49.222Z","prompt":0.4,"completion":3,"context":1000000}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-08-23T03:17:49.222Z","prompt":1.122,"completion":3.366,"context":1048576}
+{"id":"meta/muse-glimmer-30b","at":"2026-08-23T03:17:49.222Z","prompt":0.35,"completion":1.5,"context":131072}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-08-23T03:17:49.222Z","prompt":0.055,"completion":0.18,"context":1310720}
+{"id":"thinkingmachines/inkling","at":"2026-08-23T03:17:49.222Z","prompt":1,"completion":4.05,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-08-23T03:17:49.222Z","prompt":0.413772,"completion":0.827544,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-08-23T03:17:49.222Z","prompt":0.05446,"completion":0.10892,"context":1048576}
+{"id":"moonshotai/kimi-k2.6","at":"2026-08-23T03:17:49.222Z","prompt":0.95,"completion":4,"context":262144}
+{"id":"openai/gpt-oss-120b","at":"2026-08-23T03:17:49.222Z","prompt":0.037,"completion":0.17,"context":131072}
+{"id":"qwen/qwen3-30b-a3b","at":"2026-08-23T03:17:49.222Z","prompt":0.12,"completion":0.5,"context":131072}
