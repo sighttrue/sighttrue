@@ -592,3 +592,10 @@
 {"id":"moonshotai/kimi-k2.6","at":"2026-08-23T03:17:49.222Z","prompt":0.95,"completion":4,"context":262144}
 {"id":"openai/gpt-oss-120b","at":"2026-08-23T03:17:49.222Z","prompt":0.037,"completion":0.17,"context":131072}
 {"id":"qwen/qwen3-30b-a3b","at":"2026-08-23T03:17:49.222Z","prompt":0.12,"completion":0.5,"context":131072}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-08-24T03:26:41.715Z","prompt":0.04,"completion":0.08,"context":1310720}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-08-24T03:26:41.715Z","prompt":0.14,"completion":0.28,"context":1310720}
+{"id":"qwen/qwen3.6-27b","at":"2026-08-24T03:26:41.715Z","prompt":0.32,"completion":3.2,"context":262144}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-08-24T03:26:41.715Z","prompt":0.526176,"completion":1.052352,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-08-24T03:26:41.715Z","prompt":0.0574,"completion":0.1148,"context":1048576}
+{"id":"minimax/minimax-m2.7","at":"2026-08-24T03:26:41.715Z","prompt":0.24,"completion":0.96,"context":204800}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-08-24T03:26:41.715Z","prompt":0.5,"completion":3.6,"context":262144}
