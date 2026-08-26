@@ -115,9 +115,9 @@ recommendation. Those would be this project's judgement of somebody else's work
 wearing the costume of a measurement.
 
 <!-- figures:scale -->One agent watches 417 open-source repositories and takes
-eleven readings, most of which never touch GitHub: 769 provider incidents kept
+eleven readings, most of which never touch GitHub: 785 provider incidents kept
 after their own status pages dropped them, 522 release lines on the end-of-life
-clock, 413 model prices, 182 packages by real ship date, 416 commit histories
+clock, 412 model prices, 182 packages by real ship date, 416 commit histories
 for the bus factor.<!-- /figures:scale --> It runs every four hours on GitHub
 Actions, commits what it reads to this repository, and publishes a static site.
 
