@@ -1,13 +1,13 @@
 {
-  "lastRunAt": "2026-08-27T22:15:15.435Z",
-  "lastSuccessfulRunAt": "2026-08-27T22:15:15.435Z",
+  "lastRunAt": "2026-08-28T11:22:19.069Z",
+  "lastSuccessfulRunAt": "2026-08-28T11:22:19.069Z",
   "job": "pulse",
   "partial": true,
-  "requestsConsumed": 574,
+  "requestsConsumed": 569,
   "rateLimitRemaining": 4779,
   "reposChecked": 417,
-  "requestsUnchanged": 260,
-  "eventsDetected": 22,
+  "requestsUnchanged": 265,
+  "eventsDetected": 11,
   "collectorsErrored": [
     "demand-cluster:add ability:2026-08-18: Groq 404",
     "demand-cluster:time range:2026-08-18: Groq 404",
@@ -149,6 +149,6 @@
   ],
   "summariesGenerated": 125,
   "insufficientRate": 0,
-  "bundleHash": "4f970a518f0476caa86a49d4a14225cfa2410583f8826e533435fb68654ecdb9",
+  "bundleHash": "15940be8112fd24a972219c1c982e8aeab8ab59a4b9339e883e15625d9a2367d",
   "deploySkipped": false
 }
