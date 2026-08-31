@@ -686,3 +686,10 @@
 {"id":"z-ai/glm-5.1","at":"2026-08-30T08:22:36.354Z","prompt":0.966,"completion":3.036,"context":204800}
 {"id":"arcee-ai/trinity-large-thinking","at":"2026-08-30T08:22:36.354Z","prompt":0.25,"completion":0.8,"context":262144}
 {"id":"qwen/qwen3-next-80b-a3b-instruct","at":"2026-08-30T08:22:36.354Z","prompt":0.09,"completion":1.1,"context":262144}
+{"id":"deepseek/deepseek-v4-flash-vision-exp","at":"2026-08-31T08:42:51.375Z","prompt":0.44,"completion":1.32,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-08-31T08:42:51.375Z","prompt":1.32,"completion":3.96,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-08-31T08:42:51.375Z","prompt":1.6,"completion":3.2,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-08-31T08:42:51.375Z","prompt":0.088606,"completion":0.177212,"context":1048576}
+{"id":"moonshotai/kimi-k2.5","at":"2026-08-31T08:42:51.375Z","prompt":0.45,"completion":2.25,"context":262144}
+{"id":"mistralai/devstral-2512","at":"2026-08-31T08:42:51.375Z","prompt":0.4,"completion":2,"context":262144}
+{"id":"meta-llama/llama-4-maverick","at":"2026-08-31T08:42:51.375Z","prompt":0.2,"completion":0.696,"context":1048576}
