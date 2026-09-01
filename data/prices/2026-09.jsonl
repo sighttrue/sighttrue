@@ -1,0 +1,10 @@
+{"id":"ibm-granite/granite-4.2-8b","at":"2026-09-01T07:51:55.642Z","prompt":0.1,"completion":0.15,"context":131072}
+{"id":"~z-ai/glm-latest","at":"2026-09-01T07:51:55.642Z","prompt":1.17,"completion":3.96,"context":1310720}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-09-01T07:51:55.642Z","prompt":1.1154,"completion":3.3462,"context":1048576}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-09-01T07:51:55.642Z","prompt":0.05,"completion":0.16,"context":1310720}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-09-01T07:51:55.642Z","prompt":0.08092,"completion":0.16184,"context":1048576}
+{"id":"qwen/qwen3-next-80b-a3b-instruct","at":"2026-09-01T07:51:55.642Z","prompt":0.1,"completion":1.1,"context":262144}
+{"id":"meta-llama/llama-4-scout","at":"2026-09-01T07:51:55.642Z","prompt":0.1,"completion":0.3,"context":1310720}
+{"id":"anthracite-org/magnum-v4-72b","at":"2026-09-01T07:51:55.642Z","prompt":2.5,"completion":5,"context":32768}
+{"id":"mancer/weaver","at":"2026-09-01T07:51:55.642Z","prompt":0.4,"completion":0.75,"context":8000}
+{"id":"gryphe/mythomax-l2-13b","at":"2026-09-01T07:51:55.642Z","prompt":0.35,"completion":0.6,"context":8192}
