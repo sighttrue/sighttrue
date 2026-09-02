@@ -8,3 +8,14 @@
 {"id":"anthracite-org/magnum-v4-72b","at":"2026-09-01T07:51:55.642Z","prompt":2.5,"completion":5,"context":32768}
 {"id":"mancer/weaver","at":"2026-09-01T07:51:55.642Z","prompt":0.4,"completion":0.75,"context":8000}
 {"id":"gryphe/mythomax-l2-13b","at":"2026-09-01T07:51:55.642Z","prompt":0.35,"completion":0.6,"context":8192}
+{"id":"anthropic/claude-fable-5.1","at":"2026-09-02T07:09:15.888Z","prompt":10,"completion":50,"context":1000000}
+{"id":"anthropic/claude-fable-5.1:batch","at":"2026-09-02T07:09:15.888Z","prompt":5,"completion":25,"context":1000000}
+{"id":"inception/mercury-2.5-preview","at":"2026-09-02T07:09:15.888Z","prompt":0.04,"completion":0.15,"context":260000}
+{"id":"~z-ai/glm-flash-latest","at":"2026-09-02T07:09:15.888Z","prompt":0.075,"completion":0.25,"context":1310720}
+{"id":"qwen/qwen3.8-2.4t-a95b:batch","at":"2026-09-02T07:09:15.888Z","prompt":2,"completion":6,"context":1010000}
+{"id":"z-ai/glm-5.2","at":"2026-09-02T07:09:15.888Z","prompt":0.966,"completion":3.036,"context":1048576}
+{"id":"nvidia/nemotron-3-ultra-550b-a55b","at":"2026-09-02T07:09:15.888Z","prompt":0.625,"completion":3.125,"context":262144}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-09-02T07:09:15.888Z","prompt":1.04226,"completion":2.08452,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-09-02T07:09:15.888Z","prompt":0.088606,"completion":0.177212,"context":1048576}
+{"id":"deepseek/deepseek-chat-v3.1","at":"2026-09-02T07:09:15.888Z","prompt":0.25,"completion":0.95,"context":163840}
+{"id":"gryphe/mythomax-l2-13b","at":"2026-09-02T07:09:15.888Z","prompt":0.06,"completion":0.06,"context":8192}
