@@ -19,3 +19,14 @@
 {"id":"deepseek/deepseek-v4-flash","at":"2026-09-02T07:09:15.888Z","prompt":0.088606,"completion":0.177212,"context":1048576}
 {"id":"deepseek/deepseek-chat-v3.1","at":"2026-09-02T07:09:15.888Z","prompt":0.25,"completion":0.95,"context":163840}
 {"id":"gryphe/mythomax-l2-13b","at":"2026-09-02T07:09:15.888Z","prompt":0.06,"completion":0.06,"context":8192}
+{"id":"meta/muse-spark-1.3-contributor","at":"2026-09-03T07:13:57.229Z","prompt":0.1,"completion":0.2,"context":1048576}
+{"id":"meta/muse-spark-1.3","at":"2026-09-03T07:13:57.229Z","prompt":1.25,"completion":4.25,"context":1048576}
+{"id":"google/gemini-3.8-flash","at":"2026-09-03T07:13:57.229Z","prompt":0.75,"completion":3.75,"context":1048576}
+{"id":"google/gemini-3.8-flash:batch","at":"2026-09-03T07:13:57.229Z","prompt":0.375,"completion":1.875,"context":1048576}
+{"id":"~z-ai/glm-latest","at":"2026-09-03T07:13:57.229Z","prompt":1.106,"completion":3.476,"context":1310720}
+{"id":"google/gemini-3.7-flash:batch","at":"2026-09-03T07:13:57.229Z","prompt":0.375,"completion":1.875,"context":1048576}
+{"id":"meta/muse-glimmer-30b","at":"2026-09-03T07:13:57.229Z","prompt":0.3,"completion":1.1,"context":131072}
+{"id":"nvidia/nemotron-3-ultra-550b-a55b","at":"2026-09-03T07:13:57.229Z","prompt":0.6,"completion":2.4,"context":262144}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-09-03T07:13:57.229Z","prompt":0.55,"completion":3.5,"context":262144}
+{"id":"z-ai/glm-4.6","at":"2026-09-03T07:13:57.229Z","prompt":0.55,"completion":2.2,"context":204800}
+{"id":"meta-llama/llama-3.3-70b-instruct","at":"2026-09-03T07:13:57.229Z","prompt":0.1,"completion":0.32,"context":131072}
