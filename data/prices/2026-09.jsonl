@@ -61,3 +61,12 @@
 {"id":"deepseek/deepseek-v4-pro","at":"2026-09-06T07:10:42.225Z","prompt":0.72819,"completion":1.45638,"context":1048576}
 {"id":"deepseek/deepseek-v4-flash","at":"2026-09-06T07:10:42.225Z","prompt":0.08162,"completion":0.16324,"context":1048576}
 {"id":"qwen/qwen3.5-35b-a3b","at":"2026-09-06T07:10:42.225Z","prompt":0.3125,"completion":1.25,"context":262144}
+{"id":"~z-ai/glm-flash-latest","at":"2026-09-07T07:23:04.915Z","prompt":0.07125,"completion":0.2375,"context":1310720}
+{"id":"deepseek/deepseek-v4-flash-vision-exp","at":"2026-09-07T07:23:04.915Z","prompt":0.44,"completion":1.32,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-09-07T07:23:04.915Z","prompt":1.1154,"completion":3.3462,"context":1048576}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-09-07T07:23:04.915Z","prompt":0.05,"completion":0.16,"context":1310720}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-09-07T07:23:04.915Z","prompt":0.14,"completion":0.28,"context":1310720}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-09-07T07:23:04.915Z","prompt":1.04226,"completion":2.08452,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-09-07T07:23:04.915Z","prompt":0.088606,"completion":0.177212,"context":1048576}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-09-07T07:23:04.915Z","prompt":0.39,"completion":2.34,"context":262144}
+{"id":"z-ai/glm-4.6","at":"2026-09-07T07:23:04.915Z","prompt":0.43,"completion":1.75,"context":204800}
