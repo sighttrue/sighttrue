@@ -70,3 +70,16 @@
 {"id":"deepseek/deepseek-v4-flash","at":"2026-09-07T07:23:04.915Z","prompt":0.088606,"completion":0.177212,"context":1048576}
 {"id":"qwen/qwen3.5-397b-a17b","at":"2026-09-07T07:23:04.915Z","prompt":0.39,"completion":2.34,"context":262144}
 {"id":"z-ai/glm-4.6","at":"2026-09-07T07:23:04.915Z","prompt":0.43,"completion":1.75,"context":204800}
+{"id":"~z-ai/glm-latest","at":"2026-09-08T07:17:38.802Z","prompt":1.12,"completion":3.52,"context":1310720}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-09-08T07:17:38.802Z","prompt":1.0494,"completion":3.1482,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-09-08T07:17:38.802Z","prompt":0.065,"completion":0.18,"context":1310720}
+{"id":"moonshotai/kimi-k2.7-code","at":"2026-09-08T07:17:38.802Z","prompt":0.71,"completion":3.5,"context":262144}
+{"id":"mistralai/mistral-medium-3-5:batch","at":"2026-09-08T07:17:38.802Z","prompt":0.75,"completion":3.75,"context":262144}
+{"id":"~moonshotai/kimi-latest","at":"2026-09-08T07:17:38.802Z","prompt":2.5,"completion":14,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-09-08T07:17:38.802Z","prompt":0.95526,"completion":1.91052,"context":1048576}
+{"id":"z-ai/glm-4.7-flash","at":"2026-09-08T07:17:38.802Z","prompt":0.0605,"completion":0.4,"context":202752}
+{"id":"z-ai/glm-4.6","at":"2026-09-08T07:17:38.802Z","prompt":0.55,"completion":2.2,"context":204800}
+{"id":"deepseek/deepseek-chat-v3.1","at":"2026-09-08T07:17:38.802Z","prompt":0.25,"completion":0.95,"context":163840}
+{"id":"minimax/minimax-m1","at":"2026-09-08T07:17:38.802Z","prompt":0.4,"completion":2.2,"context":1000000}
+{"id":"qwen/qwen3-14b","at":"2026-09-08T07:17:38.802Z","prompt":0.2275,"completion":0.91,"context":131072}
+{"id":"deepseek/deepseek-chat-v3-0324","at":"2026-09-08T07:17:38.802Z","prompt":0.29,"completion":1.14,"context":163840}
