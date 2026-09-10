@@ -105,3 +105,15 @@
 {"id":"qwen/qwen3-next-80b-a3b-instruct","at":"2026-09-09T07:26:48.114Z","prompt":0.09,"completion":1.1,"context":262144}
 {"id":"qwen/qwen3-235b-a22b-2507","at":"2026-09-09T07:26:48.114Z","prompt":0.22,"completion":0.88,"context":262144}
 {"id":"minimax/minimax-m1","at":"2026-09-09T07:26:48.114Z","prompt":0.55,"completion":2.2,"context":1000000}
+{"id":"deepseek/deepseek-v4.1-flash","at":"2026-09-10T07:22:09.788Z","prompt":0.3,"completion":1.2,"context":1048576}
+{"id":"~z-ai/glm-latest","at":"2026-09-10T07:22:09.788Z","prompt":1.085,"completion":3.41,"context":1310720}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-09-10T07:22:09.788Z","prompt":1.0494,"completion":3.1482,"context":1048576}
+{"id":"mistralai/mistral-small-2603:batch","at":"2026-09-10T07:22:09.788Z","prompt":0.075,"completion":0.3,"context":262144}
+{"id":"qwen/qwen3.5-122b-a10b","at":"2026-09-10T07:22:09.788Z","prompt":0.26,"completion":2.08,"context":262144}
+{"id":"minimax/minimax-m2.5","at":"2026-09-10T07:22:09.788Z","prompt":0.3,"completion":1.2,"context":204800}
+{"id":"mistralai/ministral-8b-2512:batch","at":"2026-09-10T07:22:09.788Z","prompt":0.075,"completion":0.075,"context":262144}
+{"id":"mistralai/mistral-large-2512:batch","at":"2026-09-10T07:22:09.788Z","prompt":0.25,"completion":0.75,"context":262144}
+{"id":"mistralai/mistral-medium-3.1:batch","at":"2026-09-10T07:22:09.788Z","prompt":0.2,"completion":1,"context":131072}
+{"id":"mistralai/codestral-2508:batch","at":"2026-09-10T07:22:09.788Z","prompt":0.15,"completion":0.45,"context":256000}
+{"id":"qwen/qwen3-30b-a3b-instruct-2507","at":"2026-09-10T07:22:09.788Z","prompt":0.09,"completion":0.3,"context":262144}
+{"id":"deepseek/deepseek-chat","at":"2026-09-10T07:22:09.788Z","prompt":0.2574,"completion":1.0287,"context":163840}
