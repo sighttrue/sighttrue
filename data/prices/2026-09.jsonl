@@ -164,3 +164,12 @@
 {"id":"minimax/minimax-m2.5","at":"2026-09-13T07:30:46.650Z","prompt":0.27,"completion":1.08,"context":204800}
 {"id":"qwen/qwen3-30b-a3b-instruct-2507","at":"2026-09-13T07:30:46.650Z","prompt":0.04815,"completion":0.19305,"context":262144}
 {"id":"meta-llama/llama-3.1-70b-instruct","at":"2026-09-13T07:30:46.650Z","prompt":0.4,"completion":0.4,"context":131072}
+{"id":"deepseek/deepseek-v4.1-flash","at":"2026-09-14T07:57:13.540Z","prompt":0.3,"completion":1.2,"context":1048576}
+{"id":"~z-ai/glm-latest","at":"2026-09-14T07:57:13.540Z","prompt":0.92,"completion":3.1372,"context":1310720}
+{"id":"z-ai/glm-5.3","at":"2026-09-14T07:57:13.540Z","prompt":1.4,"completion":4.4,"context":1310720}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-09-14T07:57:13.540Z","prompt":0.9834,"completion":2.9502,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-09-14T07:57:13.540Z","prompt":0.06,"completion":0.12,"context":1310720}
+{"id":"z-ai/glm-5.2","at":"2026-09-14T07:57:13.540Z","prompt":0.6832,"completion":2.1472,"context":1048576}
+{"id":"nvidia/nemotron-3-ultra-550b-a55b","at":"2026-09-14T07:57:13.540Z","prompt":0.6,"completion":2.4,"context":262144}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-09-14T07:57:13.540Z","prompt":0.088606,"completion":0.177212,"context":1048576}
+{"id":"qwen/qwen3-14b","at":"2026-09-14T07:57:13.540Z","prompt":0.12,"completion":0.24,"context":131072}
