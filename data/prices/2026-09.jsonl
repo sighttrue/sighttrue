@@ -191,3 +191,13 @@
 {"id":"~moonshotai/kimi-latest","at":"2026-09-16T07:45:01.993Z","prompt":2.1,"completion":10.95,"context":1048576}
 {"id":"mistralai/mistral-small-3.2-24b-instruct","at":"2026-09-16T07:45:01.993Z","prompt":0.09375,"completion":0.25,"context":256000}
 {"id":"minimax/minimax-m1","at":"2026-09-16T07:45:01.993Z","prompt":0.4,"completion":2.2,"context":1000000}
+{"id":"stealth/union-alpha","at":"2026-09-17T07:46:37.112Z","prompt":0,"completion":0,"context":262144}
+{"id":"~deepseek/deepseek-pro-latest","at":"2026-09-17T07:46:37.112Z","prompt":0.7,"completion":2.96,"context":1048576}
+{"id":"z-ai/glm-5.3-flash","at":"2026-09-17T07:46:37.112Z","prompt":0.09,"completion":0.3,"context":1310720}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-09-17T07:46:37.112Z","prompt":1.32,"completion":3.96,"context":1048576}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-09-17T07:46:37.112Z","prompt":0.03,"completion":0.13,"context":1310720}
+{"id":"moonshotai/kimi-k3","at":"2026-09-17T07:46:37.112Z","prompt":3,"completion":15,"context":1048576}
+{"id":"nvidia/nemotron-3-nano-30b-a3b","at":"2026-09-17T07:46:37.112Z","prompt":0.06,"completion":0.24,"context":262144}
+{"id":"qwen/qwen3-vl-30b-a3b-instruct","at":"2026-09-17T07:46:37.112Z","prompt":0.13,"completion":0.52,"context":262144}
+{"id":"z-ai/glm-4.6","at":"2026-09-17T07:46:37.112Z","prompt":0.5,"completion":2,"context":204800}
+{"id":"gryphe/mythomax-l2-13b","at":"2026-09-17T07:46:37.112Z","prompt":0.08,"completion":0.11,"context":8192}
