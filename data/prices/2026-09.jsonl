@@ -232,3 +232,14 @@
 {"id":"deepseek/deepseek-v4-pro","at":"2026-09-19T07:23:39.163Z","prompt":0.554016,"completion":1.108032,"context":1048576}
 {"id":"deepseek/deepseek-v4-flash","at":"2026-09-19T07:23:39.163Z","prompt":0.04676,"completion":0.09352,"context":1048576}
 {"id":"qwen/qwen3-vl-30b-a3b-instruct","at":"2026-09-19T07:23:39.163Z","prompt":0.2,"completion":0.7,"context":262144}
+{"id":"~deepseek/deepseek-pro-latest","at":"2026-09-20T07:47:15.058Z","prompt":0.57156,"completion":1.71468,"context":1048576}
+{"id":"~z-ai/glm-latest","at":"2026-09-20T07:47:15.058Z","prompt":0.8442,"completion":2.6532,"context":1310720}
+{"id":"z-ai/glm-5.3","at":"2026-09-20T07:47:15.058Z","prompt":0.896,"completion":2.816,"context":1310720}
+{"id":"qwen/qwen3.8-27b","at":"2026-09-20T07:47:15.058Z","prompt":0.42,"completion":3,"context":1000000}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-09-20T07:47:15.058Z","prompt":0.66,"completion":1.98,"context":1048576}
+{"id":"meta/muse-glimmer-30b","at":"2026-09-20T07:47:15.058Z","prompt":0.3,"completion":1.2,"context":131072}
+{"id":"z-ai/glm-5.2","at":"2026-09-20T07:47:15.058Z","prompt":0.6496,"completion":2.0416,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-09-20T07:47:15.058Z","prompt":0.422298,"completion":0.844596,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-09-20T07:47:15.058Z","prompt":0.03668,"completion":0.07336,"context":1048576}
+{"id":"qwen/qwen3.5-35b-a3b","at":"2026-09-20T07:47:15.058Z","prompt":0.3125,"completion":1.25,"context":262144}
+{"id":"qwen/qwen3-vl-30b-a3b-instruct","at":"2026-09-20T07:47:15.058Z","prompt":0.13,"completion":0.52,"context":262144}
