@@ -332,3 +332,16 @@
 {"id":"qwen/qwen3-next-80b-a3b-instruct","at":"2026-09-24T07:39:21.535Z","prompt":0.1,"completion":1.1,"context":262144}
 {"id":"openai/gpt-oss-120b:batch","at":"2026-09-24T07:39:21.535Z","prompt":0.0296,"completion":0.136,"context":131072}
 {"id":"qwen/qwen3-30b-a3b-instruct-2507","at":"2026-09-24T07:39:21.535Z","prompt":0.1,"completion":0.3,"context":262144}
+{"id":"~deepseek/deepseek-pro-latest","at":"2026-09-25T07:57:05.755Z","prompt":0.09984,"completion":2.88,"context":1048576}
+{"id":"~deepseek/deepseek-flash-latest","at":"2026-09-25T07:57:05.755Z","prompt":0.04,"completion":0.49,"context":1048576}
+{"id":"deepseek/deepseek-v4.1-flash","at":"2026-09-25T07:57:05.755Z","prompt":0.3,"completion":1.2,"context":1048576}
+{"id":"z-ai/glm-5.3-flash","at":"2026-09-25T07:57:05.755Z","prompt":0.045,"completion":0.14,"context":1310720}
+{"id":"~z-ai/glm-latest","at":"2026-09-25T07:57:05.755Z","prompt":0.5614,"completion":1.7644,"context":1310720}
+{"id":"z-ai/glm-5.3","at":"2026-09-25T07:57:05.755Z","prompt":1.4,"completion":4.4,"context":1310720}
+{"id":"moonshotai/kimi-k2.7-code","at":"2026-09-25T07:57:05.755Z","prompt":0.6562,"completion":3.3,"context":262144}
+{"id":"~moonshotai/kimi-latest","at":"2026-09-25T07:57:05.755Z","prompt":0.8845,"completion":10.5346,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-09-25T07:57:05.755Z","prompt":0.783,"completion":1.566,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-09-25T07:57:05.755Z","prompt":0.049,"completion":0.098,"context":1048576}
+{"id":"z-ai/glm-5.1","at":"2026-09-25T07:57:05.755Z","prompt":0.9646,"completion":3.0316,"context":204800}
+{"id":"z-ai/glm-4.7","at":"2026-09-25T07:57:05.755Z","prompt":0.6,"completion":2.2,"context":204800}
+{"id":"qwen/qwen3-vl-30b-a3b-instruct","at":"2026-09-25T07:57:05.755Z","prompt":0.15,"completion":0.6,"context":262144}
