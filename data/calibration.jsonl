@@ -172,3 +172,4 @@
 {"date":"2026-09-27","collector":"fork-spike","metric":"multiplier against own baseline","threshold":3,"measured":32,"crossed":30,"max":5.03,"p50":3.51,"p90":4.86,"p99":5.03,"unbounded":0}
 {"date":"2026-09-27","collector":"fork-outlier","metric":"ratio to category median","threshold":8,"measured":32,"crossed":32,"max":195,"p50":161,"p90":176,"p99":195,"unbounded":0}
 {"date":"2026-09-27","collector":"demand","metric":"engagement across repositories","threshold":60,"measured":7,"crossed":7,"max":2154,"p50":659,"p90":2154,"p99":2154,"unbounded":0}
+{"date":"2026-09-27","collector":"lineage","metric":"new descendants this week","threshold":2,"measured":12,"crossed":8,"max":102,"p50":13,"p90":44,"p99":102,"unbounded":0}
