@@ -173,3 +173,6 @@
 {"date":"2026-09-27","collector":"fork-outlier","metric":"ratio to category median","threshold":8,"measured":32,"crossed":32,"max":195,"p50":161,"p90":176,"p99":195,"unbounded":0}
 {"date":"2026-09-27","collector":"demand","metric":"engagement across repositories","threshold":60,"measured":7,"crossed":7,"max":2154,"p50":659,"p90":2154,"p99":2154,"unbounded":0}
 {"date":"2026-09-27","collector":"lineage","metric":"new descendants this week","threshold":2,"measured":12,"crossed":8,"max":102,"p50":13,"p90":44,"p99":102,"unbounded":0}
+{"date":"2026-09-28","collector":"fork-spike","metric":"multiplier against own baseline","threshold":3,"measured":35,"crossed":4,"max":3.23,"p50":2.2,"p90":3.09,"p99":3.23,"unbounded":0}
+{"date":"2026-09-28","collector":"fork-outlier","metric":"ratio to category median","threshold":8,"measured":35,"crossed":35,"max":146,"p50":114,"p90":129,"p99":146,"unbounded":0}
+{"date":"2026-09-28","collector":"demand","metric":"engagement across repositories","threshold":60,"measured":7,"crossed":7,"max":2172,"p50":659,"p90":2172,"p99":2172,"unbounded":0}
