@@ -202,3 +202,16 @@
 {"id":"deepseek/deepseek-v4-flash","at":"2026-10-11T09:00:56.940Z","prompt":0.03,"completion":1.28,"context":1048576}
 {"id":"moonshotai/kimi-k2.6","at":"2026-10-11T09:00:56.940Z","prompt":0.65,"completion":3.41,"context":262144}
 {"id":"qwen/qwen3-14b","at":"2026-10-11T09:00:56.940Z","prompt":0.12,"completion":0.24,"context":40960}
+{"id":"~deepseek/deepseek-pro-latest","at":"2026-10-12T09:22:19.900Z","prompt":0.25,"completion":5,"context":1048576}
+{"id":"~deepseek/deepseek-flash-latest","at":"2026-10-12T09:22:19.900Z","prompt":0.0336,"completion":1.188,"context":1048576}
+{"id":"~z-ai/glm-flash-latest","at":"2026-10-12T09:22:19.900Z","prompt":0.0232,"completion":1.2,"context":1048576}
+{"id":"z-ai/glm-5.3-flash","at":"2026-10-12T09:22:19.900Z","prompt":0.0232,"completion":1.2,"context":1048576}
+{"id":"~z-ai/glm-latest","at":"2026-10-12T09:22:19.900Z","prompt":0.055,"completion":5,"context":1048576}
+{"id":"z-ai/glm-5.3","at":"2026-10-12T09:22:19.900Z","prompt":0.079,"completion":4.8,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-10-12T09:22:19.900Z","prompt":1.32,"completion":3.96,"context":1048576}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-10-12T09:22:19.900Z","prompt":0.0128,"completion":0.768,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-10-12T09:22:19.900Z","prompt":0.016,"completion":0.64,"context":1048576}
+{"id":"moonshotai/kimi-k3","at":"2026-10-12T09:22:19.900Z","prompt":0.73,"completion":10,"context":1048576}
+{"id":"~moonshotai/kimi-latest","at":"2026-10-12T09:22:19.900Z","prompt":0.72,"completion":24,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-10-12T09:22:19.900Z","prompt":0.95526,"completion":1.91052,"context":1048576}
+{"id":"google/gemma-4-26b-a4b-it","at":"2026-10-12T09:22:19.900Z","prompt":0.09,"completion":0.3,"context":262144}
