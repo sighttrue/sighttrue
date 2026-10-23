@@ -398,3 +398,12 @@
 {"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-10-22T07:42:14.963Z","prompt":0.0475,"completion":0.1568,"context":1048576}
 {"id":"~moonshotai/kimi-latest","at":"2026-10-22T07:42:14.963Z","prompt":0.238,"completion":16,"context":1048576}
 {"id":"qwen/qwen3.5-397b-a17b","at":"2026-10-22T07:42:14.963Z","prompt":0.5,"completion":3.6,"context":262144}
+{"id":"minimax/minimax-m3.1-flash","at":"2026-10-23T07:39:50.030Z","prompt":0.15,"completion":0.6,"context":1048576}
+{"id":"reflection/beam-1.0-501b-a23b","at":"2026-10-23T07:39:50.030Z","prompt":0.25,"completion":1,"context":1048576}
+{"id":"~deepseek/deepseek-pro-latest","at":"2026-10-23T07:39:50.030Z","prompt":0.2247,"completion":8,"context":1048576}
+{"id":"deepseek/deepseek-v4.1-flash","at":"2026-10-23T07:39:50.030Z","prompt":0.165,"completion":0.66,"context":1048576}
+{"id":"~z-ai/glm-flash-latest","at":"2026-10-23T07:39:50.030Z","prompt":0.0052,"completion":0.1985,"context":1048576}
+{"id":"z-ai/glm-5.3-flash","at":"2026-10-23T07:39:50.030Z","prompt":0.0052,"completion":0.1985,"context":1048576}
+{"id":"qwen/qwen3.8-27b","at":"2026-10-23T07:39:50.030Z","prompt":0.2,"completion":2.5,"context":1000000}
+{"id":"qwen/qwen3.5-9b","at":"2026-10-23T07:39:50.030Z","prompt":0.17,"completion":0.25,"context":262144}
+{"id":"mistralai/mistral-small-3.2-24b-instruct","at":"2026-10-23T07:39:50.030Z","prompt":0.075,"completion":0.2,"context":256000}
