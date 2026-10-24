@@ -407,3 +407,17 @@
 {"id":"qwen/qwen3.8-27b","at":"2026-10-23T07:39:50.030Z","prompt":0.2,"completion":2.5,"context":1000000}
 {"id":"qwen/qwen3.5-9b","at":"2026-10-23T07:39:50.030Z","prompt":0.17,"completion":0.25,"context":262144}
 {"id":"mistralai/mistral-small-3.2-24b-instruct","at":"2026-10-23T07:39:50.030Z","prompt":0.075,"completion":0.2,"context":256000}
+{"id":"moonshotai/kimi-k3.1-pro","at":"2026-10-24T07:23:23.598Z","prompt":2,"completion":10,"context":1048576}
+{"id":"deepseek/deepseek-v4.1-flash-1017","at":"2026-10-24T07:23:23.598Z","prompt":0.15,"completion":0.6,"context":1048576}
+{"id":"~deepseek/deepseek-pro-latest","at":"2026-10-24T07:23:23.598Z","prompt":0.1188,"completion":8,"context":1048576}
+{"id":"~deepseek/deepseek-flash-latest","at":"2026-10-24T07:23:23.598Z","prompt":0.02,"completion":1,"context":1048576}
+{"id":"deepseek/deepseek-v4.1-flash","at":"2026-10-24T07:23:23.598Z","prompt":0.02,"completion":1,"context":1048576}
+{"id":"~z-ai/glm-flash-latest","at":"2026-10-24T07:23:23.598Z","prompt":0.0175,"completion":0.1425,"context":1048576}
+{"id":"z-ai/glm-5.3-flash","at":"2026-10-24T07:23:23.598Z","prompt":0.15,"completion":0.5,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro-0813","at":"2026-10-24T07:23:23.598Z","prompt":0.66,"completion":1.98,"context":1048576}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-10-24T07:23:23.598Z","prompt":0.0422,"completion":0.1694,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-10-24T07:23:23.598Z","prompt":0.04444,"completion":0.13332,"context":1048576}
+{"id":"moonshotai/kimi-k3","at":"2026-10-24T07:23:23.598Z","prompt":0.239,"completion":10.8,"context":1048576}
+{"id":"~moonshotai/kimi-latest","at":"2026-10-24T07:23:23.598Z","prompt":0.238,"completion":24,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-10-24T07:23:23.598Z","prompt":0.469626,"completion":0.939252,"context":1048576}
+{"id":"google/gemma-4-26b-a4b-it","at":"2026-10-24T07:23:23.598Z","prompt":0.0675,"completion":0.225,"context":262144}

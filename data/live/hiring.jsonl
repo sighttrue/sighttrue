@@ -147,7 +147,7 @@
 {"month":"2026-10","term":"Angular","posts":4,"sample":396,"conservative":false}
 {"month":"2026-10","term":"Azure","posts":6,"sample":396,"conservative":false}
 {"month":"2026-10","term":"C#","posts":9,"sample":396,"conservative":false}
-{"month":"2026-10","term":"C++","posts":14,"sample":396,"conservative":false}
+{"month":"2026-10","term":"C++","posts":13,"sample":396,"conservative":false}
 {"month":"2026-10","term":"ClickHouse","posts":3,"sample":396,"conservative":false}
 {"month":"2026-10","term":"Cloudflare","posts":3,"sample":396,"conservative":false}
 {"month":"2026-10","term":"Django","posts":3,"sample":396,"conservative":false}
@@ -180,7 +180,7 @@
 {"month":"2026-10","term":"React","posts":60,"sample":396,"conservative":false}
 {"month":"2026-10","term":"Redis","posts":5,"sample":396,"conservative":false}
 {"month":"2026-10","term":"Ruby","posts":5,"sample":396,"conservative":false}
-{"month":"2026-10","term":"Rust","posts":24,"sample":396,"conservative":false}
+{"month":"2026-10","term":"Rust","posts":23,"sample":396,"conservative":false}
 {"month":"2026-10","term":"Scala","posts":3,"sample":396,"conservative":false}
 {"month":"2026-10","term":"Snowflake","posts":2,"sample":396,"conservative":false}
 {"month":"2026-10","term":"Spring","posts":3,"sample":396,"conservative":true}
