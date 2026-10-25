@@ -421,3 +421,11 @@
 {"id":"~moonshotai/kimi-latest","at":"2026-10-24T07:23:23.598Z","prompt":0.238,"completion":24,"context":1048576}
 {"id":"deepseek/deepseek-v4-pro","at":"2026-10-24T07:23:23.598Z","prompt":0.469626,"completion":0.939252,"context":1048576}
 {"id":"google/gemma-4-26b-a4b-it","at":"2026-10-24T07:23:23.598Z","prompt":0.0675,"completion":0.225,"context":262144}
+{"id":"~z-ai/glm-flash-latest","at":"2026-10-25T07:39:12.854Z","prompt":0.0418,"completion":0.077,"context":1048576}
+{"id":"~z-ai/glm-latest","at":"2026-10-25T07:39:12.854Z","prompt":0.0703,"completion":4.3843,"context":1048576}
+{"id":"liquid/lfm-2.5-2.6b","at":"2026-10-25T07:39:12.854Z","prompt":0.35,"completion":0.5,"context":128000}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-10-25T07:39:12.854Z","prompt":0.0422,"completion":0.1694,"context":1048576}
+{"id":"~moonshotai/kimi-latest","at":"2026-10-25T07:39:12.854Z","prompt":0.19,"completion":8.94,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-10-25T07:39:12.854Z","prompt":0.2088,"completion":0.4176,"context":1048576}
+{"id":"minimax/minimax-m2.5","at":"2026-10-25T07:39:12.854Z","prompt":0.3,"completion":1.2,"context":204800}
+{"id":"meta-llama/llama-3.2-3b-instruct","at":"2026-10-25T07:39:12.854Z","prompt":0.05,"completion":0.33,"context":131072}
