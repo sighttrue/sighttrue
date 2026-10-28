@@ -464,3 +464,17 @@
 {"id":"qwen/qwen3.5-27b","at":"2026-10-27T07:59:07.864Z","prompt":0.26,"completion":2.6,"context":262144}
 {"id":"qwen/qwen3-30b-a3b-instruct-2507","at":"2026-10-27T07:59:07.864Z","prompt":0.1,"completion":0.3,"context":262144}
 {"id":"google/gemma-3-4b-it","at":"2026-10-27T07:59:07.864Z","prompt":0.05,"completion":0.1,"context":131072}
+{"id":"prism-ml/ternary-bonsai-2-9b","at":"2026-10-28T08:41:37.699Z","prompt":0.08,"completion":0.13,"context":262144}
+{"id":"inclusionai/ling-3.1-flash","at":"2026-10-28T08:41:37.699Z","prompt":0.075,"completion":0.225,"context":1000000}
+{"id":"~deepseek/deepseek-pro-latest","at":"2026-10-28T08:41:37.699Z","prompt":0.2542,"completion":8,"context":1048576}
+{"id":"~deepseek/deepseek-flash-latest","at":"2026-10-28T08:41:37.699Z","prompt":0.0126,"completion":1.8,"context":1048576}
+{"id":"~z-ai/glm-flash-latest","at":"2026-10-28T08:41:37.699Z","prompt":0.0363,"completion":0.091,"context":1048576}
+{"id":"qwen/qwen3.8-27b","at":"2026-10-28T08:41:37.699Z","prompt":0.039,"completion":1.25,"context":1000000}
+{"id":"moonshotai/kimi-k3","at":"2026-10-28T08:41:37.699Z","prompt":0.189,"completion":20,"context":1048576}
+{"id":"z-ai/glm-5.2","at":"2026-10-28T08:41:37.699Z","prompt":0.0179,"completion":7,"context":1048576}
+{"id":"~moonshotai/kimi-latest","at":"2026-10-28T08:41:37.699Z","prompt":0.1605,"completion":8.099,"context":1048576}
+{"id":"qwen/qwen3.6-35b-a3b","at":"2026-10-28T08:41:37.699Z","prompt":0.1,"completion":0.9,"context":262144}
+{"id":"qwen/qwen3.6-27b","at":"2026-10-28T08:41:37.699Z","prompt":0.45,"completion":2.7,"context":262144}
+{"id":"deepseek/deepseek-v4-flash","at":"2026-10-28T08:41:37.699Z","prompt":0.14,"completion":0.28,"context":1048576}
+{"id":"z-ai/glm-5.1","at":"2026-10-28T08:41:37.699Z","prompt":1.4,"completion":4.4,"context":204800}
+{"id":"meta-llama/llama-3.1-8b-instruct","at":"2026-10-28T08:41:37.699Z","prompt":0.02,"completion":0.04,"context":131072}
