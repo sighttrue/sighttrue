@@ -273,3 +273,6 @@
 {"date":"2026-10-29","collector":"fork-spike","metric":"multiplier against own baseline","threshold":3,"measured":7,"crossed":0,"max":1.63,"p50":1.04,"p90":1.63,"p99":1.63,"unbounded":0}
 {"date":"2026-10-29","collector":"fork-outlier","metric":"ratio to category median","threshold":8,"measured":7,"crossed":7,"max":29,"p50":21,"p90":29,"p99":29,"unbounded":0}
 {"date":"2026-10-29","collector":"demand","metric":"engagement across repositories","threshold":60,"measured":6,"crossed":6,"max":2646,"p50":350,"p90":2646,"p99":2646,"unbounded":0}
+{"date":"2026-10-30","collector":"fork-spike","metric":"multiplier against own baseline","threshold":3,"measured":12,"crossed":5,"max":3.97,"p50":1.6,"p90":3.97,"p99":3.97,"unbounded":0}
+{"date":"2026-10-30","collector":"fork-outlier","metric":"ratio to category median","threshold":8,"measured":12,"crossed":12,"max":32,"p50":16,"p90":27.5,"p99":32,"unbounded":0}
+{"date":"2026-10-30","collector":"demand","metric":"engagement across repositories","threshold":60,"measured":6,"crossed":6,"max":2646,"p50":350,"p90":2646,"p99":2646,"unbounded":0}
