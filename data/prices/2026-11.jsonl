@@ -8,3 +8,10 @@
 {"id":"z-ai/glm-4.7","at":"2026-11-01T09:22:28.664Z","prompt":0.6,"completion":2.2,"context":204800}
 {"id":"openai/gpt-oss-120b","at":"2026-11-01T09:22:28.664Z","prompt":0.026,"completion":0.098,"context":131072}
 {"id":"openai/gpt-oss-20b","at":"2026-11-01T09:22:28.664Z","prompt":0.03,"completion":0.13,"context":131072}
+{"id":"deepseek/deepseek-v4.1-flash-1017","at":"2026-11-02T09:37:07.011Z","prompt":0.3,"completion":1.2,"context":1048576}
+{"id":"z-ai/glm-5.3","at":"2026-11-02T09:37:07.011Z","prompt":0.08,"completion":3.6,"context":1048576}
+{"id":"qwen/qwen3.8-27b","at":"2026-11-02T09:37:07.011Z","prompt":0.15,"completion":1.875,"context":1024000}
+{"id":"~deepseek/deepseek-v4-flash-latest","at":"2026-11-02T09:37:07.011Z","prompt":0.059,"completion":0.3,"context":1048576}
+{"id":"google/gemma-4-26b-a4b-it","at":"2026-11-02T09:37:07.011Z","prompt":0.084,"completion":0.251,"context":262144}
+{"id":"openai/gpt-oss-120b","at":"2026-11-02T09:37:07.011Z","prompt":0.15,"completion":0.6,"context":131072}
+{"id":"meta-llama/llama-3.2-3b-instruct","at":"2026-11-02T09:37:07.011Z","prompt":0.0509,"completion":0.335,"context":131072}
