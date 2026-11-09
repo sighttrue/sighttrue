@@ -109,3 +109,13 @@
 {"id":"morph/morph-v3-large:batch","at":"2026-11-08T09:07:12.575Z","prompt":0.45,"completion":0.95,"context":262144}
 {"id":"morph/morph-v3-fast:batch","at":"2026-11-08T09:07:12.575Z","prompt":0.4,"completion":0.6,"context":81920}
 {"id":"meta-llama/llama-3.2-3b-instruct","at":"2026-11-08T09:07:12.575Z","prompt":0.05,"completion":0.33,"context":131072}
+{"id":"z-ai/glm-5.3:batch","at":"2026-11-09T09:54:56.909Z","prompt":0.45,"completion":2,"context":1048576}
+{"id":"moonshotai/kimi-k3:batch","at":"2026-11-09T09:54:56.909Z","prompt":0.917,"completion":6,"context":1048576}
+{"id":"z-ai/glm-5.2:batch","at":"2026-11-09T09:54:56.909Z","prompt":0.623,"completion":1.271,"context":1048576}
+{"id":"~moonshotai/kimi-latest","at":"2026-11-09T09:54:56.909Z","prompt":0.1824,"completion":10.1489,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-11-09T09:54:56.909Z","prompt":0.95526,"completion":1.91052,"context":1048576}
+{"id":"google/gemma-4-26b-a4b-it","at":"2026-11-09T09:54:56.909Z","prompt":0.09,"completion":0.3,"context":262144}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-11-09T09:54:56.909Z","prompt":0.6,"completion":3.6,"context":262144}
+{"id":"openai/gpt-oss-120b","at":"2026-11-09T09:54:56.909Z","prompt":0.15,"completion":0.6,"context":131072}
+{"id":"google/gemma-3-27b-it","at":"2026-11-09T09:54:56.909Z","prompt":0.08,"completion":0.45,"context":131072}
+{"id":"meta-llama/llama-3.1-8b-instruct","at":"2026-11-09T09:54:56.909Z","prompt":0.02,"completion":0.04,"context":131072}
