@@ -1,15 +1,21 @@
 {
-  "lastRunAt": "2026-11-12T07:07:50.371Z",
+  "lastRunAt": "2026-11-12T09:55:50.616Z",
   "lastSuccessfulRunAt": "2026-11-12T07:07:50.371Z",
-  "job": "pulse",
+  "job": "daily",
   "partial": true,
-  "requestsConsumed": 549,
+  "requestsConsumed": 152,
   "rateLimitRemaining": 4773,
   "reposChecked": 417,
   "requestsUnchanged": 284,
-  "eventsDetected": 9,
+  "eventsDetected": 45,
   "collectorsErrored": [
-    "base honojs/hono: fetch failed"
+    "adoption pypi: refused 3 of 64 reads, last known counts carried forward",
+    "incidents datadog: api unavailable",
+    "typosquat @babelcore: 405 reading @babelcore",
+    "typosquat b@abel/core: 405 reading b@abel/core",
+    "typosquat babel/core: 405 reading babel/core",
+    "images openjdk:25: no longer published",
+    "images openjdk:25-slim: no longer published"
   ],
   "summariesGenerated": 125,
   "insufficientRate": 0,
