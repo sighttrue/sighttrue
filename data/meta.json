@@ -1,15 +1,21 @@
 {
-  "lastRunAt": "2026-11-14T00:52:55.173Z",
+  "lastRunAt": "2026-11-14T09:04:05.326Z",
   "lastSuccessfulRunAt": "2026-11-14T00:52:55.173Z",
-  "job": "pulse",
+  "job": "daily",
   "partial": true,
-  "requestsConsumed": 501,
+  "requestsConsumed": 148,
   "rateLimitRemaining": 4786,
   "reposChecked": 417,
   "requestsUnchanged": 332,
-  "eventsDetected": 5,
+  "eventsDetected": 29,
   "collectorsErrored": [
-    "releases scikit-learn/scikit-learn: fetch failed"
+    "adoption pypi: refused 1 of 64 reads, last known counts carried forward",
+    "incidents datadog: api unavailable",
+    "typosquat @babelcore: 405 reading @babelcore",
+    "typosquat b@abel/core: 405 reading b@abel/core",
+    "typosquat babel/core: 405 reading babel/core",
+    "images openjdk:25: no longer published",
+    "images openjdk:25-slim: no longer published"
   ],
   "summariesGenerated": 125,
   "insufficientRate": 0,
