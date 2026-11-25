@@ -362,3 +362,16 @@
 {"id":"~moonshotai/kimi-latest","at":"2026-11-24T12:36:37.997Z","prompt":0.1824,"completion":10.6066,"context":1048576}
 {"id":"deepseek/deepseek-v4-pro","at":"2026-11-24T12:36:37.997Z","prompt":1.28,"completion":2.56,"context":1048576}
 {"id":"meta-llama/llama-3.1-8b-instruct","at":"2026-11-24T12:36:37.997Z","prompt":0.05,"completion":0.08,"context":131072}
+{"id":"upstage/solar-mini-4-5","at":"2026-11-25T11:26:38.770Z","prompt":0.01,"completion":0.04,"context":524288}
+{"id":"upstage/solar-pro-4-contributor","at":"2026-11-25T11:26:38.770Z","prompt":0.09,"completion":0.36,"context":524288}
+{"id":"xiaomi/mimo-v2.6-flash-mopd","at":"2026-11-25T11:26:38.770Z","prompt":0.5,"completion":1,"context":1048576}
+{"id":"deepseek/deepseek-v4.1-flash-1017","at":"2026-11-25T11:26:38.770Z","prompt":0.15,"completion":0.6,"context":1048576}
+{"id":"~deepseek/deepseek-flash-latest","at":"2026-11-25T11:26:38.770Z","prompt":0.036,"completion":0.5,"context":1048576}
+{"id":"deepseek/deepseek-v4-flash-vision-exp","at":"2026-11-25T11:26:38.770Z","prompt":0.44,"completion":1.32,"context":1048576}
+{"id":"nvidia/nemotron-3.5-lightning","at":"2026-11-25T11:26:38.770Z","prompt":0.07,"completion":0.2,"context":1048576}
+{"id":"~moonshotai/kimi-latest","at":"2026-11-25T11:26:38.770Z","prompt":0.1824,"completion":11.0055,"context":1048576}
+{"id":"qwen/qwen3.6-35b-a3b","at":"2026-11-25T11:26:38.770Z","prompt":0.1,"completion":0.89,"context":262144}
+{"id":"qwen/qwen3.5-9b","at":"2026-11-25T11:26:38.770Z","prompt":0.1,"completion":0.25,"context":262144}
+{"id":"minimax/minimax-m2.5","at":"2026-11-25T11:26:38.770Z","prompt":0.3,"completion":1.2,"context":65536}
+{"id":"z-ai/glm-4.7-flash","at":"2026-11-25T11:26:38.770Z","prompt":0.0605,"completion":0.4,"context":131072}
+{"id":"z-ai/glm-4.5-air","at":"2026-11-25T11:26:38.770Z","prompt":0.14,"completion":0.86,"context":131072}
