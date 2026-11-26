@@ -375,3 +375,14 @@
 {"id":"minimax/minimax-m2.5","at":"2026-11-25T11:26:38.770Z","prompt":0.3,"completion":1.2,"context":65536}
 {"id":"z-ai/glm-4.7-flash","at":"2026-11-25T11:26:38.770Z","prompt":0.0605,"completion":0.4,"context":131072}
 {"id":"z-ai/glm-4.5-air","at":"2026-11-25T11:26:38.770Z","prompt":0.14,"completion":0.86,"context":131072}
+{"id":"reflection/beam-1.0-501b-a23b","at":"2026-11-26T11:01:32.188Z","prompt":0.3,"completion":1,"context":1048576}
+{"id":"~unbiased/pareto-latest","at":"2026-11-26T11:01:32.188Z","prompt":null,"completion":null,"context":262144}
+{"id":"~deepseek/deepseek-pro-latest","at":"2026-11-26T11:01:32.188Z","prompt":0.111,"completion":4.44,"context":1048576}
+{"id":"z-ai/glm-5.3-flash","at":"2026-11-26T11:01:32.188Z","prompt":0.15,"completion":0.5,"context":1048576}
+{"id":"qwen/qwen3.8-27b","at":"2026-11-26T11:01:32.188Z","prompt":0.06,"completion":1.96,"context":1024000}
+{"id":"deepseek/deepseek-v4-flash-0731","at":"2026-11-26T11:01:32.188Z","prompt":0.06,"completion":0.18,"context":1048576}
+{"id":"deepseek/deepseek-v4-pro","at":"2026-11-26T11:01:32.188Z","prompt":0.888188,"completion":1.5082,"context":1048576}
+{"id":"qwen/qwen3.5-397b-a17b","at":"2026-11-26T11:01:32.188Z","prompt":0.5,"completion":3.6,"context":262144}
+{"id":"z-ai/glm-4.5-air","at":"2026-11-26T11:01:32.188Z","prompt":0.2,"completion":1.1,"context":131072}
+{"id":"tngtech/deepseek-r1t2-chimera","at":"2026-11-26T11:01:32.188Z","prompt":1,"completion":2.625,"context":131072}
+{"id":"google/gemma-3-27b-it","at":"2026-11-26T11:01:32.188Z","prompt":0.08,"completion":0.45,"context":131072}
